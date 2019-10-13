@@ -5,8 +5,11 @@
 # Host architecture, actually target architecture
 TARGETARCH=i386
 
-
+# Main directory of the project
 PROJECT_MAINDIR=$(shell pwd)
+
+# Output object directory
+OBJDIR=$(PROJECT_MAINDIR)/obj
 
 PREFIX=/usr/local/muOS
 AR=/usr/bin/i686-elf-ar
@@ -33,15 +36,23 @@ export CFLAGS
 export CPPFLAGS
 export NASMFLAGS
 export PROJECT_MAINDIR
+export OBJDIR
 
-.PHONY: all MuOS clean
+.PHONY: all MuOS clean install
 
 all: MuOS
 
 MuOS:
+	@echo "Building LibC.."
 	$(MAKE) -C libc/ all
+	@echo "Building uKernel.."
 	$(MAKE) -C kernel/ all
-	
+
 clean:
-	$(MAKE) -C libc/ clean
-	$(MAKE) -C kernel/ clean
+	@echo -e "Cleaning up.."
+	@$(MAKE) -C libc/ clean
+	@$(MAKE) -C kernel/ clean
+
+install:
+	@echo -e "Installing MuOS binary to /boot/"
+	@sudo cp -f kernel/muOsKernel.bin /boot/

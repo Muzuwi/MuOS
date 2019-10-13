@@ -1,0 +1,9 @@
+*.o
+*.d
+*.a
+*.bin
+.idea/*
+.stdir/*
+docs/*
+CMakeLists.txt
+run.sh

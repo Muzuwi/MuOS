@@ -13,7 +13,7 @@ INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -masm=intel
-CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude
+CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude -D__LIBC_DEBUG
 NASMFLAGS?=-felf32
 LIBKERNEL_CFLAGS:=$(CFLAGS) -I$(PROJECT_MAINDIR)/kernel/include
 LIBKERNEL_CPPFLAGS:=$(CPPFLAGS) -D__is_libkernel
@@ -30,6 +30,11 @@ LIBKERNEL_CPPFLAGS:=$(LIBKERNEL_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 FREEOBJS=			\
 $(ARCH_FREEOBJS)	\
 string/strlen.o 	\
+string/strcmp.o 	\
+string/memcpy.o 	\
+string/memchr.o 	\
+string/memset.o 	\
+string/memcmp.o 	\
 stdio/printf.o 		\
 stdio/puts.o 		\
 stdio/putchar.o 	\

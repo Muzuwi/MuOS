@@ -1,14 +1,19 @@
 #include <string.h>
-#include "vga.h"
-
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
+#include <arch/i386/vga.h>
 
 static uint16_t* vga_buffer_base_address = (uint16_t*)0xB8000;
 
 uint8_t vga_console_position_x = 0, vga_console_position_y = 0;
 uint8_t vga_color = 0;
 
+//  Set a character at x y without affecting the current console position
+void vga_putdebugch(size_t x, size_t y, char ch, uint8_t bg, uint8_t fg){
+	if(x >= VGA_WIDTH || y >= VGA_HEIGHT || x < 0 || y < 0){
+		return;
+	}
+
+	vga_buffer_base_address[y*VGA_WIDTH + x] = (((bg << 4) | fg) << 8) | (ch & 0xFF);
+}
 
 //  Set console color byte
 void vga_setcolor(enum VGA_COLOR bg, enum VGA_COLOR fg){

@@ -3,7 +3,7 @@ TARGETARCH?=i386
 
 # Compiler / linker variables
 CFLAGS?=-O2 -g
-CPPFLAGS?=
+CPPFLAGS?=-O2 -g
 LDFLAGS?=
 LIBS?=
 
@@ -12,7 +12,7 @@ INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -masm=intel
-CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude -I$(INCLUDEDIR)
+CPPFLAGS:=$(CPPFLAGS) -ffreestanding -Wall -Wextra -masm=intel -D__is_kernel -Iinclude -I$(INCLUDEDIR) -I/usr/lib/gcc/i686-elf/9.2.0/include -fno-rtti -fno-exceptions
 LDFLAGS:=$(LDFLAGS)
 NASMFLAGS?=-felf32
 LIBS:=$(LIBS) -nostdlib -L$(LIBDIR) -lkernel -lgcc
@@ -74,6 +74,8 @@ clean:
 	@-rm */*.d 2>/dev/null || true
 	@-rm */*/*.o 2>/dev/null || true
 	@-rm */*/*.d 2>/dev/null || true
+	@-rm */*/*/*.o 2>/dev/null || true
+	@-rm */*/*/*.d 2>/dev/null || true
 	@-rm *.o 2>/dev/null || true
 	@-rm *.d 2>/dev/null || true
 	@-rm muOsKernel.bin 2>/dev/null || true

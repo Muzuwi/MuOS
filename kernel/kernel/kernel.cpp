@@ -3,6 +3,7 @@
 #include <kernel/tty.h>
 #include <arch/i386/i8042.hpp>
 #include <arch/i386/gdt.hpp>
+#include <arch/i386/interrupts.hpp>
 
 namespace uKernel {
 	extern "C" void kernel_entrypoint();
@@ -17,6 +18,8 @@ extern "C" void uKernel::kernel_entrypoint(){
 
 	GDT::init_GDT();
 	i8042::init_controller();
+	IDT::init_PIC();
+	IDT::init_IDT();
 
 	printf("[uKernel] Main loop\n");
 	while(true){

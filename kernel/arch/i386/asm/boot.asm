@@ -38,6 +38,9 @@ _start:
 	extern kernel_entrypoint
 	call kernel_entrypoint
 
+	extern _fini
+	call _fini
+
 	loopLabel:
 		cli
 		hlt

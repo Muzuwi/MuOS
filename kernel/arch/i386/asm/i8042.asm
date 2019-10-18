@@ -9,9 +9,7 @@ ps2ctrl_read:
 
 global ps2ctrl_read_status
 ps2ctrl_read_status:
-	mov edi, [esp+4]
 	in al, 0x64
-	mov [edi], al
 	ret
 
 ;  Writing to the controller
@@ -51,4 +49,14 @@ ps2ctrl_wait_output_full:
 	in al, 0x64
 	test al, 00000001b 
 	jz ps2ctrl_wait_output_full
+	ret
+
+
+global ps2ctrl_timeout_error
+ps2ctrl_timeout_error:
+	in al, 0x64
+	test al, 01000000b
+	jz no_timeout
+	mov eax, -1
+	no_timeout:
 	ret

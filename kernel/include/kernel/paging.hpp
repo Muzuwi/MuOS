@@ -5,6 +5,10 @@
 #ifndef KERNEL_PAGING_H
 #define KERNEL_PAGING_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -44,5 +48,8 @@ struct PAGE_TABLE {
 	struct PT_ENTRY pages[1024];
 };
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

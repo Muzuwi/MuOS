@@ -1,6 +1,10 @@
 #ifndef KERNEL_CPUID_H
 #define KERNEL_CPUID_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -20,5 +24,10 @@
 
 const char* cpuid_get_cpu_brandstring();
 unsigned int cpuid_get_msw();
+
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

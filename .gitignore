@@ -2,8 +2,9 @@
 *.d
 *.a
 *.bin
+*.iso
+*.sh
 .idea/*
 .stdir/*
+.gdb_history
 docs/*
-CMakeLists.txt
-run.sh

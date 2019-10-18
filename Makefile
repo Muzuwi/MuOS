@@ -38,9 +38,9 @@ export NASMFLAGS
 export PROJECT_MAINDIR
 export OBJDIR
 
-.PHONY: all MuOS clean install
+.PHONY: all MuOS clean install bootable
 
-all: MuOS
+all: MuOS bootable
 
 MuOS:
 	@echo "Building LibC.."
@@ -56,3 +56,8 @@ clean:
 install:
 	@echo -e "Installing MuOS binary to /boot/"
 	@sudo cp -f kernel/muOsKernel.bin /boot/
+
+bootable: MuOS
+	@echo "Making bootable image muOS.img"
+	@cp -f kernel/muOsKernel.bin isodir/boot/
+	@grub-mkrescue -o muOS.iso isodir/

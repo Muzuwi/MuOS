@@ -28,6 +28,26 @@ extern "C" int irq12();
 extern "C" int irq13();
 extern "C" int irq14();
 extern "C" int irq15();
+extern "C" int isr_except_divbyzero();
+extern "C" int isr_except_dbg();
+extern "C" int isr_except_nmi();
+extern "C" int isr_except_break();
+extern "C" int isr_except_overflow();
+extern "C" int isr_except_bound();
+extern "C" int isr_except_invalidop();
+extern "C" int isr_except_nodevice();
+extern "C" int isr_except_doublefault();
+extern "C" int isr_except_invalidtss();
+extern "C" int isr_except_invalidseg();
+extern "C" int isr_except_segstackfault();
+extern "C" int isr_except_gpf();
+extern "C" int isr_except_pagefault();
+extern "C" int isr_except_x87fpfault();
+extern "C" int isr_except_aligncheck();
+extern "C" int isr_except_machinecheck();
+extern "C" int isr_except_simdfp();
+extern "C" int isr_except_virtfault();
+extern "C" int isr_except_security();
 extern "C" void loadIDT(uint32_t);
 
 /*
@@ -36,22 +56,56 @@ extern "C" void loadIDT(uint32_t);
 	into IDTR
 */
 void IDT::init_IDT(){
-	uint32_t irq0addr,irq1addr,irq2addr,irq3addr,
-				  irq4addr,irq5addr,irq6addr,irq7addr,
-				  irq8addr,irq9addr,irq10addr,irq11addr,
-				  irq12addr,irq13addr,irq14addr,irq15addr;
+	//  Interrupt handler entrypoint address
+	uint32_t irq_addr;
 
-
+	//  Exception handler entrypoint adress
+	uint32_t except_addr; 
 
 	#define TOSTRING(a) #a
 	#define CAT(a, b) a##b
 	#define SETIRQ(irqname, number) \
-		CAT(irqname, addr) = (uint32_t)(irqname); \
+		irq_addr = (uint32_t)(irqname); \
 		interrupts_table[number].zero = 0; \
-		interrupts_table[number].offset_lower = CAT(irqname, addr) & 0xFFFF; \
-		interrupts_table[number].offset_higher = (CAT(irqname, addr) & 0xFFFF0000) >> 16; \
+		interrupts_table[number].offset_lower = irq_addr & 0xFFFF; \
+		interrupts_table[number].offset_higher = (irq_addr & 0xFFFF0000) >> 16; \
 		interrupts_table[number].selector = 0x08;	\
 		interrupts_table[number].type_attr = 0x8e;
+
+	#define SETEXCEPTION(excname, number) \
+		except_addr = (uint32_t)(excname); \
+		interrupts_table[number].zero = 0; \
+		interrupts_table[number].offset_lower = except_addr & 0xFFFF; \
+		interrupts_table[number].offset_higher = (except_addr & 0xFFFF0000) >> 16; \
+		interrupts_table[number].selector = 0x08;	\
+		interrupts_table[number].type_attr = 0x8f;
+
+	SETEXCEPTION(isr_except_divbyzero, 0)
+	SETEXCEPTION(isr_except_dbg, 1)
+	SETEXCEPTION(isr_except_nmi, 2)
+	SETEXCEPTION(isr_except_break, 3)
+	SETEXCEPTION(isr_except_overflow, 4)
+	SETEXCEPTION(isr_except_bound, 5)
+	SETEXCEPTION(isr_except_invalidop, 6)
+	SETEXCEPTION(isr_except_nodevice, 7)
+	SETEXCEPTION(isr_except_doublefault, 8)
+	//  9 legacy
+	SETEXCEPTION(isr_except_invalidtss, 10)
+	SETEXCEPTION(isr_except_invalidseg, 11)
+	SETEXCEPTION(isr_except_segstackfault, 12)
+	SETEXCEPTION(isr_except_gpf, 13)
+	SETEXCEPTION(isr_except_pagefault, 14)
+	//  15 reserved
+	SETEXCEPTION(isr_except_x87fpfault, 16)
+	SETEXCEPTION(isr_except_aligncheck, 17)
+	SETEXCEPTION(isr_except_machinecheck, 18)
+	SETEXCEPTION(isr_except_simdfp, 19)
+	SETEXCEPTION(isr_except_virtfault, 20)
+	//  21-29 reserved
+	SETEXCEPTION(isr_except_security, 30)
+	//  31 reserved
+
+
 
 	SETIRQ(irq0, 32)
 	SETIRQ(irq1, 33)

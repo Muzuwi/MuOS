@@ -1,4 +1,5 @@
 #include <arch/i386/portio.hpp>
+#include <arch/i386/registers.hpp>
 #include <stdio.h>
 
 /*
@@ -6,8 +7,12 @@
 */
 
 
-extern "C" void _kernel_exception_divbyzero( uint32_t fault_addr ){
-	printf("Divide by zero exception at %x, KERNEL ABORT\n", fault_addr);
+extern "C" void _kernel_exception_divbyzero(Registers& regs){
+	printf("Divide by zero exception at %x, KERNEL ABORT\n", regs.eip);
+	printf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	printf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	printf("eip: %x\n", regs.eip);
+	printf("System halted\n");
 	out(0x20, 0x20);
 	asm volatile(
 		"cli\n"
@@ -16,56 +21,60 @@ extern "C" void _kernel_exception_divbyzero( uint32_t fault_addr ){
 }
 
 
-extern "C" void _kernel_exception_dbg(){
+extern "C" void _kernel_exception_dbg(Registers& regs){
 	
 	out(0x20, 0x20);
 }
 
 
-extern "C" void _kernel_exception_nmi(){
-	
-	out(0x20, 0x20);
-
-}
-
-
-extern "C" void _kernel_exception_break(){
+extern "C" void _kernel_exception_nmi(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_overflow(){
+extern "C" void _kernel_exception_break(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_bound(){
+extern "C" void _kernel_exception_overflow(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_invalidop(){
+extern "C" void _kernel_exception_bound(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_nodevice(){
+extern "C" void _kernel_exception_invalidop(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_doublefault(){
+extern "C" void _kernel_exception_nodevice(Registers& regs){
+	
+	out(0x20, 0x20);
+
+}
+
+
+extern "C" void _kernel_exception_doublefault(Registers& regs){
 	printf("Double Fault exception, ABORT\n");
+	printf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	printf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	printf("eip: %x\n", regs.eip);
+
 	out(0x20, 0x20);
 		asm volatile(
 		"cli\n"
@@ -74,29 +83,32 @@ extern "C" void _kernel_exception_doublefault(){
 }
 
 
-extern "C" void _kernel_exception_invalidtss(){
+extern "C" void _kernel_exception_invalidtss(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_invalidseg(){
+extern "C" void _kernel_exception_invalidseg(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_segstackfault(){
+extern "C" void _kernel_exception_segstackfault(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_gpf(uint32_t fault_addr){
-	printf("General Protection Fault exception at %x\n", fault_addr);
+extern "C" void _kernel_exception_gpf(Registers& regs){
+	printf("General Protection Fault exception at %x\n", regs.eip);
+	printf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	printf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	printf("eip: %x\n", regs.eip);
 	out(0x20, 0x20);
 	asm volatile(
 		"cli\n"
@@ -105,49 +117,49 @@ extern "C" void _kernel_exception_gpf(uint32_t fault_addr){
 }
 
 
-extern "C" void _kernel_exception_pagefault(){
+extern "C" void _kernel_exception_pagefault(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_x87fpfault(){
+extern "C" void _kernel_exception_x87fpfault(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_aligncheck(){
+extern "C" void _kernel_exception_aligncheck(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_machinecheck(){
+extern "C" void _kernel_exception_machinecheck(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_simdfp(){
+extern "C" void _kernel_exception_simdfp(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_virtfault(){
+extern "C" void _kernel_exception_virtfault(Registers& regs){
 	
 	out(0x20, 0x20);
 
 }
 
 
-extern "C" void _kernel_exception_security(){
+extern "C" void _kernel_exception_security(Registers& regs){
 	
 	out(0x20, 0x20);
 

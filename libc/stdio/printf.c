@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stddef.h>
 
 
 #define PRINTF_BUFFER_SIZE 1024
@@ -37,7 +38,9 @@ struct dest_t {
 };
 
 
-int _printf_internal(const char* format, struct dest_t destination, va_list arg) {
+int _vsnprintf_internal(const char* format, struct dest_t destination, va_list arg) {
+	//  TODO: Bounds checking all over the place
+
 	char buffer[PRINTF_BUFFER_SIZE];
 
 	//  For convenience
@@ -54,6 +57,12 @@ int _printf_internal(const char* format, struct dest_t destination, va_list arg)
 	unsigned int dst_cnt = 0;
 
 	while(format[format_cnt] != '\0'){
+		//  Ignore any characters that would not fit the destination buffer
+		if(dst_cnt >= destination.dest_buffer_len){
+			total_chars_written++;
+			format_cnt++;
+			continue;
+		}
 		//  Character escape sequence \x
 		if(format[format_cnt] == '\\'){
 			if(format[format_cnt+1] != '\0'){
@@ -165,9 +174,49 @@ int printf(const char* format, ...){
 	va_list args;
 	
 	va_start(args, format);
-	_printf_internal(format, destination, args);
+	int c = _vsnprintf_internal(format, destination, args);
 	va_end(args);
 
 	puts(buf);
+
+	return c;
 }
 
+int vprintf(const char* format, va_list args){
+	char buf[PRINTF_BUFFER_SIZE];
+
+	struct dest_t destination;
+	destination.dest_buffer = buf;
+	destination.dest_buffer_len = PRINTF_BUFFER_SIZE;
+
+	int c = _vsnprintf_internal(format, destination, args);
+
+	puts(buf);
+
+	return c;
+}
+
+
+int snprintf(char* dest, size_t size, const char* format, ...){
+	struct dest_t destination;
+	destination.dest_buffer = dest;
+	destination.dest_buffer_len = size;
+
+	va_list args;
+
+	va_start(args, format);
+	int c = _vsnprintf_internal(format, destination, args);
+	va_end(args);
+
+	return c;
+}
+
+int vsnprintf(char* dest, size_t size, const char* format, va_list args){
+	struct dest_t destination;
+	destination.dest_buffer = dest;
+	destination.dest_buffer_len = size;
+
+	int c = _vsnprintf_internal(format, destination, args);
+
+	return c;
+}

@@ -6,6 +6,12 @@ inFromPortB:
 	in al, dx
 	ret
 
+global inFromPortD
+inFromPortD:
+	mov edx, [esp+4]
+	in eax, dx
+	ret
+
 global outToPortB
 outToPortB:
 	mov edx, [esp+4]

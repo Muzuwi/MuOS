@@ -1,6 +1,6 @@
 #include <arch/i386/portio.hpp>
 #include <arch/i386/registers.hpp>
-#include <stdio.h>
+#include <kernel/kdebugf.hpp>
 
 /*
 	This file contains exception handling routines for the kernel	
@@ -8,11 +8,11 @@
 
 
 extern "C" void _kernel_exception_divbyzero(Registers& regs){
-	printf("Divide by zero exception at %x, KERNEL ABORT\n", regs.eip);
-	printf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-	printf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
-	printf("eip: %x\n", regs.eip);
-	printf("System halted\n");
+	kerrorf("Divide by zero exception at %x, KERNEL ABORT\n", regs.eip);
+	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("System halted\n");
 	out(0x20, 0x20);
 	asm volatile(
 		"cli\n"
@@ -70,10 +70,10 @@ extern "C" void _kernel_exception_nodevice(Registers& regs){
 
 
 extern "C" void _kernel_exception_doublefault(Registers& regs){
-	printf("Double Fault exception, ABORT\n");
-	printf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-	printf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
-	printf("eip: %x\n", regs.eip);
+	kerrorf("Double Fault exception, ABORT\n");
+	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	kerrorf("eip: %x\n", regs.eip);
 
 	out(0x20, 0x20);
 		asm volatile(
@@ -105,10 +105,10 @@ extern "C" void _kernel_exception_segstackfault(Registers& regs){
 
 
 extern "C" void _kernel_exception_gpf(Registers& regs){
-	printf("General Protection Fault exception at %x\n", regs.eip);
-	printf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-	printf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
-	printf("eip: %x\n", regs.eip);
+	kerrorf("General Protection Fault exception at %x\n", regs.eip);
+	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	kerrorf("eip: %x\n", regs.eip);
 	out(0x20, 0x20);
 	asm volatile(
 		"cli\n"

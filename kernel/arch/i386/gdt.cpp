@@ -1,6 +1,6 @@
 #include <arch/i386/gdt.hpp>
 #include <arch/i386/portio.hpp>
-#include <stdio.h>
+#include <kernel/kdebugf.hpp>
 
 /*
 	Descriptor table storage
@@ -35,15 +35,15 @@ void GDT::init_GDT(){
 	descriptor_table[3] = coder3descr;
 	descriptor_table[4] = datar3descr;
 
-	printf(GDT_LOG "GDT mem location 0x%x\n", (uint32_t)descriptor_table);
+	kdebugf(GDT_LOG "GDT mem location 0x%x\n", (uint32_t)descriptor_table);
 	//descriptor_table[0] = ((uint32_t)(16 - 1) << 24) | ((uint32_t)descriptor_table << 4);
 	uint16_t descr_size = sizeof(descriptor_table)*sizeof(uint64_t);
 	descriptor_table[0] = (descr_size) | ((uint64_t)descriptor_table << 16);
 
-	printf(GDT_LOG "GDT load..");
+	kdebugf(GDT_LOG "GDT load..");
 	lgdt((uint32_t)descriptor_table);
-	printf("complete\n");
-	printf(GDT_LOG "GDT set up complete with flat mapping\n");
+	kdebugf("complete\n");
+	kdebugf(GDT_LOG "GDT set up complete with flat mapping\n");
 }
 
 
@@ -66,7 +66,7 @@ uint64_t GDT::create_descriptor(uint32_t base, uint32_t limit, uint16_t acc){
 	// descriptor |= (uint64_t)(access) << 40;
 	// descriptor |= (uint64_t)(flags & 0xC) << 52;
 	descriptor |= ((uint64_t)(acc) & 0x00F0FF) << 40;
-	printf(GDT_LOG "Created descriptor base %x, limit %x, flags %x\n", base, limit, acc);
+	kdebugf(GDT_LOG "Created descriptor base %x, limit %x, flags %x\n", base, limit, acc);
 
 	return descriptor;
 }

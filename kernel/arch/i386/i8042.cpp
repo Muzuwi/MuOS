@@ -1,5 +1,5 @@
 #include <arch/i386/i8042.hpp>
-#include <stdio.h>
+#include <kernel/kdebugf.hpp>
 
 ps2_device_t i8042::devices[I8042_MAX_DEVICES] = {};
 
@@ -7,16 +7,16 @@ void identify_device(unsigned char* response, size_t len){
 	if(len == 1){
 		switch(response[0]){
 			case 0x0:
-				printf("[i804_ctrl]: Device PS/2 Mouse\n");
+				kdebugf("[i804_ctrl]: Device PS/2 Mouse\n");
 				break;
 			case 0x3:
-				printf("[i8042_ctrl]: Device PS/2 Mouse w/ scrollwheel\n");
+				kdebugf("[i8042_ctrl]: Device PS/2 Mouse w/ scrollwheel\n");
 				break;
 			case 0x4:
-				printf("[i8042_ctrl]: Device PS/2 Mouse 5 button\n");
+				kdebugf("[i8042_ctrl]: Device PS/2 Mouse 5 button\n");
 				break;
 			default: 
-				printf("[i8042_ctrl]: Unknown device id %x\n", response[0]);
+				kdebugf("[i8042_ctrl]: Unknown device id %x\n", response[0]);
 		}
 	} else if(len == 2){
 		switch(response[0]){
@@ -25,17 +25,17 @@ void identify_device(unsigned char* response, size_t len){
 				switch(response[1]){
 					case 0x41:
 					case 0xC1:
-						printf("[i8042_ctrl]: Device MF/2 keyboard w/ translation\n");
+						kdebugf("[i8042_ctrl]: Device MF/2 keyboard w/ translation\n");
 						break;
 					case 0x83:
-						printf("[i8042_ctrl]: Device MF/2 keyboard\n");
+						kdebugf("[i8042_ctrl]: Device MF/2 keyboard\n");
 
 					default: break;
 				}	
 				break;
 			}			
 			default: 
-				printf("[i8042_ctrl]: Unknown device id %x%x\n", response[0], response[1]);
+				kdebugf("[i8042_ctrl]: Unknown device id %x%x\n", response[0], response[1]);
 				break;	
 		}
 	}
@@ -62,7 +62,7 @@ void i8042::init_controller(){
 	data = read_data();
 
 	unsigned char backup_config_data = data;
-	printf("[i8042_ctrl]: Received initial configuration byte %x\n", data);
+	kdebugf("[i8042_ctrl]: Received initial configuration byte %x\n", data);
 	if(!(data & (1 << 5))){
 		has_second_port = false;
 		//  2nd port not present
@@ -77,15 +77,15 @@ void i8042::init_controller(){
 	write_command(0xAA);
 	data = read_data();
 	if(data == 0x55){
-		printf("[i8042_ctrl]: Self-test passed\n");
+		kdebugf("[i8042_ctrl]: Self-test passed\n");
 	} else if(data == 0xFC){
-		printf("[i8042_ctrl]: Self-test failed\n");
+		kdebugf("[i8042_ctrl]: Self-test failed\n");
 	} else {
-		printf("[i8042_ctrl]: Self-test likely failed (unknown response %x)\n", data);
+		kdebugf("[i8042_ctrl]: Self-test likely failed (unknown response %x)\n", data);
 	}
 
 	if(data != 0x55){
-		printf("[i8042_ctrl]: Restoring previous configuration\n");
+		kdebugf("[i8042_ctrl]: Restoring previous configuration\n");
 		write_command(0x60);
 		write_data(backup_config_data);
 
@@ -93,7 +93,7 @@ void i8042::init_controller(){
 		write_command(0xAA);
 		data = read_data();
 		if(data != 0x55){
-			printf("[i8042_ctrl]: Self test still failing, for now ignoring..\n");
+			kdebugf("[i8042_ctrl]: Self test still failing, for now ignoring..\n");
 			//return;
 		}
 	}
@@ -108,11 +108,11 @@ void i8042::init_controller(){
 		if(conf & (1 << 5)) {
 			//  Absent
 			has_second_port = false;
-			printf("[i8042_ctrl]: 2nd channel absent\n");
+			kdebugf("[i8042_ctrl]: 2nd channel absent\n");
 		} else {
 			//  Present, disable the second port again
 			has_second_port = true;
-			printf("[i8042_ctrl]: 2nd channel present\n");
+			kdebugf("[i8042_ctrl]: 2nd channel present\n");
 			write_command(0xA7);
 		}
 	}
@@ -124,28 +124,28 @@ void i8042::init_controller(){
 
 	switch(data){
 		case 0x0:{
-			printf("[i8042_ctrl]: Port 1 test passed\n");
+			kdebugf("[i8042_ctrl]: Port 1 test passed\n");
 			first_good = true;
 			break;
 		}
 		case 0x1:{
-			printf("[i8042_ctrl]: Port 1 failure - clock line stuck low\n");
+			kdebugf("[i8042_ctrl]: Port 1 failure - clock line stuck low\n");
 			break;
 		}
 		case 0x2:{
-			printf("[i8042_ctrl]: Port 1 failure - clock line stuck high\n");
+			kdebugf("[i8042_ctrl]: Port 1 failure - clock line stuck high\n");
 			break;
 		}
 		case 0x3:{
-			printf("[i8042_ctrl]: Port 1 failure - data line stuck low\n");
+			kdebugf("[i8042_ctrl]: Port 1 failure - data line stuck low\n");
 			break;
 		}
 		case 0x4:{
-			printf("[i8042_ctrl]: Port 1 failure - data line stuck high\n");
+			kdebugf("[i8042_ctrl]: Port 1 failure - data line stuck high\n");
 			break;
 		}
 		default:{
-			printf("[i8042_ctrl]: Port 1 test - unknown response\n");
+			kdebugf("[i8042_ctrl]: Port 1 test - unknown response\n");
 			break;
 		}
 	}
@@ -155,35 +155,35 @@ void i8042::init_controller(){
 		data = read_data();
 		switch(data){
 			case 0x0:{
-				printf("[i8042_ctrl]: Port 2 test passed\n");
+				kdebugf("[i8042_ctrl]: Port 2 test passed\n");
 				second_good = true;
 				break;
 			}
 			case 0x1:{
-				printf("[i8042_ctrl]: Port 2 failure - clock line stuck low\n");
+				kdebugf("[i8042_ctrl]: Port 2 failure - clock line stuck low\n");
 				break;
 			}
 			case 0x2:{
-				printf("[i8042_ctrl]: Port 2 failure - clock line stuck high\n");
+				kdebugf("[i8042_ctrl]: Port 2 failure - clock line stuck high\n");
 				break;
 			}
 			case 0x3:{
-				printf("[i8042_ctrl]: Port 2 failure - data line stuck low\n");
+				kdebugf("[i8042_ctrl]: Port 2 failure - data line stuck low\n");
 				break;
 			}
 			case 0x4:{
-				printf("[i8042_ctrl]: Port 2 failure - data line stuck high\n");
+				kdebugf("[i8042_ctrl]: Port 2 failure - data line stuck high\n");
 				break;
 			}
 			default:{
-				printf("[i8042_ctrl]: Port 2 test - unknown response\n");
+				kdebugf("[i8042_ctrl]: Port 2 test - unknown response\n");
 				break;
 			}
 		}
 	}
 
 	if(!(first_good || second_good)){
-		printf("[i8042_ctrl]: No working channels, bailing out..\n");
+		kdebugf("[i8042_ctrl]: No working channels, bailing out..\n");
 	}
 
 	//  Response buffer
@@ -192,31 +192,31 @@ void i8042::init_controller(){
 
 	//  Enable working PS/2 ports
 	if(first_good == true){
-		printf("[i8042_ctrl]: Enabling channel 1\n");
+		kdebugf("[i8042_ctrl]: Enabling channel 1\n");
 		write_command(0xAE);
 		write_data(0xFF);
-		printf("[i8042_ctrl]: Channel 1 reset, self-test ");
+		kdebugf("[i8042_ctrl]: Channel 1 reset, self-test ");
 		response[0] = read_data();
 		response[1] = read_data();
 		if(response[0] == 0xFA && response[1] == 0xAA){
-			printf("passed\n");
+			kdebugf("passed\n");
 		} else {
-			printf("failed\n");
+			kdebugf("failed\n");
 		}
 	}
 
 	if(second_good == true){
-		printf("[i8042_ctrl]: Enabling channel 2\n");
+		kdebugf("[i8042_ctrl]: Enabling channel 2\n");
 		write_command(0xA8);
 		write_command(0xD4);
 		write_data(0xFF);
-		printf("[i8042_ctrl]: Channel 2 reset, self-test ");
+		kdebugf("[i8042_ctrl]: Channel 2 reset, self-test ");
 		response[0] = read_data();
 		response[1] = read_data();
 		if(response[0] == 0xFA && response[1] == 0xAA){
-			printf("passed\n");
+			kdebugf("passed\n");
 		} else {
-			printf("failed\n");
+			kdebugf("failed\n");
 		}
 	}
 
@@ -227,12 +227,12 @@ void i8042::init_controller(){
 	/*if(first_good == true){
 		write_data(0xF5);
 		while(read_data() != 0xFA){
-			//printf("[i8042_ctrl]: waiting for ack %n");
+			//kdebugf("[i8042_ctrl]: waiting for ack %n");
 			
 		}
 		write_data(0xF2);
 		while(read_data() != 0xFA){
-			//printf("[i8042_ctrl] waiting for ack\n");
+			//kdebugf("[i8042_ctrl] waiting for ack\n");
 		}
 		cnt = 0;
 		while(check_timeout() && cnt < 2){
@@ -246,12 +246,12 @@ void i8042::init_controller(){
 		write_command(0xD4);
 		write_data(0xF5);
 		while(read_data() != 0xFA){
-			// printf("[i8042_ctrl]: waiting for ack %n");
+			// kdebugf("[i8042_ctrl]: waiting for ack %n");
 		}
 		write_command(0xD4);
 		write_data(0xF2);
 		while(read_data() != 0xFA){
-			// printf("[i8042_ctrl] waiting for ack\n");
+			// kdebugf("[i8042_ctrl] waiting for ack\n");
 		}
 		cnt = 0;
 		while(check_timeout() && cnt < 2){
@@ -260,8 +260,19 @@ void i8042::init_controller(){
 		identify_device(response, cnt);
 	}*/
 
+	if(first_good){
+		kdebugf(I8042_LOG "Reenabling scan mode for device 1\n");
+		write_data(0xF4);
+	}
+
+	if(second_good){
+		kdebugf(I8042_LOG "Reenabling scan mode for device 2\n");
+		write_command(0xD4);
+		write_data(0xF4);
+	}
+
 	if(first_good || second_good){
-		printf(I8042_LOG "One or more devices have been successfully initialized\n");
+		kdebugf(I8042_LOG "One or more devices have been successfully initialized\n");
 	}
 }
 

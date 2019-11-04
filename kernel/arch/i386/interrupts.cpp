@@ -1,7 +1,7 @@
 #include <arch/i386/interrupts.hpp>
 #include <arch/i386/portio.hpp>
 #include <arch/i386/vga.h>
-#include <stdio.h>
+#include <kernel/kdebugf.hpp>
 
 /*
 	Actual Interrupt descriptor table in memory
@@ -131,9 +131,9 @@ void IDT::init_IDT(){
 	idtr |= idt_size;
 	idtr |= ((uint64_t)idt_addr) << 16;
 
-	printf(IDT_LOG "Loading IDT table \n");
+	kdebugf(IDT_LOG "Loading IDT table \n");
 	loadIDT((uint32_t)&idtr);
-	printf(IDT_LOG "IDT loaded\n");
+	kdebugf(IDT_LOG "IDT loaded\n");
 }
 
 
@@ -143,7 +143,7 @@ void IDT::init_IDT(){
 */
 extern "C" void remapPIC();
 void IDT::init_PIC(){
-	printf(PIC_LOG "Initializing PIC\n");
+	kdebugf(PIC_LOG "Initializing PIC\n");
 
 	out(PIC_MASTER_CMD, 0x11);
 	out(PIC_SLAVE_CMD, 0x11);
@@ -160,5 +160,5 @@ void IDT::init_PIC(){
 	out(PIC_MASTER_DATA, 0);
 	out(PIC_SLAVE_DATA, 0);
 
-	printf(PIC_LOG "PIC initialization complete\n");
+	kdebugf(PIC_LOG "PIC initialization complete\n");
 }

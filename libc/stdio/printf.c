@@ -96,6 +96,11 @@ int _vsnprintf_internal(const char* format, struct dest_t destination, va_list a
 				}
 				case 'i':{
 					int num = va_arg(arg, int);
+					if(num == 0){
+						dst_bfr[dst_cnt++] = '0';
+						total_chars_written++;
+						break;
+					}
 
 					int workPointer = 0;
 					while(num != 0){

@@ -12,6 +12,7 @@ reg_store:
 	dd 0
 	dd 0
 	dd 0
+	dd 0
 
 
 
@@ -29,6 +30,12 @@ reg_store:
 	push eax
 %endmacro
 
+%macro save_error_code 0
+	mov [temp], eax
+	pop eax
+	mov [reg_store + 36], eax
+	mov eax, [temp]
+%endmacro
 
 section .text
 
@@ -190,6 +197,7 @@ isr_except_segstackfault:
 
 global isr_except_gpf
 isr_except_gpf:
+	save_error_code
 	save_regs
 	pusha
 	push dword reg_store
@@ -203,6 +211,7 @@ isr_except_gpf:
 
 global isr_except_pagefault
 isr_except_pagefault:
+	save_error_code
 	save_regs
 	pusha
 	push dword reg_store

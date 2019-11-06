@@ -56,16 +56,24 @@ extern "C" void _kernel_exception_bound(Registers& regs){
 
 
 extern "C" void _kernel_exception_invalidop(Registers& regs){
-	
-	out(0x20, 0x20);
+	kerrorf("Invalid opcode exception at %x, KERNEL ABORT\n", regs.eip);
+	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("Offending instruction: %x", *((uint32_t*)regs.eip));
+	kerrorf("System halted\n");
+	asm volatile(
+		"cli\n"
+		"hlt\t\n"
+		);
 
+	out(0x20, 0x20);
 }
 
 
 extern "C" void _kernel_exception_nodevice(Registers& regs){
-	
-	out(0x20, 0x20);
 
+	out(0x20, 0x20);
 }
 
 
@@ -86,21 +94,27 @@ extern "C" void _kernel_exception_doublefault(Registers& regs){
 extern "C" void _kernel_exception_invalidtss(Registers& regs){
 	
 	out(0x20, 0x20);
-
 }
 
 
 extern "C" void _kernel_exception_invalidseg(Registers& regs){
 	
 	out(0x20, 0x20);
-
 }
 
 
 extern "C" void _kernel_exception_segstackfault(Registers& regs){
-	
-	out(0x20, 0x20);
+	kerrorf("Stack segment fault at %x, KERNEL ABORT\n", regs.eip);
+	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("Error code: %x\n", regs.error_code);
+	asm volatile(
+		"cli\n"
+		"hlt\t\n"
+		);
 
+	out(0x20, 0x20);
 }
 
 
@@ -109,6 +123,7 @@ extern "C" void _kernel_exception_gpf(Registers& regs){
 	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
 	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
 	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("Error code: %x", regs.error_code);
 	out(0x20, 0x20);
 	asm volatile(
 		"cli\n"
@@ -118,23 +133,28 @@ extern "C" void _kernel_exception_gpf(Registers& regs){
 
 
 extern "C" void _kernel_exception_pagefault(Registers& regs){
-	
+	kerrorf("Page Fault exception at %x\n", regs.eip);
+	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("Error code: %x", regs.error_code);
 	out(0x20, 0x20);
-
+	asm volatile(
+		"cli\n"
+		"hlt\t\n"
+		);
 }
 
 
 extern "C" void _kernel_exception_x87fpfault(Registers& regs){
 	
 	out(0x20, 0x20);
-
 }
 
 
 extern "C" void _kernel_exception_aligncheck(Registers& regs){
 	
 	out(0x20, 0x20);
-
 }
 
 
@@ -148,19 +168,16 @@ extern "C" void _kernel_exception_machinecheck(Registers& regs){
 extern "C" void _kernel_exception_simdfp(Registers& regs){
 	
 	out(0x20, 0x20);
-
 }
 
 
 extern "C" void _kernel_exception_virtfault(Registers& regs){
 	
 	out(0x20, 0x20);
-
 }
 
 
 extern "C" void _kernel_exception_security(Registers& regs){
 	
 	out(0x20, 0x20);
-
 }

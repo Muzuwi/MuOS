@@ -2,35 +2,39 @@ ENTRY(_start)
 
 SECTIONS
 {
-	/*  Start at 1MiB */
 	. = 1M;
 
-	.text BLOCK(4K) : ALIGN(4K)
+	/*  Start of kernel */
+	_ukernel_start = .;
+
+	.text ALIGN(4K) : AT(ADDR(.text) - 0)
 	{
 		*(.multiboot)
 		*(.text)
 	}
 
 	/*  Read-Only Data */
-	.rodata BLOCK(4K) : ALIGN(4K)
+	.rodata ALIGN(4K) : AT(ADDR(.rodata) - 0)
 	{
 		*(.rodata)
 
 	}
 
 	/*  R/W Data  */
-	.data BLOCK(4K) : ALIGN(4K)
+	.data ALIGN(4K) : AT(ADDR(.data) - 0)
 	{
 		*(.data)
 
 	}
 	
 	/*  Uninitialized Read-write data + stack*/
-	.bss BLOCK(4K) : ALIGN(4K)
+	.bss ALIGN(4K) : AT(ADDR(.bss) - 0)
 	{
 		*(COMMON)
 		*(.bss)
 
 	}
+
+	_ukernel_end = .;
 
 }

@@ -6,7 +6,7 @@
 #define BASE_FREQ 1193182
 
 Timer* Timer::instance = nullptr; 
-Timer system_timer;
+static Timer system_timer;
 
 /*
 	Updates the reload value on channel0 PIT
@@ -22,11 +22,11 @@ Timer::Timer(){
 		kerrorf("Only one timer instance allowed!\n");
 		return;
 	}
-	kdebugf("Timer initialized\n");
 	Timer::instance = this;
 	m_frequency = 1000;
 	out(0x43, 0b00110110);
 	update_timer_reload(BASE_FREQ/m_frequency);
+	kdebugf("[timer] Timer initialized at %i Hz\n", m_frequency);
 	
 }
 

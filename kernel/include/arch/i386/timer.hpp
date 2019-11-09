@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-class Timer {
+class Timer final {
 	static Timer* instance;
 	uint16_t m_frequency;
 	uint64_t m_ticks;

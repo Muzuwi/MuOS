@@ -7,17 +7,20 @@
 #include <kernel/kdebugf.hpp>
 #include <arch/i386/timer.hpp>
 #include <arch/i386/paging.hpp>
+#include <arch/i386/BootConfig.hpp>
+#include <arch/i386/MemManager.hpp>
 
 namespace uKernel {
-	extern "C" void kernel_entrypoint();
+	extern "C" void kernel_entrypoint(uintptr_t*);
 };
 
 /*
 	Main kernel entrypoint
 */
-extern "C" void uKernel::kernel_entrypoint(){
+extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	tty_init();
 	kdebugf("[uKernel] uKernel booting\n");
+	BootConfig::parse_multiboot_structure(multiboot_info);
 
 	GDT::init_GDT();
 	IDT::init_PIC();

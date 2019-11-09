@@ -13,6 +13,11 @@ align 4
 	dd MAGIC
 	dd FLAG
 	dd CHECKSUM
+	dd 0
+	dd 0
+	dd 0
+	dd 0
+	dd 0
 
 ; Initialize .bss for stack
 section .bss
@@ -33,6 +38,9 @@ _start:
 	;   Call fancy init
 	extern _init
 	call _init
+
+	;  Pass the address of the multiboot info struct to the kernel
+	push ebx
 
 	; 	Call the kernel
 	extern kernel_entrypoint

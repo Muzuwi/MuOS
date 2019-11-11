@@ -22,11 +22,11 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	kdebugf("[uKernel] uKernel booting\n");
 	BootConfig::parse_multiboot_structure(multiboot_info);
 
+	// Paging::init_paging();
 	GDT::init_GDT();
 	IDT::init_PIC();
 	IDT::init_IDT();
 	// i8042::init_controller();
-	Paging::init_paging();
 
 	kdebugf("[uKernel] Initialization took %ims\n", (int)Timer::getTimer().getTimeSinceStart());
 	while(true){

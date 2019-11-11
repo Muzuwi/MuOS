@@ -33,7 +33,22 @@ section .text
 global _start
 _start:
 	;  Set stack
-	mov esp, stack_top
+	;  We have to subtract the virtual offset from the address,
+	;  to get the physical one, because the linker puts the 
+	;  object at higher half 
+	extern _ukernel_virtual_offset
+	mov eax, stack_top
+	sub eax, _ukernel_virtual_offset
+	mov esp, eax
+
+	;  Call stage0
+	;  This basically sets up higher half mappings
+	;  but in c, because ASM does not bring joy to me
+	;  The kernel is mapped to 0xd0000000+1MiB
+	extern _stage0_entrypoint
+	mov eax, _stage0_entrypoint
+	sub eax, _ukernel_virtual_offset
+	call eax
 
 	;   Call fancy init
 	extern _init
@@ -53,5 +68,4 @@ _start:
 		cli
 		hlt
 		jmp loopLabel
-
 .end:

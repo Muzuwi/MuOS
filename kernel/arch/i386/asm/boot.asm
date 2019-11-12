@@ -50,6 +50,17 @@ _start:
 	sub eax, _ukernel_virtual_offset
 	call eax
 
+	;  Correct stack address
+	mov eax, esp
+	add eax, _ukernel_virtual_offset
+	mov esp, eax
+
+	;  Do a far jump into higher half
+	mov eax, higher
+	push eax
+	ret
+higher:
+
 	;   Call fancy init
 	extern _init
 	call _init

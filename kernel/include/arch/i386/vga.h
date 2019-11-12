@@ -36,6 +36,7 @@ void vga_putch(char ch);
 void vga_setcolor(enum VGA_COLOR bg, enum VGA_COLOR fg);
 void vga_clear(void);
 void vga_setpos(size_t x, size_t y);
+void vga_set_buffer();
 
 #ifdef __cplusplus
 }

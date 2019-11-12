@@ -1,7 +1,8 @@
 #include <string.h>
 #include <arch/i386/vga.h>
 
-static uint16_t* vga_buffer_base_address = (uint16_t*)0xB8000;
+extern uint32_t _ukernel_virtual_offset;
+static uint16_t* vga_buffer_base_address = (uint16_t*)(0xB8000);
 
 uint8_t vga_console_position_x = 0, vga_console_position_y = 0;
 uint8_t vga_color = 0;
@@ -72,4 +73,8 @@ void vga_clear(void){
 void vga_setpos(size_t x, size_t y){
 	vga_console_position_x = x;
 	vga_console_position_y = y;
+}
+
+void vga_set_buffer(){
+	vga_buffer_base_address = (uint16_t*)(0xB8000 + (uint32_t)&_ukernel_virtual_offset);
 }

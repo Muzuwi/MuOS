@@ -6,6 +6,7 @@ void tty_init(){
     vga_clear();
     vga_setpos(0,0);
     vga_setcolor(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+	vga_set_buffer();
 }
 
 void tty_prints(const char* data){

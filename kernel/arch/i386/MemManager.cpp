@@ -4,6 +4,7 @@
 #define assert(a)
 
 extern uint32_t _ukernel_start, _ukernel_end;
+extern uint32_t _ukernel_virtual_offset;
 
 static MemManager manager;
 MemManager* MemManager::instance = nullptr;
@@ -30,7 +31,7 @@ MemManager::MemManager(){
 */
 void MemManager::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 	auto mmap_len = multiboot_mmap[0];
-	auto mmap_addr = multiboot_mmap[1];
+	auto mmap_addr = (uint32_t)multiboot_mmap[1] + (uint32_t)&_ukernel_virtual_offset;
 	kdebugf("mmap size: %x\n", mmap_len);
 	kdebugf("mmap addr: %x\n", mmap_addr);
 

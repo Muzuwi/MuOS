@@ -15,7 +15,7 @@ LIBDIR?=$(PREFIX)/lib
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -masm=intel
 CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude -D__LIBC_DEBUG
 NASMFLAGS?=-felf32
-LIBKERNEL_CFLAGS:=$(CFLAGS) -I$(PROJECT_MAINDIR)/kernel/include
+LIBKERNEL_CFLAGS:=$(CFLAGS) -I$(PROJECT_MAINDIR)/Kernel/include
 LIBKERNEL_CPPFLAGS:=$(CPPFLAGS) -D__is_libkernel
 
 ARCHDIR=arch/$(TARGETARCH)

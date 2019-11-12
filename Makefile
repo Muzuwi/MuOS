@@ -46,18 +46,18 @@ MuOS:
 	@echo "Building LibC.."
 	$(MAKE) -C LibC/ all
 	@echo "Building uKernel.."
-	$(MAKE) -C kernel/ all
+	$(MAKE) -C Kernel/ all
 
 clean:
 	@echo -e "Cleaning up.."
 	@$(MAKE) -C LibC/ clean
-	@$(MAKE) -C kernel/ clean
+	@$(MAKE) -C Kernel/ clean
 
 install:
 	@echo -e "Installing MuOS binary to /boot/"
-	@sudo cp -f kernel/muOsKernel.bin /boot/
+	@sudo cp -f Kernel/muOsKernel.bin /boot/
 
 bootable: MuOS
 	@echo "Making bootable image muOS.img"
-	@cp -f kernel/muOsKernel.bin isodir/boot/
+	@cp -f Kernel/muOsKernel.bin isodir/boot/
 	@grub-mkrescue -o muOS.iso isodir/

@@ -44,13 +44,13 @@ all: MuOS bootable
 
 MuOS:
 	@echo "Building LibC.."
-	$(MAKE) -C libc/ all
+	$(MAKE) -C LibC/ all
 	@echo "Building uKernel.."
 	$(MAKE) -C kernel/ all
 
 clean:
 	@echo -e "Cleaning up.."
-	@$(MAKE) -C libc/ clean
+	@$(MAKE) -C LibC/ clean
 	@$(MAKE) -C kernel/ clean
 
 install:

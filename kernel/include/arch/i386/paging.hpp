@@ -32,5 +32,5 @@ enum dir_flags {
 
 namespace Paging {
 	void init_paging();
-	void allocate_page(void*, void*);
+	void allocate_page(void*, void*, bool=false);
 }

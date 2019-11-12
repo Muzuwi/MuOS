@@ -20,9 +20,10 @@ namespace uKernel {
 extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	tty_init();
 	kdebugf("[uKernel] uKernel booting\n");
+
+	Paging::init_paging();
 	BootConfig::parse_multiboot_structure(multiboot_info);
 
-	// Paging::init_paging();
 	GDT::init_GDT();
 	IDT::init_PIC();
 	IDT::init_IDT();

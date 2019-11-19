@@ -107,7 +107,7 @@ void Paging::allocate_page(void* physical_address, void* virtual_address, bool i
 	if(!check_page_present(dir_index, page_index)){
 		new_page(dir_index, page_index, physical_address);
 	} else {
-		// kerrorf("[paging] Tried allocating an already present page %i:%i\n", dir_index, page_index);
+		kerrorf("[paging] Tried allocating an already present page %i:%i\n", dir_index, page_index);
 	}
 
 	//  Flush TLB
@@ -173,4 +173,14 @@ void Paging::init_paging() {
 		: ""(page_dir_physical) 
 		:
 	);
+}
+
+/*
+	Checks whether a given virtual address is already mapped to some physical address
+*/
+bool Paging::is_present(void* virtual_address) {
+	uint32_t dir = (uint32_t)virtual_address >> 22,
+			 page = ((uint32_t)virtual_address >> 12) & 0x03FF;
+	return check_dir_exists(dir) &&
+		   check_page_present(dir, page);
 }

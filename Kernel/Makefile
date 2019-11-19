@@ -27,6 +27,7 @@ KERNEL_OBJS=			\
 $(KERNEL_ARCH_OBJS) 	\
 kernel/kernel.o 		\
 kernel/VirtualMemManager.o \
+kernel/kmalloc.o 		\
 
 # All objects
 OBJS=					\

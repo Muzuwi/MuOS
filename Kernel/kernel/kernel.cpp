@@ -9,6 +9,7 @@
 #include <arch/i386/paging.hpp>
 #include <arch/i386/BootConfig.hpp>
 #include <arch/i386/MemManager.hpp>
+#include <kernel/kmalloc.hpp>
 
 namespace uKernel {
 	extern "C" void kernel_entrypoint(uintptr_t*);
@@ -21,12 +22,12 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	tty_init();
 	kdebugf("[uKernel] uKernel booting\n");
 
-	Paging::init_paging();
-	BootConfig::parse_multiboot_structure(multiboot_info);
-
 	GDT::init_GDT();
 	IDT::init_PIC();
 	IDT::init_IDT();
+	BootConfig::parse_multiboot_structure(multiboot_info);
+	KMalloc::get().init();
+
 	// i8042::init_controller();
 
 	kdebugf("[uKernel] Initialization took %ims\n", (int)Timer::getTimer().getTimeSinceStart());

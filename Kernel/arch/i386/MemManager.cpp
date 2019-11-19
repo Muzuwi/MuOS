@@ -1,10 +1,12 @@
 #include <arch/i386/MemManager.hpp>
 #include <arch/i386/multiboot.hpp>
 #include <kernel/kdebugf.hpp>
+#include <kernel/kpanic.hpp>
 #define assert(a)
 
 extern uint32_t _ukernel_start, _ukernel_end;
 extern uint32_t _ukernel_virtual_offset;
+extern uint32_t _ukernel_physical_start;
 
 static MemManager manager;
 MemManager* MemManager::instance = nullptr;
@@ -32,8 +34,8 @@ MemManager::MemManager(){
 void MemManager::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 	auto mmap_len = multiboot_mmap[0];
 	auto mmap_addr = (uint32_t)multiboot_mmap[1] + (uint32_t)&_ukernel_virtual_offset;
-	kdebugf("mmap size: %x\n", mmap_len);
-	kdebugf("mmap addr: %x\n", mmap_addr);
+	kdebugf("[PMM] mmap size: %x\n", mmap_len);
+	kdebugf("[PMM] mmap addr: %x\n", mmap_addr);
 
 	//  Total system memory
 	uint64_t memory_amount = 0, reserved_amount = 0;
@@ -52,7 +54,6 @@ void MemManager::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 			case USABLE:
 				kdebugf("usable\n");
 				memory_amount += range;
-
 				m_free_mem_ranges[m_free_mem_ranges_count++] = mem_range_t(start, end);
 				break;
 
@@ -80,7 +81,27 @@ void MemManager::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 	uint32_t kernel_start = (uint32_t)(&_ukernel_start),
 			 kernel_end   = (uint32_t)(&_ukernel_end);
 
-	kdebugf("Free memory ranges [%x]: \n", (int)m_free_mem_ranges_count);
+	for(size_t i = 0; i < m_free_mem_ranges_count; i++){
+		auto& range = m_free_mem_ranges[i];
+
+		if(range.m_start < (uint32_t)&_ukernel_physical_start) {
+			if(range.m_end < (uint32_t)&_ukernel_end - (uint32_t)&_ukernel_virtual_offset) {
+				continue;
+			} else {
+				kpanic();
+			}
+		} else {
+			if(range.m_end < (uint32_t)&_ukernel_end - (uint32_t)&_ukernel_virtual_offset) {
+				//  TODO:  Delete
+				kpanic();
+			} else {
+				range.m_start = ((uint32_t)&_ukernel_end - (uint32_t)&_ukernel_virtual_offset);
+			}
+		}
+	}
+
+
+	kdebugf("[PMM] Free memory ranges [%x]: \n", (int)m_free_mem_ranges_count);
 	for(size_t i = 0; i < m_free_mem_ranges_count; i++){
 		auto start = m_free_mem_ranges[i].m_start,
 			 end   = m_free_mem_ranges[i].m_end;
@@ -95,9 +116,9 @@ void MemManager::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 
 	uint32_t mem_mib = memory_amount / 0x100000;
 
-	kdebugf("Kernel-used memory: %i MiB\n", (kernel_end - kernel_start) / 0x100000);
-	kdebugf("Total usable memory: %i MiB\n", mem_mib);
-	kdebugf("Reserved memory: %i bytes\n", reserved_amount);
+	kdebugf("[PMM] Kernel-used memory: %i MiB\n", (kernel_end - kernel_start) / 0x100000);
+	kdebugf("[PMM] Total usable memory: %i MiB\n", mem_mib);
+	kdebugf("[PMM] Reserved memory: %i bytes\n", reserved_amount);
 
 }
 
@@ -110,10 +131,29 @@ uint64_t MemManager::get_free() {
 	return (uint64_t)0;
 }
 
+
 /*
-	TODO:
+	Tries allocating a memory range with a specified size
+	and returns its' start and end. 
+	Kernel ranges CANNOT be freed
 */
-void* MemManager::allocate_kernel(size_t size) {
+mem_range_t MemManager::allocate_kernel_range(size_t size, size_t alignment) {
+	for(size_t i = 0; i < m_free_mem_ranges_count; i++){
+		auto& range = m_free_mem_ranges[i];
 
+		uint32_t aligned_start = range.m_start & alignment;
+		while(aligned_start < range.m_end) {
+			uint32_t expected_end = aligned_start+size;
+			if(aligned_start > range.m_start && expected_end < range.m_end){
+				auto allocated_range = mem_range_t(aligned_start, expected_end);
+				kdebugf("[PMM] allocated kernel range %x to %x, alignment %i\n", (uint32_t)aligned_start, (uint32_t)expected_end, (int)alignment);
+				return allocated_range;
+			} else {
+				// kdebugf("%x %x %x %x\n", aligned_start, expected_end, (uint32_t)range.m_start, (uint32_t)range.m_end);
+			}
+			aligned_start += alignment;
+		}
+	}
+	kerrorf("[PMM] could not find a range to allocate %i bytes, panic!\n", size);
+	kpanic();
 }
-

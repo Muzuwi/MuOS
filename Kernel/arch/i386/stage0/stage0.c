@@ -1,4 +1,3 @@
-
 /*
 	This function is responsible for setting up paging 
 	for the kernel in the higher half
@@ -6,63 +5,63 @@
 	caution must be taken with memory operations because of it.
 */
 
+#define PAGE_SIZE 4096
+#define MiB 0x100000
+
 extern unsigned int _ukernel_virtual_offset;
 extern unsigned int page_table[1024][1024];
 extern unsigned int page_dir[1024];
+extern unsigned int _ukernel_start, _ukernel_end;
 
-//  Turn off optimizations in hopes of reducing the chance
-//  of something trying to access higher half when not mapped
-#pragma GCC optimize("O0")
+#define kernel_size ((unsigned int)&_ukernel_end-(unsigned int)&_ukernel_start)
+#define kernel_end_physical ((unsigned int)&_ukernel_end - (unsigned int)&_ukernel_virtual_offset)
+#define kernel_start_physical ((unsigned int)&_ukernel_start - (unsigned int)&_ukernel_virtual_offset)
+
 void _stage0_entrypoint(){
+	/*
+		Physical memory locations of the page directory and table
+	*/	
 	unsigned int* actual_address_dir = (unsigned int*)((unsigned int)&page_dir[0] - (unsigned int)&_ukernel_virtual_offset);	
 	unsigned int* actual_address_table = (unsigned int*)((unsigned int)&page_table[0][0] - (unsigned int)&_ukernel_virtual_offset);
 
-	actual_address_dir[0] |= 3;
-	actual_address_dir[0] |= (unsigned int)(&actual_address_table[0]);
-
-	actual_address_dir[1] |= 3;
-	actual_address_dir[1] |= ((unsigned int)&actual_address_table[0] + 1*0x1000);
-
-	//  Identity map the first 8MiB, hopefully the kernel doesn't grow beyond that for now..
-	unsigned int* table_zero = (unsigned int*)(&actual_address_table[0]);
-	unsigned int* table_one = (unsigned int*)((unsigned int)&actual_address_table[0] + 1*0x1000);
-	int i = 0;
-	while(i < 1024){
-		table_zero[i] |= 3;
-		table_zero[i] |= i*4096;
-		i++;
+	/*
+		Identity map 0-0x800000
+		We need only the first few megs of so
+		of kernel memory to jump to higher half
+	*/
+	for(int i = 0; i < 2; i++) {
+		unsigned int* table_addr = (unsigned int*)((unsigned int)&actual_address_table[0] + i*0x1000);
+		actual_address_dir[i] |= 3;
+		actual_address_dir[i] |= (unsigned int)(table_addr);
+		for(int table = 0; table < 1024; table++) {
+			table_addr[table] |= 3;
+			table_addr[table] |= i*4*MiB + table*PAGE_SIZE;
+		}
 	}
 
-	i = 0;
-	while(i < 1024){
-		table_one[i] |= 3;
-		table_one[i] |= 1024*4096 + i*4096;
-		i++;
+	/*
+		Map the entire kernel binary
+	*/
+	unsigned int dir_first = (unsigned int)&_ukernel_start / (4*MiB);
+	unsigned int dir_count = ((unsigned int)&_ukernel_end / (4*MiB)) - dir_first; 
+	unsigned int dir_counter = dir_first;
+	short finished = 0;
+	while(dir_counter <= dir_first+dir_count && finished == 0) {
+		unsigned int* table_addr = (unsigned int*)((unsigned int)&actual_address_table[0] + dir_counter*0x1000);
+		actual_address_dir[dir_counter] |= 3;
+		actual_address_dir[dir_counter] |= (unsigned int)(table_addr);
+		for(int table = 0; table < 1024; table++) {
+			unsigned int* addr = (unsigned int*)((dir_counter-dir_first)*4*MiB + table*PAGE_SIZE);
+			if((unsigned int)addr >= kernel_end_physical) {
+				finished = 1;
+				break;
+			}
+			table_addr[table] |= 3;
+			table_addr[table] |= (unsigned int)addr; 
+		}
+
+		dir_counter = dir_counter + 1;
 	}
-
-	//  Bootstrap the first 8MiB of kernel in higher half, more accurate mappings will be done in higher half
-	unsigned int dir_number = ((unsigned int)&_ukernel_virtual_offset / (4096*1024));
-	actual_address_dir[dir_number] |= 3;
-	actual_address_dir[dir_number] |= ((unsigned int)&actual_address_table[0] + dir_number*4096);
-	actual_address_dir[dir_number+1] |= 3;
-	actual_address_dir[dir_number+1] |= ((unsigned int)&actual_address_table[0] + (dir_number+1)*4096);
-
-	i = 0;
-	unsigned int* table_first = (unsigned int*)((unsigned int)&actual_address_table[0] + (dir_number)*0x1000);
-	unsigned int* table_second = (unsigned int*)((unsigned int)&actual_address_table[0] + (dir_number+1)*0x1000);
-	while(i < 1024){
-		table_first[i] |= 3;
-		table_first[i] |= 0 + i*4096;
-		i++;
-	}
-
-	i = 0;
-	while(i < 1024){
-		table_second[i] |= 3;
-		table_second[i] |= 0 + 1024*4096 + i*4096;
-		i++;
-	}
-
 
 	//  Update cr3
 	asm volatile(

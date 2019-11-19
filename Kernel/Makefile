@@ -12,7 +12,7 @@ INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -masm=intel
-CPPFLAGS:=$(CPPFLAGS) -ffreestanding -Wall -Wextra -masm=intel -D__is_kernel -Iinclude -I$(INCLUDEDIR) -I/usr/lib/gcc/i686-elf/9.2.0/include -fno-rtti -fno-exceptions
+CPPFLAGS:=$(CPPFLAGS) -ffreestanding -Wall -Wextra -masm=intel -D__is_kernel -Iinclude -I$(INCLUDEDIR) -I/usr/lib/gcc/i686-elf/9.2.0/include -fno-rtti -fno-exceptions -fno-threadsafe-statics
 LDFLAGS:=$(LDFLAGS)
 NASMFLAGS?=-felf32
 LIBS:=$(LIBS) -nostdlib -L$(LIBDIR) -lkernel -lgcc
@@ -26,6 +26,7 @@ include $(ARCHDIR)/make.config
 KERNEL_OBJS=			\
 $(KERNEL_ARCH_OBJS) 	\
 kernel/kernel.o 		\
+kernel/VirtualMemManager.o \
 
 # All objects
 OBJS=					\

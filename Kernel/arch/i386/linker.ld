@@ -3,8 +3,11 @@ ENTRY(_start)
 /*  Start of the virtual kernel address space*/
 _ukernel_virtual_start = 0xD0100000;
 
+/*  Physical address of the kernel */
+_ukernel_physical_start = 0x100000;
+
 /*  Offset from virtual to physical*/
-_ukernel_virtual_offset = _ukernel_virtual_start - 0x100000;
+_ukernel_virtual_offset = _ukernel_virtual_start - _ukernel_physical_start;
 
 SECTIONS
 {

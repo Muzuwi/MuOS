@@ -1,0 +1,72 @@
+#  Import base configuration
+include $(PROJDIR)/Makefile.base
+
+#  Compilation flags
+LIBKERNEL_FLAGS := $(GCC_INCLUDE_FLAGS) $(GCC_CFLAGS)
+LIBC_FLAGS		:= $(GCC_INCLUDE_FLAGS) $(GCC_CFLAGS)
+
+#  Get objects to build from external file
+include $(PROJDIR)/LibC/Makefile.libc.objs
+
+# All objects to build
+OBJS=				\
+$(LIBC_FREEOBJS)	\
+$(LIBC_HOSTEDOBJS)	\
+
+# List of objects for libkernel
+LIBKERNEL_OBJS=$(LIBC_FREEOBJS:.o=.libkernel.o)
+
+#  The targets that we will build
+#  TODO: Add LibC hosted when it's done
+TARGETS=libkernel.a
+
+.PHONY: all clean install-headers install-libkernel
+.SUFFIXES: .o .libkernel.o .c .S
+
+all: $(TARGETS) install-headers install-libraries
+
+libc.a: $(OBJS)
+		$(AR) rcs $@ $(OBJS)
+
+libkernel.a: $(LIBKERNEL_OBJS)
+		$(AR) rcs $@ $(LIBKERNEL_OBJS)
+
+.c.o:
+	@echo "CC  $@"
+	@$(GCC) -MD -c $< -o $@ -std=gnu11 $(LIBC_FLAGS)
+
+.c.S:
+	@echo "AS  $@"
+	@$(GCC) -MD -c $< -o $@ $(LIBC_FLAGS)
+
+.c.libkernel.o:
+	@echo "CC  $@"
+	@$(GCC) -MD -c $< -o $@ -std=gnu11 $(LIBKERNEL_FLAGS)
+
+.S.libkernel.o:
+	@echo "AS  $@"
+	@$(GCC) -MD -c $< -o $@ $(LIBKERNEL_FLAGS)
+
+install-headers:
+	@echo "Copying libC headers into INCLUDEDIR $(PREFIX)/include/"
+	@cp -R --preserve=timestamps "LibC/include/." "$(PREFIX)/include/"
+
+install-libraries: $(TARGETS)
+	@echo "Copying libkernel into LIBDIR $(PREFIX)/lib" 
+	@cp "libkernel.a" "$(PREFIX)/lib"
+
+clean:
+	@-rm */*.o 2>/dev/null || true
+	@-rm */*.d 2>/dev/null || true
+	@-rm */*/*.o 2>/dev/null || true
+	@-rm */*/*.d 2>/dev/null || true
+	@-rm */*/*/*.o 2>/dev/null || true
+	@-rm */*/*/*.d 2>/dev/null || true
+	@-rm */*/*/*/*.o 2>/dev/null || true
+	@-rm */*/*/*/*.d 2>/dev/null || true
+	@-rm *.o 2>/dev/null || true
+	@-rm *.d 2>/dev/null || true
+	@-rm libkernel.a 2>/dev/null || true
+
+-include $(OBJS:.o=.d)
+-include $(LIBKERNEL_OBJS:.o=.d)

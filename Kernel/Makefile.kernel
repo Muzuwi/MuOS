@@ -1,0 +1,63 @@
+#  Base
+include $(PROJDIR)/Makefile.base
+
+#  Sources folder for the specified architecture
+ARCHDIR=Kernel/arch/$(ARCH_TARGET)
+
+#  Get kernel objects to build
+include $(PROJDIR)/Kernel/Makefile.kernel.objs
+
+#  All objects to link to the kernel binary
+OBJS:=					\
+$(ARCHDIR)/crti.o 		\
+$(ARCHDIR)/crtbegin.o 	\
+$(KERNEL_OBJS) 			\
+$(ARCHDIR)/crtend.o 	\
+$(ARCHDIR)/crtn.o 		\
+
+#  Compilation flags
+KERNEL_LINKER_FLAGS:=$(OBJS) $(GCC_LINKFLAGS_STDLIBS) -lkernel
+KERNEL_CFLAGS 	 :=$(GCC_INCLUDE_FLAGS) -IKernel/include $(GCC_CFLAGS)
+KERNEL_CPPFLAGS  :=$(GCC_INCLUDE_FLAGS) -IKernel/include $(GCC_CPPFLAGS)
+
+.PHONY: all clean uKernel
+.SUFFIXES: .o .c .cpp .S .asm
+
+all: uKernel
+
+uKernel: $(OBJS) $(ARCHDIR)/kernel_link.ld
+	$(GCC) -T $(ARCHDIR)/kernel_link.ld -o Kernel/$@.bin $(KERNEL_CFLAGS) $(KERNEL_LINKER_FLAGS)
+
+$(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
+	@OBJ=`$(GCC) $(KERNEL_CFLAGS) $(GCC_LINKFLAGS_STDLIBS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+
+.asm.o:
+	@echo "NASM  $@"
+	@$(NASM) $(NASM_FLAGS) $< -o $@
+
+.cpp.o:
+	@echo "CXX  $@"
+	@$(CXX) -c $< -o $@ $(KERNEL_CPPFLAGS)
+
+.c.o:
+	@echo "CC  $@"
+	@$(GCC) -MD -c $< -o $@ -std=gnu11 $(KERNEL_CFLAGS)
+
+.S.o:
+	@echo "AS  $@"
+	@$(GCC) -MD -c $< -o $@ $(KERNEL_CFLAGS)
+
+clean:
+	@-rm */*.o 2>/dev/null || true
+	@-rm */*.d 2>/dev/null || true
+	@-rm */*/*.o 2>/dev/null || true
+	@-rm */*/*.d 2>/dev/null || true
+	@-rm */*/*/*.o 2>/dev/null || true
+	@-rm */*/*/*.d 2>/dev/null || true
+	@-rm */*/*/*/*.o 2>/dev/null || true
+	@-rm */*/*/*/*.d 2>/dev/null || true
+	@-rm *.o 2>/dev/null || true
+	@-rm *.d 2>/dev/null || true
+	@-rm Kernel/uKernel.bin 2>/dev/null || true
+
+-include $(OBJS:.o=.d)

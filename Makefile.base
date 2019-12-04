@@ -1,0 +1,31 @@
+# ===
+#	Base config file for all Makefile scripts for compiling the system
+#   This file contains environment configuration for the module makefiles
+# ===
+
+#  Target architecture to build for
+ARCH_TARGET:=i386
+
+#  System root on the host
+PREFIX:=/usr/local/muOS
+
+#   Toolchain binaries
+AR :=$(PREFIX)/bin/i686-muos-ar
+AS :=$(PREFIX)/bin/i686-muos-as
+GCC:=$(PREFIX)/bin/i686-muos-gcc
+CXX:=$(PREFIX)/bin/i686-muos-g++
+NASM?=nasm
+
+#   Default include folders
+GCC_INCLUDE_FLAGS:=-Iinclude 
+GCC_INCLUDE_FLAGS+=-I$(PREFIX)/lib/gcc/i686-muos/9.2.0/include 
+GCC_INCLUDE_FLAGS+=-I$(PREFIX)/include
+
+#   Default C and C++ flags
+GCC_CFLAGS  :=-O2 -g -ffreestanding -Wall -Wextra -masm=intel
+GCC_CPPFLAGS:=-O2 -g -ffreestanding -Wall -Wextra -masm=intel -fno-rtti -fno-exceptions -fno-threadsafe-statics
+
+NASM_FLAGS:=-felf32
+
+#  TODO: Add when userland is done
+GCC_LINKFLAGS_STDLIBS:=-L$(PREFIX)/lib -nostdlib -lgcc

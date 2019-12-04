@@ -1,0 +1,8 @@
+#  Get architecture-dependent objects
+include $(ARCHDIR)/make.config
+
+#  Kernel objects to build
+KERNEL_OBJS:=$(KERNEL_ARCH_OBJS) 		\
+Kernel/kernel/kernel.o 					\
+Kernel/kernel/VirtualMemManager.o 		\
+Kernel/kernel/kmalloc.o 				\

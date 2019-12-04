@@ -6,4 +6,5 @@ int puts(const char* ch){
 		putchar(ch[ptr]);
 		ptr++;
 	}
+	return 0;
 }

@@ -162,17 +162,17 @@ void Paging::init_paging() {
 	// }
 	// kdebugf(" to %x\n", last_dir*0x400000 + last_page*4096);
 
-	auto page_dir_physical = ((uint32_t)&page_dir - (uint32_t)&_ukernel_virtual_offset);
-	asm volatile(
-		"mov %%eax, %0\n"
-		"mov cr3, %%eax\n"
-		"mov %%eax, cr0\n"
-		"or %%eax, 0x80000001\n"
-		"mov cr0, %%eax\t\n"
-		:
-		: ""(page_dir_physical) 
-		:
-	);
+	// auto page_dir_physical = ((uint32_t)&page_dir - (uint32_t)&_ukernel_virtual_offset);
+	// asm volatile(
+	// 	"mov %%eax, %0\n"
+	// 	"mov cr3, %%eax\n"
+	// 	"mov %%eax, cr0\n"
+	// 	"or %%eax, 0x80000001\n"
+	// 	"mov cr0, %%eax\t\n"
+	// 	:
+	// 	: ""(page_dir_physical) 
+	// 	:
+	// );
 }
 
 /*

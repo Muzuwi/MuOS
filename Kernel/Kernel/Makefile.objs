@@ -1,0 +1,2 @@
+EXT_OBJS+= \
+Kernel/kernel.o

@@ -1,0 +1,4 @@
+EXT_OBJS+= \
+Bootstage/boot.o 		\
+Bootstage/BootConfig.o  \
+Bootstage/stage0.o

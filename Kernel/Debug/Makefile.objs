@@ -1,0 +1,3 @@
+EXT_OBJS+=\
+Debug/kdebugf.o 	\
+Debug/kpanic.o

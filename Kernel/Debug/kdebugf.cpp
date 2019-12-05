@@ -32,7 +32,7 @@ int kdebugf(const char* format, ...){
 	out(0x3f8, '0');
 	out(0x3f8, 'm');
 
-	puts(buffer);
+	// puts(buffer);
 
 
 	return c;
@@ -67,7 +67,7 @@ int kerrorf(const char* format, ...){
 	out(0x3f8, '0');
 	out(0x3f8, 'm');
 
-	puts(buffer);
+	// puts(buffer);
 
 
 	return c;

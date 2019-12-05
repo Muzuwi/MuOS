@@ -1,0 +1,4 @@
+EXT_OBJS+= \
+Interrupt/irqhandlers.o 		\
+Interrupt/exceptions.o 			\
+Interrupt/asm/exceptions.o

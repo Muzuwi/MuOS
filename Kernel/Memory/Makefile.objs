@@ -1,0 +1,4 @@
+EXT_OBJS+= \
+Memory/kmalloc.o 			\
+Memory/PhysMemManager.o 	\
+Memory/VirtualMemManager.o

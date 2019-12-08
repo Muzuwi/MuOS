@@ -56,11 +56,11 @@ $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 
 .cpp.o:
 	@echo "CXX  $@"
-	@$(CXX) -c $< -o $@ $(KERNEL_CPPFLAGS)
+	@$(CXX) -c $< -o $@ $(KERNEL_CPPFLAGS) -I$(dir $<)
 
 .c.o:
 	@echo "CC  $@"
-	@$(GCC) -MD -c $< -o $@ -std=gnu11 $(KERNEL_CFLAGS)
+	@$(GCC) -MD -c $< -o $@ -std=gnu11 $(KERNEL_CFLAGS) -I$(dir $<)
 
 .S.o:
 	@echo "AS  $@"

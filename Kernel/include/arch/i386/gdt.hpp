@@ -29,13 +29,12 @@
 
 #define GDT_LOG "[gdt]: "
 
-#pragma pack(1)
 struct gdt_entry_t {
 	uint32_t base;
 	uint32_t limit;
 	uint8_t access;
 	uint8_t flags;
-};
+} __attribute__((packed));
 
 namespace GDT {
 	extern uint64_t descriptor_table[16];

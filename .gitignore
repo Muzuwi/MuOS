@@ -8,3 +8,5 @@
 .stdir/*
 .gdb_history
 docs/*
+Toolchain/*
+MuOS.*

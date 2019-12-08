@@ -1,8 +1,8 @@
-#include <arch/i386/BootConfig.hpp>
-#include <arch/i386/MemManager.hpp>
-#include <arch/i386/multiboot.hpp>
-#include <arch/i386/paging.hpp>
-#include <kernel/kdebugf.hpp>
+#include <Arch/i386/BootConfig.hpp>
+#include <Arch/i386/MemManager.hpp>
+#include <Arch/i386/multiboot.hpp>
+#include <Arch/i386/paging.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
 
 extern uint32_t _ukernel_virtual_offset;
 

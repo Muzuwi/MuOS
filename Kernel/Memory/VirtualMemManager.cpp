@@ -1,7 +1,7 @@
-#include <kernel/VirtualMemManager.hpp>
-#include <arch/i386/MemManager.hpp>
-#include <arch/i386/paging.hpp>
-#include <kernel/kdebugf.hpp>
+#include <Kernel/Memory/VirtualMemManager.hpp>
+#include <Arch/i386/MemManager.hpp>
+#include <Arch/i386/paging.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
 
 //  Temporarily store the virt address given to kmalloc
 static mem_range_t kmalloc_temp;

@@ -1,7 +1,7 @@
-#include <arch/i386/interrupts.hpp>
-#include <arch/i386/portio.hpp>
-#include <arch/i386/vga.h>
-#include <kernel/kdebugf.hpp>
+#include <Arch/i386/interrupts.hpp>
+#include <Arch/i386/portio.hpp>
+#include <Arch/i386/vga.h>
+#include <Kernel/Debug/kdebugf.hpp>
 
 /*
 	Actual Interrupt descriptor table in memory

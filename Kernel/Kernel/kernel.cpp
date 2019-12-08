@@ -1,15 +1,15 @@
 #include <stdio.h>
 #include <string.h>
-#include <kernel/tty.h>
-#include <arch/i386/i8042.hpp>
-#include <arch/i386/gdt.hpp>
-#include <arch/i386/interrupts.hpp>
-#include <kernel/kdebugf.hpp>
-#include <arch/i386/timer.hpp>
-#include <arch/i386/paging.hpp>
-#include <arch/i386/BootConfig.hpp>
-#include <arch/i386/MemManager.hpp>
-#include <kernel/kmalloc.hpp>
+#include <Kernel/Debug/tty.h>
+#include <Arch/i386/i8042.hpp>
+#include <Arch/i386/gdt.hpp>
+#include <Arch/i386/interrupts.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
+#include <Arch/i386/timer.hpp>
+#include <Arch/i386/paging.hpp>
+#include <Arch/i386/BootConfig.hpp>
+#include <Arch/i386/MemManager.hpp>
+#include <Kernel/Memory/kmalloc.hpp>
 
 namespace uKernel {
 	extern "C" void kernel_entrypoint(uintptr_t*);

@@ -1,6 +1,6 @@
-#include <arch/i386/timer.hpp>
-#include <arch/i386/portio.hpp>
-#include <kernel/kdebugf.hpp>
+#include <Arch/i386/timer.hpp>
+#include <Arch/i386/portio.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
 
 #define assert(a)
 #define BASE_FREQ 1193182

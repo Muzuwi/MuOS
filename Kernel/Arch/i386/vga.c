@@ -1,5 +1,5 @@
 #include <string.h>
-#include <arch/i386/vga.h>
+#include <Arch/i386/vga.h>
 
 extern uint32_t _ukernel_virtual_offset;
 static uint16_t* vga_buffer_base_address = (uint16_t*)(0xB8000);

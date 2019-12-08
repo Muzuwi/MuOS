@@ -1,6 +1,6 @@
-#include <arch/i386/portio.hpp>
-#include <arch/i386/registers.hpp>
-#include <kernel/kdebugf.hpp>
+#include <Arch/i386/portio.hpp>
+#include <Arch/i386/registers.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
 
 /*
 	This file contains exception handling routines for the kernel	

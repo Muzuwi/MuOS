@@ -1,5 +1,5 @@
 #pragma once
-#include <kernel/SystemTypes.hpp>
+#include <Kernel/SystemTypes.hpp>
 
 class VirtualMemManager final {
 	VirtualMemManager();

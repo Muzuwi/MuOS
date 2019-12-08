@@ -1,7 +1,7 @@
-#include <arch/i386/MemManager.hpp>
-#include <arch/i386/multiboot.hpp>
-#include <kernel/kdebugf.hpp>
-#include <kernel/kpanic.hpp>
+#include <Arch/i386/MemManager.hpp>
+#include <Arch/i386/multiboot.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
+#include <Kernel/Debug/kpanic.hpp>
 #define assert(a)
 
 extern uint32_t _ukernel_start, _ukernel_end;

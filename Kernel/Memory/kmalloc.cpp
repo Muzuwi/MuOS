@@ -1,7 +1,7 @@
-#include <kernel/kmalloc.hpp>
-#include <kernel/VirtualMemManager.hpp>
-#include <kernel/kdebugf.hpp>
-#include <kernel/kpanic.hpp>
+#include <Kernel/Memory/kmalloc.hpp>
+#include <Kernel/Memory/VirtualMemManager.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
+#include <Kernel/Debug/kpanic.hpp>
 #include <string.h>
 
 mem_range_t kmalloc_mem_range;

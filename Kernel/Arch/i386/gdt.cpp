@@ -1,6 +1,6 @@
-#include <arch/i386/gdt.hpp>
-#include <arch/i386/portio.hpp>
-#include <kernel/kdebugf.hpp>
+#include <Arch/i386/gdt.hpp>
+#include <Arch/i386/portio.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
 
 /*
 	Descriptor table storage

@@ -1,6 +1,6 @@
 #include <stdarg.h>
 #include <string.h>
-#include <arch/i386/vga.h>
+#include <Arch/i386/vga.h>
 
 void tty_init(){
     vga_clear();

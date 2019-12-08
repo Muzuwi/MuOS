@@ -1,5 +1,5 @@
-#include <arch/i386/i8042.hpp>
-#include <kernel/kdebugf.hpp>
+#include <Arch/i386/i8042.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
 
 ps2_device_t i8042::devices[I8042_MAX_DEVICES] = {};
 

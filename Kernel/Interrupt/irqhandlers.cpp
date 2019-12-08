@@ -1,6 +1,6 @@
-#include <arch/i386/portio.hpp>
-#include <arch/i386/vga.h>
-#include <arch/i386/timer.hpp>
+#include <Arch/i386/portio.hpp>
+#include <Arch/i386/vga.h>
+#include <Arch/i386/timer.hpp>
 
 /*
 	Kernel Interrupt handler routines`

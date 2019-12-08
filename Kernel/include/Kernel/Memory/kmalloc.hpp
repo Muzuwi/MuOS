@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include <kernel/SystemTypes.hpp>
+#include <Kernel/SystemTypes.hpp>
 
 #define MiB 0x100000
 #define KMALLOC_POOL_SIZE  (4 * MiB) 

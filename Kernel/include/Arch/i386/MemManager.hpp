@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include <kernel/SystemTypes.hpp>
+#include <Kernel/SystemTypes.hpp>
 
 //  TODO: This will not be necessary once i get page frame allocation going
 #define MEMMANAGER_MAX_MEM_RANGES 32

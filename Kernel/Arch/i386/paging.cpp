@@ -1,5 +1,5 @@
-#include <arch/i386/paging.hpp>
-#include <kernel/kdebugf.hpp>
+#include <Arch/i386/paging.hpp>
+#include <Kernel/Debug/kdebugf.hpp>
 
 #define PAGE_SIZE 4096
 

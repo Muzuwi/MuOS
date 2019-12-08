@@ -14,6 +14,18 @@ extern "C" void out(uint16_t port, uint8_t value){
 }
 
 /*
+ *  Writes a dword to the specified I/O port
+ */
+extern "C" void outd(uint16_t port, uint32_t value) {
+	asm volatile("mov %%eax, %0\n"
+				 "mov %%dx, %1\n"
+				 "out %%dx, %%eax\t\n"
+				 :
+				 :""(value), ""(port)
+				 : "eax");
+}
+
+/*
 	Reads a byte from the specified I/O port
 */
 extern "C" uint8_t in(uint16_t port){

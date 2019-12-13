@@ -1,5 +1,6 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/portio.hpp>
+#include <Kernel/Debug/tty.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +33,7 @@ int kdebugf(const char* format, ...){
 	out(0x3f8, '0');
 	out(0x3f8, 'm');
 
-	// puts(buffer);
+	tty_prints(buffer);
 
 
 	return c;
@@ -67,7 +68,7 @@ int kerrorf(const char* format, ...){
 	out(0x3f8, '0');
 	out(0x3f8, 'm');
 
-	// puts(buffer);
+	tty_prints(buffer);
 
 
 	return c;

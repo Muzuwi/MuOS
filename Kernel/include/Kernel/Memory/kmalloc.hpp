@@ -9,17 +9,24 @@
 
 typedef uint32_t chunk_t; 
 
-#define SANITIZE_KMALLOC_MEM_RANGE
-
-
 void* operator new(size_t);
 void* operator new[](size_t);
+void operator delete(void*);
 void operator delete(void*, size_t);
 void operator delete[](void*, size_t);
+void operator delete[](void*);
 
 
 class KMalloc {
 	KMalloc();
+	uint64_t m_total_allocations;
+	uint64_t m_total_frees;
+	uint64_t m_current_allocations;
+
+	mem_range_t m_kmalloc_mem_range;
+
+	void mark_range(size_t, size_t, size_t, size_t, bool);
+	bool is_kmalloc_memory(void*);
 public:
 	static KMalloc& get();
 	
@@ -27,5 +34,7 @@ public:
 	uint64_t getPoolSize();
 	void* kmalloc_alloc(size_t);
 	void kmalloc_free(void*);
-	//  Other alloc fun stuff
+	uint64_t getCurrentAllocations();
+	uint64_t getTotalAllocations();
+	uint64_t getTotalFrees();
 };

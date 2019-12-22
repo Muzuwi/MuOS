@@ -1,6 +1,6 @@
 #include <stdarg.h>
 #include <stddef.h>
-
+#include <stdio.h>
 
 #define PRINTF_BUFFER_SIZE 1024
 

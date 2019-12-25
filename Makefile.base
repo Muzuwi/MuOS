@@ -17,9 +17,9 @@ CXX:=$(PREFIX)/bin/i686-muos-g++
 NASM?=nasm
 
 #   Default include folders
-GCC_INCLUDE_FLAGS:=-Iinclude 
-GCC_INCLUDE_FLAGS+=-I$(PREFIX)/lib/gcc/i686-muos/9.2.0/include 
-GCC_INCLUDE_FLAGS+=-I$(PREFIX)/include
+GCC_INCLUDE_FLAGS:=-ILibrary/
+GCC_INCLUDE_FLAGS+=-ILibC/include
+GCC_INCLUDE_FLAGS+=-I$(PREFIX)/lib/gcc/i686-muos/9.2.0/include
 
 #   Default C and C++ flags
 GCC_CFLAGS  :=-O2 -g -ffreestanding -Wall -Wextra -masm=intel

@@ -5,8 +5,10 @@
 #include <string.h>
 
 //#define KMALLOC_DEBUG
+//#define KMALLOC_DEBUG_NOISY
+
 #define KMALLOC_SANITIZER
-#define KMALLOC_SANITIZER_BYTE 0x0
+#define KMALLOC_SANITIZER_BYTE 0x99
 
 chunk_t m_mem_allocations[KMALLOC_ARR_COUNT] {
 
@@ -27,41 +29,45 @@ KMalloc& KMalloc::get() {
 void KMalloc::init() {
 	m_kmalloc_mem_range = mem_range_t(0, 0);
 
-	memset((void*)m_mem_allocations, 0, KMALLOC_ARR_COUNT);
+	memset((void*)m_mem_allocations, 0, KMALLOC_ARR_COUNT*sizeof(chunk_t));
 
 	m_kmalloc_mem_range = VirtualMemManager::get().bootstrap(KMALLOC_POOL_SIZE);
 }
 
+/*
+ *	Debug function that logs the current allocation statistics to the kernel log
+ */
+void KMalloc::logAllocationStats() {
+	kdebugf("[KMalloc] Current allocations: %i bytes\n", m_current_allocations);
+	kdebugf("[KMalloc] Total allocations: %i bytes\n", m_total_allocations);
+	kdebugf("[KMalloc] Total frees: %i bytes\n", m_total_frees);
+}
 
 /*
 	This is just a helper to easily mark allocations that span 
 	multiple rray entries as used
 */
-void KMalloc::mark_range(size_t start_index, size_t end_index, size_t start_chunk, size_t end_chunk, bool clear=false) {
-	// kdebugf("[KMalloc] marking chunks %x:%x spanning index %x:%x as alloc'd\n", start_chunk, end_chunk, start_index, end_index);
+void KMalloc::mark_range(size_t start_chunk, size_t end_chunk, bool clear=false) {
 
-	for(size_t i = start_index; i <= end_index; i++) {
-		size_t upper_bound = sizeof(chunk_t)*32;
-		size_t start = 0;
+#ifdef KMALLOC_DEBUG_NOISY
+	kdebugf("[KMalloc] marking chunks %i:%i spanning index %i:%i as %s\n", start_chunk, end_chunk, start_index, end_index, clear ? "unalloc'd" : "alloc'd");
+#endif
 
-		if(i == start_index) start = start_chunk;
-		if(i == end_index) upper_bound = end_chunk+1;
-		if(start_index == end_index) {
-			start = start_chunk;
-			upper_bound = end_chunk+1;
-		}
+	for(size_t chunk = start_chunk; chunk <= end_chunk; chunk++) {
+		size_t index = chunk / bits(chunk_t);
 
-		for(size_t chunk = start; chunk < upper_bound; chunk++) {
-			if(clear) {
-				m_mem_allocations[i] &= ~(1 << chunk);
-			} else {
-				m_mem_allocations[i] |= (1 << chunk);
+		if(clear) {
+			if(!(m_mem_allocations[index] & (1 << (chunk % bits(chunk_t))))) {
+				kerrorf("Tried clearing allocation bit when allocation is already clear (%i-%i)\n", start_chunk, end_chunk);
 			}
+			m_mem_allocations[index] &= ~(1 << (chunk % bits(chunk_t)));
+		} else {
+			if(m_mem_allocations[index] & (1 << (chunk % bits(chunk_t)))) {
+				kerrorf("Tried setting allocation bit when allocation is already present (%i-%i)\n", start_chunk, end_chunk);
+			}
+			m_mem_allocations[index] |= (1 << (chunk % bits(chunk_t)));
 		}
-
-		if(start_index == end_index) return;
 	}
-
 }
 
 /*
@@ -75,33 +81,36 @@ void* KMalloc::kmalloc_alloc(size_t size) {
 	if(proper_size % KMALLOC_CHUNK) chunks++;
 
 	size_t available = 0;
-	size_t start = 0, start_index = 0;
+	size_t start = 0;
 
 	for(size_t i = 0; i < KMALLOC_ARR_COUNT; i++){
 		if(m_mem_allocations[i] == 0xffffffff) {
 			available = 0;
-			start = 0;
-			start_index = i+1;
+			start = (i+1)*bits(chunk_t);
 			continue;
 		}
 
-		for(size_t current = 0; current < sizeof(chunk_t)*8; current++){
+		for(size_t current = 0; current < bits(chunk_t); current++){
 			if(!((1 << current) & m_mem_allocations[i])) {
 				available++; 
 			}else {
 				available = 0;
-				start = current+1;
-				start_index = i;
+				start = i*bits(chunk_t) + current+1;
 				continue;
 			}
 
 			if(available >= chunks){
-				// kdebugf("[KMalloc] available %i\n", available);
-				mark_range(start_index, i, start, current);
+#ifdef KMALLOC_DEBUG_NOISY
+				kdebugf("[KMalloc] available %i\n", available);
+#endif
+				mark_range(start, start+chunks-1);
 
-				uint32_t mem_offset = i*KMALLOC_CHUNK*32 + (start)*KMALLOC_CHUNK;
+				uint32_t mem_offset = start*KMALLOC_CHUNK;
 				uint32_t* memory_begin = (uint32_t*)(m_kmalloc_mem_range.m_start + mem_offset);
-				// kdebugf("[KMalloc] found at %x, chunks %i-%i, offset %x\n", memory_begin, (int)start, (int)(start+chunks-1), (uint32_t)mem_offset);
+
+#ifdef KMALLOC_DEBUG_NOISY
+				kdebugf("[KMalloc] found at %x, chunks %i-%i, offset %x\n", memory_begin, (int)start, (int)(start+chunks-1), (uint32_t)mem_offset);
+#endif
 
 				*(allocation_t*)memory_begin = (allocation_t)size;
 
@@ -122,11 +131,6 @@ void* KMalloc::kmalloc_alloc(size_t size) {
 			}
 
 		}
-
-		if(available == 0) {
-			start_index = i + 1;
-		}
-
 	}
 
 	kerrorf("[KMalloc] cannot find %i free chunks for %i allocation (out of memory?)\n", chunks, size);
@@ -141,29 +145,27 @@ void KMalloc::kmalloc_free(void* pointer) {
 	if(!is_kmalloc_memory(pointer)) return;
 
 	uintptr_t address = (uintptr_t)pointer - sizeof(allocation_t);
-
 #ifdef KMALLOC_DEBUG
 	kdebugf("[KMalloc] freeing address %x\n", (uint32_t)pointer);
+#endif
+#ifdef KMALLOC_DEBUG_NOISY
 	kdebugf("[KMalloc] allocation address: %x\n", address);
 #endif
 
 	allocation_t alloc = *((allocation_t*)address);
 
-#ifdef KMALLOC_DEBUG
-	kdebugf("[KMalloc] allocation size: %x\n", alloc);
+#ifdef KMALLOC_DEBUG_NOISY
+	kdebugf("[KMalloc] allocation size: %i (actual: %i) [bytes]\n", alloc, alloc+sizeof(allocation_t));
 #endif
 
 	size_t start_chunk = (address - m_kmalloc_mem_range.m_start) / KMALLOC_CHUNK;
 	size_t end_chunk = (start_chunk + (alloc/KMALLOC_CHUNK));
-	size_t start_index = start_chunk / (sizeof(chunk_t)*8);
-	size_t end_index = end_chunk / (sizeof(chunk_t)*8);
 
-#ifdef KMALLOC_DEBUG
-	kdebugf("[KMalloc] start chunk: %x, end chunk: %x\n", start_chunk, end_chunk);
-	kdebugf("[KMalloc] start index: %x, end index: %x\n", start_index, end_index);
+#ifdef KMALLOC_DEBUG_NOISY
+	kdebugf("[KMalloc] start chunk: %i, end chunk: %i\n", start_chunk, end_chunk);
 #endif
 
-	mark_range(start_index, end_index, start_chunk, end_chunk, true);
+	mark_range(start_chunk, end_chunk, true);
 
 	m_total_frees += (alloc + sizeof(allocation_t));
 	m_current_allocations -= (alloc + sizeof(allocation_t));

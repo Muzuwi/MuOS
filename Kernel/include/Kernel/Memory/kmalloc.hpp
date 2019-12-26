@@ -6,6 +6,7 @@
 #define KMALLOC_POOL_SIZE  (4 * MiB) 
 #define KMALLOC_CHUNK 	2
 #define KMALLOC_ARR_COUNT ((KMALLOC_POOL_SIZE / KMALLOC_CHUNK) / (sizeof(chunk_t)*8))
+#define bits(a) (sizeof(a)*8)
 
 typedef uint32_t chunk_t; 
 
@@ -25,7 +26,7 @@ class KMalloc {
 
 	mem_range_t m_kmalloc_mem_range;
 
-	void mark_range(size_t, size_t, size_t, size_t, bool);
+	void mark_range(size_t, size_t, bool);
 	bool is_kmalloc_memory(void*);
 public:
 	static KMalloc& get();
@@ -37,4 +38,5 @@ public:
 	uint64_t getCurrentAllocations();
 	uint64_t getTotalAllocations();
 	uint64_t getTotalFrees();
+	void logAllocationStats();
 };

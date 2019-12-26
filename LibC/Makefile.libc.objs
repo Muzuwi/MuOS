@@ -9,6 +9,7 @@ LibC/string/memcmp.o 	\
 LibC/stdio/printf.o 	\
 LibC/stdio/puts.o 		\
 LibC/stdio/putchar.o 	\
+LibC/icxxabi.o 		\
 
 #  Hosted stdlib
 #  TODO: Add when done

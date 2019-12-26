@@ -75,6 +75,11 @@ higher:
 	extern _fini
 	call _fini
 
+    push dword 0
+	extern __cxa_finalize
+	call __cxa_finalize
+	add esp, 4
+
 	loopLabel:
 		cli
 		hlt

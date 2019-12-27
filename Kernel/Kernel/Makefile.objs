@@ -1,2 +1,3 @@
 EXT_OBJS+= \
-Kernel/kernel.o
+Kernel/kernel.o 	\
+Kernel/ksleep.o		\

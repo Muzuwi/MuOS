@@ -10,6 +10,7 @@
 #include <Arch/i386/BootConfig.hpp>
 #include <Arch/i386/MemManager.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
+#include <Kernel/Device/PCI.hpp>
 
 namespace uKernel {
 	extern "C" void kernel_entrypoint(uintptr_t*);
@@ -28,6 +29,10 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	BootConfig::parse_multiboot_structure(multiboot_info);
 	KMalloc::get().init();
 
+	//  Find pci devices connected to the system
+	PCI::discover_devices();
+
+	kdebugf("[uKernel] Found %i PCI devices\n", PCI::getDevices().size());
 	// i8042::init_controller();
 
 	kdebugf("[uKernel] Initialization took %ims\n", (int)Timer::getTimer().getTimeSinceStart());

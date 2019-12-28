@@ -3,6 +3,7 @@
 *.a
 *.bin
 *.iso
+*.img
 *.sh
 .idea/*
 .stdir/*

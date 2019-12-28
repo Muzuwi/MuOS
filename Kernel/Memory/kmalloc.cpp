@@ -41,6 +41,32 @@ void KMalloc::logAllocationStats() {
 	kdebugf("[KMalloc] Current allocations: %i bytes\n", m_current_allocations);
 	kdebugf("[KMalloc] Total allocations: %i bytes\n", m_total_allocations);
 	kdebugf("[KMalloc] Total frees: %i bytes\n", m_total_frees);
+	kdebugf("[KMalloc] Detailed allocation breakdown:\n");
+
+	size_t chunk = 0;
+	bool any = false;
+	while(chunk < KMALLOC_ARR_COUNT*bits(chunk_t)) {
+		if(bitmask(chunk % bits(chunk_t)) & m_mem_allocations[chunk / bits(chunk_t)]) {
+			any = true;
+			uint32_t mem_offset = chunk*KMALLOC_CHUNK;
+			uint32_t* memory_begin = (uint32_t*)(m_kmalloc_mem_range.m_start + mem_offset);
+			uint32_t* alloc_begin  = (uint32_t*)((uint32_t)memory_begin + sizeof(allocation_t));
+			allocation_t alloc_size = *((allocation_t*)memory_begin);
+
+			kdebugf("	- %x: %i bytes, chunk no. %i, alloc structure at %x\n",
+			        (uint32_t)alloc_begin,
+			        (uint32_t)alloc_size,
+			        (uint32_t)chunk,
+			        (uint32_t)memory_begin
+			        );
+			chunk += alloc_size / KMALLOC_CHUNK;
+		}
+		chunk++;
+	}
+
+	if(!any) {
+		kdebugf("	- No memory currently allocated\n");
+	}
 }
 
 /*
@@ -50,7 +76,7 @@ void KMalloc::logAllocationStats() {
 void KMalloc::mark_range(size_t start_chunk, size_t end_chunk, bool clear=false) {
 
 #ifdef KMALLOC_DEBUG_NOISY
-	kdebugf("[KMalloc] marking chunks %i:%i spanning index %i:%i as %s\n", start_chunk, end_chunk, start_index, end_index, clear ? "unalloc'd" : "alloc'd");
+	kdebugf("[KMalloc] marking chunks %i:%i as %s\n", start_chunk, end_chunk, clear ? "unalloc'd" : "alloc'd");
 #endif
 
 	for(size_t chunk = start_chunk; chunk <= end_chunk; chunk++) {
@@ -155,11 +181,11 @@ void KMalloc::kmalloc_free(void* pointer) {
 	allocation_t alloc = *((allocation_t*)address);
 
 #ifdef KMALLOC_DEBUG_NOISY
-	kdebugf("[KMalloc] allocation size: %i (actual: %i) [bytes]\n", alloc, alloc+sizeof(allocation_t));
+	kdebugf("[KMalloc] allocation size: %i (actual: %i) [bytes]\n", alloc, (alloc % sizeof(allocation_t)) ? alloc + 1 : alloc);
 #endif
 
 	size_t start_chunk = (address - m_kmalloc_mem_range.m_start) / KMALLOC_CHUNK;
-	size_t end_chunk = (start_chunk + (alloc/KMALLOC_CHUNK));
+	size_t end_chunk = (start_chunk + (((alloc % sizeof(allocation_t)) ? alloc + 1 : alloc) / KMALLOC_CHUNK));
 
 #ifdef KMALLOC_DEBUG_NOISY
 	kdebugf("[KMalloc] start chunk: %i, end chunk: %i\n", start_chunk, end_chunk);

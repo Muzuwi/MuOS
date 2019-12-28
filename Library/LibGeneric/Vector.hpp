@@ -23,6 +23,7 @@ namespace gen {
 		void for_each(void (*callback)(T&));
 		void for_each(void (*callback)(const T&)) const;
 		size_t size() const;
+		bool contains(T value) const;
 	};
 }
 
@@ -109,4 +110,12 @@ void gen::vector<T>::for_each(void (*callback)(const T&)) const {
 template<class T>
 size_t gen::vector<T>::size() const {
 	return m_size;
+}
+
+template<class T>
+bool gen::vector<T>::contains(T value) const {
+	for(size_t i = 0; i < m_size; i++) {
+		if(m_base[i] == value) return true;
+	}
+	return false;
 }

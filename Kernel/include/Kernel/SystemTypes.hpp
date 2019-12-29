@@ -19,3 +19,10 @@ struct mem_range_t {
 
 
 typedef uint16_t allocation_t;
+
+
+//  FIXME:  Placeholders
+typedef int IOResult;
+typedef int FSResult;
+typedef uint64_t lba_t;
+typedef char* path_t;

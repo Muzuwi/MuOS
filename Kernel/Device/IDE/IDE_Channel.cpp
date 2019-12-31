@@ -127,7 +127,7 @@ ATA_STATUS IDE_Channel::poll(bool request_check) {
 void IDE_Channel::read_buffer(ATA_REG reg, uint32_t* buffer, size_t count) {
 	this->poll(true);
 	for(size_t i = 0; i < count; i++) {
-		buffer[i] = inw(get_register_port(reg));
+		buffer[i] = ind(get_register_port(reg));
 		if(this->poll(false) != ATA_STATUS::Ready) {
 			kerrorf("[ide] Error during read buffer operation!\n");
 		}

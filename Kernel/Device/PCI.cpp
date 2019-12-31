@@ -316,7 +316,7 @@ uint32_t PCI_Device::getConfigRegister(uint8_t offset) const {
 	                               ((uint32_t)offset & (uint32_t)~0x3)) |
 	                               ((uint32_t)0x80000000));
 	outd(CONFIG_ADDRESS, address);
-	return inw(CONFIG_DATA);
+	return ind(CONFIG_DATA);
 }
 
 

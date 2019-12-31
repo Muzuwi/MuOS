@@ -24,6 +24,7 @@ namespace gen {
 		void for_each(void (*callback)(const T&)) const;
 		size_t size() const;
 		bool contains(T value) const;
+		gen::vector<T> filter(bool (*call)(const T&));
 	};
 }
 
@@ -118,4 +119,18 @@ bool gen::vector<T>::contains(T value) const {
 		if(m_base[i] == value) return true;
 	}
 	return false;
+}
+
+template<class T>
+gen::vector<T> gen::vector<T>::filter(bool (*call)(const T&)) {
+	if(!call) return gen::vector<T>();
+
+	gen::vector<T> res;
+
+	for(size_t i = 0; i < m_size; i++) {
+		if(call(m_base[i]))
+			res.push_back(m_base[i]);
+	}
+
+	return res;
 }

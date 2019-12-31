@@ -2,8 +2,16 @@
 #include <stdint.h>
 #include <Kernel/SystemTypes.hpp>
 
+//  Symbols from the kernel linker script for the kmalloc section
+extern uint32_t _ukernel_kmalloc_start;
+extern uint32_t _ukernel_kmalloc_end;
+extern uint32_t _ukernel_kmalloc_size;
+
 #define MiB 0x100000
-#define KMALLOC_POOL_SIZE  (4 * MiB) 
+
+//  This MUST match the size of the kmalloc section provided in the kernel
+//  linker script, else weirdness will occur
+#define KMALLOC_POOL_SIZE  (4 * MiB)
 #define KMALLOC_CHUNK 	2
 #define KMALLOC_ARR_COUNT ((KMALLOC_POOL_SIZE / KMALLOC_CHUNK) / (sizeof(chunk_t)*8))
 #define bits(a) (sizeof(a)*8)

@@ -16,28 +16,3 @@ VirtualMemManager& VirtualMemManager::get(){
 	static VirtualMemManager vmemmanager;
 	return vmemmanager;
 }
-
-/*
-	
-*/
-mem_range_t VirtualMemManager::bootstrap(uint64_t size) {
-	auto phys_range = MemManager::get().allocate_kernel_range(size, 4096);
-	if(size & 0xFFF){
-		kdebugf("[VMM] bootstrap: size not page aligned!\n");
-	}
-	kdebugf("[VMM] bootstrap: got physical range %x-%x\n", (uint32_t)phys_range.m_start, (uint32_t)phys_range.m_end);
-	//  Allocate kmalloc pool starting at next aligned page after the kernel
-	uint32_t aligned = (((uint32_t)&_ukernel_end) & ~0xFFF) + 0x1000;
-	kdebugf("[VMM] bootstrap: allocating %x-%x for kmalloc\n", aligned, aligned+size);
-
-	uint32_t bytes = 0;
-	while(bytes < size){
-		Paging::allocate_page((void*)((uint32_t)phys_range.m_start+bytes),
-							  (void*)(aligned + bytes));
-		bytes += 4096;
-	}
-
-	kmalloc_temp = mem_range_t(aligned, aligned+size);
-
-	return kmalloc_temp;
-}

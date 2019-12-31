@@ -24,13 +24,14 @@ namespace uKernel {
 extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	tty_init();
 	kdebugf("[uKernel] uKernel booting\n");
+
+	KMalloc::get().init();
 	
 	GDT::init_GDT();
 	IDT::init_PIC();
 	IDT::init_IDT();
 
 	BootConfig::parse_multiboot_structure(multiboot_info);
-	KMalloc::get().init();
 
 	//  Find pci devices connected to the system
 	PCI::discover_devices();

@@ -6,6 +6,9 @@ _ukernel_virtual_start = 0xD0100000;
 /*  Physical address of the kernel */
 _ukernel_physical_start = 0x100000;
 
+/*	KMalloc section size */
+_ukernel_kmalloc_size = 0x400000;
+
 /*  Offset from virtual to physical*/
 _ukernel_virtual_offset = _ukernel_virtual_start - _ukernel_physical_start;
 
@@ -43,6 +46,14 @@ SECTIONS
 
 	}
 
-	_ukernel_end = .;
 
+	/*	KMalloc section  */
+	.kmalloc ALIGN(4K) : AT(ADDR(.kmalloc) - _ukernel_virtual_offset)
+	{
+	    _ukernel_kmalloc_start = .;
+		. += _ukernel_kmalloc_size;
+	}
+	
+    _ukernel_end = .;
+	_ukernel_kmalloc_end = .;
 }

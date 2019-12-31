@@ -27,11 +27,10 @@ KMalloc& KMalloc::get() {
 }
 
 void KMalloc::init() {
-	m_kmalloc_mem_range = mem_range_t(0, 0);
-
 	memset((void*)m_mem_allocations, 0, KMALLOC_ARR_COUNT*sizeof(chunk_t));
 
-	m_kmalloc_mem_range = VirtualMemManager::get().bootstrap(KMALLOC_POOL_SIZE);
+	m_kmalloc_mem_range = mem_range_t((uintptr_t)&_ukernel_kmalloc_start,
+	                                  (uintptr_t)&_ukernel_kmalloc_end);
 }
 
 /*

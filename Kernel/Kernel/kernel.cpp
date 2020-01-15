@@ -8,7 +8,6 @@
 #include <Arch/i386/timer.hpp>
 #include <Arch/i386/paging.hpp>
 #include <Arch/i386/BootConfig.hpp>
-#include <Arch/i386/MemManager.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Device/PCI.hpp>
 #include <Kernel/Device/IDE.hpp>

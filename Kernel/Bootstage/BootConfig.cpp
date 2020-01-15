@@ -1,7 +1,7 @@
 #include <Arch/i386/BootConfig.hpp>
-#include <Arch/i386/MemManager.hpp>
 #include <Arch/i386/multiboot.hpp>
 #include <Arch/i386/paging.hpp>
+#include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 
 extern uint32_t _ukernel_virtual_offset;
@@ -62,7 +62,7 @@ void BootConfig::parse_multiboot_structure(uintptr_t* multiboot_info){
 		kdebugf("flags 4 or 5 present\n");
 
 	if(flags & multiboot_flag_t::MULTIBOOT_MEMMAP)
-		MemManager::get().parse_multiboot_mmap(&phys_multiboot_info[11]);
+		VirtualMemManager::get().parse_multiboot_mmap(&phys_multiboot_info[11]);
 
 	if(flags & multiboot_flag_t::MULTIBOOT_BOOTNAME){
 		uint32_t* address = sanitize_multiboot_pointer((uint32_t*)phys_multiboot_info[16]);

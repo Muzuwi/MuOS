@@ -1,6 +1,5 @@
 #include <Arch/i386/BootConfig.hpp>
 #include <Arch/i386/multiboot.hpp>
-#include <Arch/i386/paging.hpp>
 #include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 
@@ -18,17 +17,22 @@ uint32_t* sanitize_multiboot_pointer(uint32_t* pointer) {
 
 	uint32_t* virtual_address = (uint32_t*)((uint32_t)pointer + (uint32_t)&_ukernel_virtual_offset); 
 
-	if(!Paging::is_present(virtual_address)) {
-		Paging::allocate_page((void*)pointer, (void*)virtual_address);
-	}
-
-	kdebugf("[multiboot_sanitizer] Sanitized %x to %x\n", (uint32_t)pointer, (uint32_t)virtual_address);
-
 	return virtual_address;
+
+//	if(!VMM::get_directory()->get_page(virtual_address)) {
+//		Paging::allocate_page((void*)pointer, (void*)virtual_address);
+//	}
+
+//	kdebugf("[multiboot_sanitizer] Sanitized %x to %x\n", (uint32_t)pointer, (uint32_t)virtual_address);
+
+//	return virtual_address;
 }
 
 
 void BootConfig::parse_multiboot_structure(uintptr_t* multiboot_info){
+	//  FIXME:  Right now this function is a horrible mess, refactor
+	return;
+
 	uint32_t* phys_multiboot_info = sanitize_multiboot_pointer(multiboot_info);
 
 	if(!phys_multiboot_info){
@@ -62,7 +66,7 @@ void BootConfig::parse_multiboot_structure(uintptr_t* multiboot_info){
 		kdebugf("flags 4 or 5 present\n");
 
 	if(flags & multiboot_flag_t::MULTIBOOT_MEMMAP)
-		VirtualMemManager::get().parse_multiboot_mmap(&phys_multiboot_info[11]);
+		VMM::get().parse_multiboot_mmap(&phys_multiboot_info[11]);
 
 	if(flags & multiboot_flag_t::MULTIBOOT_BOOTNAME){
 		uint32_t* address = sanitize_multiboot_pointer((uint32_t*)phys_multiboot_info[16]);

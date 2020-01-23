@@ -1,9 +1,11 @@
 EXT_OBJS+= \
 Arch/i386/gdt.o 		\
 Arch/i386/idt.o 		\
-Arch/i386/paging.o 		\
 Arch/i386/portio.o 		\
 Arch/i386/tty.o 		\
 Arch/i386/vga.o 		\
 Arch/i386/asm/idt.o 	\
-Arch/i386/asm/portio.o
+Arch/i386/asm/portio.o 		\
+Arch/i386/Page.o 		\
+Arch/i386/PageDirectory.o	\
+Arch/i386/PagingBootstrap.o	\

@@ -45,17 +45,13 @@ _start:
 	;  This basically sets up higher half mappings
 	;  but in c, because ASM does not bring joy to me
 	;  The kernel is mapped to 0xd0000000+1MiB
-	extern _stage0_entrypoint
-	mov eax, _stage0_entrypoint
+
+    extern _paging_bootstrap
+	mov eax, _paging_bootstrap
 	sub eax, _ukernel_virtual_offset
 	call eax
 
-	;  Correct stack address
-	mov eax, esp
-	add eax, _ukernel_virtual_offset
-	mov esp, eax
-
-	;  Do a far jump into higher half
+    ;  Do a far jump into higher half
 	mov eax, higher
 	push eax
 	ret

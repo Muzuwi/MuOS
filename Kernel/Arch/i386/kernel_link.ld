@@ -53,7 +53,13 @@ SECTIONS
 	    _ukernel_kmalloc_start = .;
 		. += _ukernel_kmalloc_size;
 	}
-	
-    _ukernel_end = .;
 	_ukernel_kmalloc_end = .;
+	
+    .kernel_pages ALIGN(4K) : AT(ADDR(.kernel_pages) - _ukernel_virtual_offset)
+	{
+	    _ukernel_pages_start = .;
+	    . += ((0x100000000 - _ukernel_virtual_offset) / 0x100000) * 1024;
+	}
+
+    _ukernel_end = .;
 }

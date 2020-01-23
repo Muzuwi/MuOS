@@ -1,21 +1,40 @@
-#include <Kernel/Memory/VirtualMemManager.hpp>
+﻿#include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Arch/i386/multiboot.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
+#include <Arch/i386/PageDirectory.hpp>
 
-extern uint32_t _ukernel_start, _ukernel_end, _ukernel_virtual_start, _ukernel_virtual_offset;
+extern uint32_t _ukernel_start, _ukernel_end, _ukernel_virtual_start;
 
-VirtualMemManager::VirtualMemManager() {
+uint32_t s_kernel_directory_table[1024] __attribute__((aligned(4096)));
+PageDirectory* VMM::s_kernel_directory = reinterpret_cast<PageDirectory*>(&s_kernel_directory_table[0]);
 
+/*
+ *	Initializes the memory manager of the kernel
+ *  TODO: Set permissions on the kernel executable sections
+ */
+void VMM::init() {
+	kdebugf("[VMM] Removing identity mappings\n");
+
+	//  FIXME:  Add a method to PageDirectory that allows unmapping entire tables
+	//  and actually flushes them afterwards
+	s_kernel_directory->get_entry((uint32_t*)0x0).set_flag(DirectoryFlag::Present, false);
 }
 
-VirtualMemManager& VirtualMemManager::get(){
-	static VirtualMemManager vmemmanager;
-	return vmemmanager;
+/*
+ *	Returns the kernel page directory
+ */
+PageDirectory* VMM::get_directory() {
+	return s_kernel_directory;
 }
 
-void VirtualMemManager::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
+VMM& VMM::get(){
+	static VMM virtual_memory_manager;
+	return virtual_memory_manager;
+}
+
+void VMM::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 	auto mmap_len = multiboot_mmap[0];
-	auto mmap_addr = (uint32_t)multiboot_mmap[1] + (uint32_t)&_ukernel_virtual_offset;
+	auto mmap_addr = (uint32_t)TO_VIRT(multiboot_mmap[1]);
 	kdebugf("[VMM] mmap size: %x\n", mmap_len);
 	kdebugf("[VMM] mmap addr: %x\n", mmap_addr);
 

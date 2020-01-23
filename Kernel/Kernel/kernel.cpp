@@ -6,12 +6,12 @@
 #include <Arch/i386/interrupts.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/timer.hpp>
-#include <Arch/i386/paging.hpp>
 #include <Arch/i386/BootConfig.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Device/PCI.hpp>
 #include <Kernel/Device/IDE.hpp>
 #include <Kernel/Filesystem/VDM.hpp>
+#include <Kernel/Memory/VirtualMemManager.hpp>
 
 namespace uKernel {
 	extern "C" void kernel_entrypoint(uintptr_t*);
@@ -23,6 +23,8 @@ namespace uKernel {
 extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	tty_init();
 	kdebugf("[uKernel] uKernel booting\n");
+
+	VMM::init();
 
 	KMalloc::get().init();
 	

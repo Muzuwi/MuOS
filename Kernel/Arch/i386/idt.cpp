@@ -8,6 +8,9 @@
 */
 IDT_Entry IDT::interrupts_table[IDT_INTS_COUNT] = {};
 
+//  FIXME:  Temp, will be moved
+uint64_t IDTR = 0;
+
 
 /*
 	IRQ handler wrappers
@@ -48,7 +51,20 @@ extern "C" int isr_except_machinecheck();
 extern "C" int isr_except_simdfp();
 extern "C" int isr_except_virtfault();
 extern "C" int isr_except_security();
-extern "C" void loadIDT(uint32_t);
+
+inline void lidt(uint64_t *idtr) {
+	asm volatile(
+	            "cli\n"
+	            "mov %%eax, %0\n"
+	            "lidt [%%eax]\n"
+	            "sti\t\n"
+	            :
+	            : ""((uintptr_t)idtr)
+	            :
+	            );
+}
+
+
 
 /*
 	This function sets up the Interrupt Descriptor Table
@@ -124,15 +140,12 @@ void IDT::init_IDT(){
 	SETIRQ(irq14, 46)
 	SETIRQ(irq15, 47)
 
-	uint32_t idt_addr = (uint32_t)interrupts_table;
-	uint64_t idtr = 0;
-
 	uint16_t idt_size = sizeof(interrupts_table)*sizeof(IDT_Entry);
-	idtr |= idt_size;
-	idtr |= ((uint64_t)idt_addr) << 16;
+	IDTR |= idt_size;
+	IDTR |= ((uint64_t)interrupts_table) << 16;
 
 	kdebugf(IDT_LOG "Loading IDT table \n");
-	loadIDT((uint32_t)&idtr);
+	lidt(&IDTR);
 	kdebugf(IDT_LOG "IDT loaded\n");
 }
 

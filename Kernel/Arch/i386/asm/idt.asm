@@ -1,13 +1,5 @@
 section .text
 
-global loadIDT
-loadIDT:
-	mov edx, [esp+4]
-	cli
-	lidt [edx]
-	sti
-	ret
-
 global irq0
 irq0:
 	pusha

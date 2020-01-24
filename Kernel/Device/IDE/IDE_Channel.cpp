@@ -1,6 +1,6 @@
 #include <Kernel/Device/IDE/IDE_Channel.hpp>
 #include <Kernel/ksleep.hpp>
-#include <Arch/i386/portio.hpp>
+#include <Arch/i386/PortIO.hpp>
 
 /*	===========================================================================
  *								IDE Channel class

@@ -1,5 +1,5 @@
 #include <Kernel/Device/PCI.hpp>
-#include <Arch/i386/portio.hpp>
+#include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <LibGeneric/Vector.hpp>
 

@@ -1,5 +1,5 @@
 #include <Kernel/Debug/kdebugf.hpp>
-#include <Arch/i386/portio.hpp>
+#include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/tty.h>
 #include <stdarg.h>
 #include <stdio.h>

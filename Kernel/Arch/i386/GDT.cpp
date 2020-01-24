@@ -1,5 +1,5 @@
-#include <Arch/i386/gdt.hpp>
-#include <Arch/i386/portio.hpp>
+#include <Arch/i386/GDT.hpp>
+#include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 
 /*

@@ -1,5 +1,5 @@
-#include <Arch/i386/portio.hpp>
-#include <Arch/i386/registers.hpp>
+#include <Arch/i386/PortIO.hpp>
+#include <Arch/i386/Registers.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 
 /*

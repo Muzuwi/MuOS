@@ -1,5 +1,5 @@
 ﻿#include <Kernel/Memory/VirtualMemManager.hpp>
-#include <Arch/i386/multiboot.hpp>
+#include <Arch/i386/Multiboot.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/PageDirectory.hpp>
 

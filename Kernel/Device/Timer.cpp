@@ -1,5 +1,5 @@
-#include <Arch/i386/timer.hpp>
-#include <Arch/i386/portio.hpp>
+#include <Arch/i386/Timer.hpp>
+#include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 
 #define assert(a)

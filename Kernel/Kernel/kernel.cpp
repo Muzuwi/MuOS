@@ -2,10 +2,10 @@
 #include <string.h>
 #include <Kernel/Debug/tty.h>
 #include <Arch/i386/i8042.hpp>
-#include <Arch/i386/gdt.hpp>
-#include <Arch/i386/interrupts.hpp>
+#include <Arch/i386/GDT.hpp>
+#include <Arch/i386/IDT.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
-#include <Arch/i386/timer.hpp>
+#include <Arch/i386/Timer.hpp>
 #include <Arch/i386/BootConfig.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Device/PCI.hpp>

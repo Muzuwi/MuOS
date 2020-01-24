@@ -1,6 +1,6 @@
-#include <Arch/i386/interrupts.hpp>
-#include <Arch/i386/portio.hpp>
-#include <Arch/i386/vga.h>
+#include <Arch/i386/IDT.hpp>
+#include <Arch/i386/PortIO.hpp>
+#include <Arch/i386/VGA.h>
 #include <Kernel/Debug/kdebugf.hpp>
 
 /*

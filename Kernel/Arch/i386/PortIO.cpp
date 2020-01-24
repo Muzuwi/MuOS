@@ -1,4 +1,4 @@
-#include <Arch/i386/portio.hpp>
+#include <Arch/i386/PortIO.hpp>
 
 extern "C" void loadGDT(uint32_t);
 

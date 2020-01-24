@@ -1,5 +1,5 @@
 #include <Arch/i386/BootConfig.hpp>
-#include <Arch/i386/multiboot.hpp>
+#include <Arch/i386/Multiboot.hpp>
 #include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 

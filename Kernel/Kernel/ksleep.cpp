@@ -1,4 +1,4 @@
-#include <Arch/i386/timer.hpp>
+#include <Arch/i386/Timer.hpp>
 #include <Kernel/ksleep.hpp>
 
 /*

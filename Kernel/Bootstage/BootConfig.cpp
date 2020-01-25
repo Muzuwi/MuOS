@@ -1,9 +1,12 @@
-#include <Arch/i386/BootConfig.hpp>
+﻿#include <Arch/i386/BootConfig.hpp>
 #include <Arch/i386/Multiboot.hpp>
 #include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
+#include <Kernel/Debug/kpanic.hpp>
 
 extern uint32_t _ukernel_virtual_offset;
+
+#define TO_PHYS(a) ((uint32_t*)((uintptr_t)a - (uintptr_t)&_ukernel_virtual_offset))
 
 /*
 	This function takes a pointer from a multiboot structure
@@ -17,27 +20,29 @@ uint32_t* sanitize_multiboot_pointer(uint32_t* pointer) {
 
 	uint32_t* virtual_address = (uint32_t*)((uint32_t)pointer + (uint32_t)&_ukernel_virtual_offset); 
 
+	//  FIXME:  Giant hack, this should be done in the VMM
+	Page* page = VMM::get_directory()->get_page(virtual_address);
+	if(!page || (page && !page->get_flag(PageFlag::Present))) {
+		if(page) {
+			page->set_physical(TO_PHYS(virtual_address));
+			page->set_flag(PageFlag::Present, true);
+		} else {
+			kpanic();
+		}
+	}
+
 	return virtual_address;
-
-//	if(!VMM::get_directory()->get_page(virtual_address)) {
-//		Paging::allocate_page((void*)pointer, (void*)virtual_address);
-//	}
-
-//	kdebugf("[multiboot_sanitizer] Sanitized %x to %x\n", (uint32_t)pointer, (uint32_t)virtual_address);
-
-//	return virtual_address;
 }
 
 
 void BootConfig::parse_multiboot_structure(uintptr_t* multiboot_info){
 	//  FIXME:  Right now this function is a horrible mess, refactor
-	return;
 
 	uint32_t* phys_multiboot_info = sanitize_multiboot_pointer(multiboot_info);
 
 	if(!phys_multiboot_info){
 		kerrorf("[BootConfig] No valid multiboot structure passed, panic!\n");
-		asm volatile("cli\nhlt");
+		kpanic();
 	}
 	
 	kdebugf("[BootConfig] Multiboot structure at %x\n", phys_multiboot_info);

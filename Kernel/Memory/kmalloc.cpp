@@ -40,6 +40,8 @@ void KMalloc::logAllocationStats() {
 	kdebugf("[KMalloc] Current allocations: %i bytes\n", m_current_allocations);
 	kdebugf("[KMalloc] Total allocations: %i bytes\n", m_total_allocations);
 	kdebugf("[KMalloc] Total frees: %i bytes\n", m_total_frees);
+
+#ifdef LEAKY_LOG
 	kdebugf("[KMalloc] Detailed allocation breakdown:\n");
 
 	size_t chunk = 0;
@@ -68,6 +70,8 @@ void KMalloc::logAllocationStats() {
 	if(!any) {
 		kdebugf("  - No memory currently allocated\n");
 	}
+
+#endif
 }
 
 /*

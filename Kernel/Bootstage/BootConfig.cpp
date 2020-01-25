@@ -45,30 +45,22 @@ void BootConfig::parse_multiboot_structure(uintptr_t* multiboot_info){
 		kpanic();
 	}
 	
+#ifdef LEAKY_LOG
 	kdebugf("[BootConfig] Multiboot structure at %x\n", phys_multiboot_info);
+#endif
 
 	auto flags = (uint32_t)phys_multiboot_info[0];
-	kdebugf("flags: %x\n", flags);
-
-	if(flags & multiboot_flag_t::MULTIBOOT_MEMINFO)
-		kdebugf("mem lower: %x, mem upper: %x\n", phys_multiboot_info[1], phys_multiboot_info[2]);
-
-	if(flags & multiboot_flag_t::MULTIBOOT_BOOTDEVICE)
-		kdebugf("boot device: %x\n", phys_multiboot_info[3]);
 
 	if(flags & multiboot_flag_t::MULTIBOOT_CMDLINE){
 		uint32_t* address = sanitize_multiboot_pointer((uint32_t*)phys_multiboot_info[4]);
 
 		if(address) {
-			kdebugf("kernel arguments: %s\n", address);
+			kdebugf("[BootConfig] Kernel arguments: %s\n", address);
 		}
 	}
 
 	if(flags & multiboot_flag_t::MULTIBOOT_MODULES)
-		kdebugf("module count: %i\n", phys_multiboot_info[5]);
-
-	if(flags & 16 || flags & 32)
-		kdebugf("flags 4 or 5 present\n");
+		kdebugf("[BootConfig] Module count: %i\n", phys_multiboot_info[5]);
 
 	if(flags & multiboot_flag_t::MULTIBOOT_MEMMAP)
 		VMM::get().parse_multiboot_mmap(&phys_multiboot_info[11]);
@@ -76,7 +68,7 @@ void BootConfig::parse_multiboot_structure(uintptr_t* multiboot_info){
 	if(flags & multiboot_flag_t::MULTIBOOT_BOOTNAME){
 		uint32_t* address = sanitize_multiboot_pointer((uint32_t*)phys_multiboot_info[16]);
 		if(address) {
-			kdebugf("bootloader name: %s\n", address);
+			kdebugf("[BootConfig] Bootloader name: %s\n", address);
 		}
 	}
 }

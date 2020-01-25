@@ -8,7 +8,9 @@ static gen::vector<VirtualBlockDevice*> virtual_drives;
 void VDM::register_drive(VirtualBlockDevice* drive) {
 	if(!drive || virtual_drives.contains(drive)) return;
 
+#ifdef LEAKY_LOG
 	kdebugf("[VDM] Registering drive at %x\n", (uint32_t)drive);
+#endif
 	virtual_drives.push_back(drive);
 
 }
@@ -23,8 +25,10 @@ void VDM::unregister_drive(VirtualBlockDevice* drive) {
 }
 
 void VDM::debug() {
+#ifdef LEAKY_LOG
 	kdebugf("[VDM] Saved devices: \n");
 	for(size_t i = 0; i < virtual_drives.size(); i++) {
 		kdebugf("	- %x\n", (uint32_t)virtual_drives[i]);
 	}
+#endif
 }

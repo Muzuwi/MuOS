@@ -1,6 +1,5 @@
 #include <Arch/i386/IDT.hpp>
 #include <Arch/i386/PortIO.hpp>
-#include <Arch/i386/VGA.h>
 #include <Kernel/Debug/kdebugf.hpp>
 
 /*
@@ -144,7 +143,6 @@ void IDT::init_IDT(){
 	IDTR |= idt_size;
 	IDTR |= ((uint64_t)interrupts_table) << 16;
 
-	kdebugf(IDT_LOG "Loading IDT table \n");
 	lidt(&IDTR);
 	kdebugf(IDT_LOG "IDT loaded\n");
 }
@@ -156,7 +154,6 @@ void IDT::init_IDT(){
 */
 extern "C" void remapPIC();
 void IDT::init_PIC(){
-	kdebugf(PIC_LOG "Initializing PIC\n");
 
 	out(PIC_MASTER_CMD, 0x11);
 	out(PIC_SLAVE_CMD, 0x11);

@@ -35,8 +35,13 @@ VMM& VMM::get(){
 void VMM::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 	auto mmap_len = multiboot_mmap[0];
 	auto mmap_addr = (uint32_t)TO_VIRT(multiboot_mmap[1]);
+
+#ifdef LEAKY_LOG
 	kdebugf("[VMM] mmap size: %x\n", mmap_len);
 	kdebugf("[VMM] mmap addr: %x\n", mmap_addr);
+#endif
+
+	kdebugf("[VMM] Multiboot memory map:\n");
 
 	//  Total system memory
 	uint64_t memory_amount = 0, reserved_amount = 0;
@@ -48,7 +53,7 @@ void VMM::parse_multiboot_mmap(uintptr_t* multiboot_mmap) {
 		uint64_t range = *((uint64_t*)(pointer + 12));
 		uint64_t end   = start + range;
 		auto type = *((uint32_t*)(pointer + 20));
-		kdebugf("%x%x", (uint32_t)((start >> 32) & (0xFFFFFFFF)),(uint32_t)(start & 0xFFFFFFFF));
+		kdebugf("[VMM] %x%x", (uint32_t)((start >> 32) & (0xFFFFFFFF)),(uint32_t)(start & 0xFFFFFFFF));
 		kdebugf(" - %x%x: ", (uint32_t)((end >> 32) & (0xFFFFFFFF)),(uint32_t)(end & 0xFFFFFFFF));
 
 		switch((mmap_memory_type_t)type){

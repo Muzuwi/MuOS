@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <LibGeneric/InitializerList.hpp>
 
 #ifdef __is_kernel_build__
 #include <Kernel/Debug/kassert.hpp>
@@ -13,6 +14,7 @@ namespace gen {
 	public:
 		vector();
 		vector(const vector<T> &vec);
+		vector(std::initializer_list<T> list);
 		~vector();
 		void push_back(T value);
 
@@ -41,6 +43,18 @@ gen::vector<T>::vector(const vector<T> &vec) {
 
 	for(size_t i = 0; i < m_size; i++) {
 		m_base[i] = vec[i];
+	}
+}
+
+template<class T>
+gen::vector<T>::vector(std::initializer_list<T> list) {
+	m_size = list.size();
+	m_base = new T[m_size];
+
+	size_t i = 0;
+	std::initializer_list<int>::iterator iterator;
+	for(iterator = list.begin(); iterator != list.end(); ++iterator, ++i) {
+		m_base[i] = *iterator;
 	}
 }
 

@@ -339,6 +339,10 @@ bool PCI_Device::isValid() const{
 	return (this->getVendor() != 0xFFFF);
 }
 
+uint16_t PCI_Device::getDeviceID() const {
+	return this->readConfigField16(W_DEVICEID);
+}
+
 
 void check_device(uint8_t bus, uint8_t dev) {
 

@@ -34,6 +34,7 @@ public:
 	uint16_t readConfigField16(PCI_FIELD16) const;
 	uint16_t readConfigField8(PCI_FIELD8) const;
 	uint32_t getConfigRegister(uint8_t offset) const;
+	uint16_t getDeviceID() const;
 	uint16_t getVendor() const;
 	uint16_t getBaseClass() const;
 	uint16_t getSubclass() const;

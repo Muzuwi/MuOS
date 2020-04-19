@@ -22,6 +22,7 @@ namespace uKernel {
 */
 extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	tty_init();
+	Timer::getTimer();
 	kdebugf("[uKernel] uKernel booting\n");
 
 	VMM::init();

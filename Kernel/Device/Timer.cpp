@@ -5,9 +5,6 @@
 #define assert(a)
 #define BASE_FREQ 1193182
 
-Timer* Timer::instance = nullptr; 
-static Timer system_timer;
-
 /*
 	Updates the reload value on channel0 PIT
 */
@@ -18,26 +15,18 @@ void update_timer_reload(uint16_t freq){
 
 
 Timer::Timer(){
-	if(Timer::instance){
-		kerrorf("Only one timer instance allowed!\n");
-		return;
-	}
-	Timer::instance = this;
 	m_frequency = 1000;
-	out(0x43, 0b00110110);
+	out(0x43, 0b00110100);
 	update_timer_reload(BASE_FREQ/m_frequency);
 	kdebugf("[timer] Timer initialized at %i Hz\n", m_frequency);
-	
 }
 
 /*
 	Returns a timer instance
 */
 Timer& Timer::getTimer(){
-	//  TODO: Asserts
-	assert(Timer::instance);
-
-	return *Timer::instance;
+	static Timer system_timer;
+	return system_timer;
 }
 
 /*

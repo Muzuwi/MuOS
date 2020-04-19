@@ -2,7 +2,6 @@
 #include <stdint.h>
 
 class Timer final {
-	static Timer* instance;
 	uint16_t m_frequency;
 	uint64_t m_ticks;
 public:

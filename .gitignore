@@ -10,4 +10,6 @@
 .gdb_history
 docs/*
 Toolchain/*
+!Toolchain/CMakeLists.txt
 MuOS.*
+cmake-build-muos/

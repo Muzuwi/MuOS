@@ -1,2 +1,0 @@
-EXT_OBJS+= \
-Filesystem/VDM.o 	\

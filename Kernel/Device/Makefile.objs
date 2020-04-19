@@ -1,6 +1,0 @@
-EXT_OBJS+= \
-Device/Timer.o     	 \
-Device/PCI.o		 \
-Device/IDE.o	 	 \
-Device/IDE/IDE_Channel.o \
-Device/IDE/IDE_Drive.o	 \

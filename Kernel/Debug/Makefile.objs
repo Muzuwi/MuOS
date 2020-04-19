@@ -1,4 +1,0 @@
-EXT_OBJS+=\
-Debug/kdebugf.o 	\
-Debug/kpanic.o		\
-Debug/kassert.o

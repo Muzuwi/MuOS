@@ -3,6 +3,7 @@
 #include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
+#include <Kernel/Memory/PMM.hpp>
 
 extern uint32_t _ukernel_virtual_offset;
 
@@ -63,7 +64,7 @@ void BootConfig::parse_multiboot_structure(uintptr_t* multiboot_info){
 		kdebugf("[BootConfig] Module count: %i\n", phys_multiboot_info[5]);
 
 	if(flags & multiboot_flag_t::MULTIBOOT_MEMMAP)
-		VMM::get().parse_multiboot_mmap(&phys_multiboot_info[11]);
+		PMM::handle_multiboot_memmap(&phys_multiboot_info[11]);
 
 	if(flags & multiboot_flag_t::MULTIBOOT_BOOTNAME){
 		uint32_t* address = sanitize_multiboot_pointer((uint32_t*)phys_multiboot_info[16]);

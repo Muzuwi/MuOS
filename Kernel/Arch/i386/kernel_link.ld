@@ -18,6 +18,7 @@ SECTIONS
 	/*  Start of kernel */
 	_ukernel_start = .;
 
+    _ukernel_RO_begin = .;
 	.text ALIGN(4K) : AT(ADDR(.text) - _ukernel_virtual_offset)
 	{
 		*(.multiboot)
@@ -30,6 +31,7 @@ SECTIONS
 		*(.rodata)
 
 	}
+	_ukernel_RO_end = .;
 
 	/*  R/W Data  */
 	.data ALIGN(4K) : AT(ADDR(.data) - _ukernel_virtual_offset)

@@ -4,7 +4,7 @@
 #include <Arch/i386/PageDirectory.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 
-extern uint32_t _ukernel_start, _ukernel_end, _ukernel_virtual_start;
+extern uint32_t _ukernel_start, _ukernel_end, _ukernel_virtual_start, _ukernel_RO_begin, _ukernel_RO_end;
 
 uint32_t s_kernel_directory_table[1024] __attribute__((aligned(4096)));
 PageDirectory* VMM::s_kernel_directory = reinterpret_cast<PageDirectory*>(&s_kernel_directory_table[0]);
@@ -19,6 +19,19 @@ void VMM::init() {
 	//  FIXME:  Add a method to PageDirectory that allows unmapping entire tables
 	//  and actually flushes them afterwards
 	s_kernel_directory->get_entry((uint32_t*)0x0).set_flag(DirectoryFlag::Present, false);
+
+	kdebugf("[VMM] Locking write on read-only regions\n");
+	uintptr_t cur = (uintptr_t)&_ukernel_RO_begin;
+	while(cur < (uintptr_t)&_ukernel_RO_end) {
+		auto* page = s_kernel_directory->get_page((uint32_t*)cur);
+		if(page) {
+			page->set_flag(PageFlag::RW, false);
+			invlpg((uintptr_t*)cur);
+		}
+
+		cur += 4096;
+	}
+
 }
 
 /*

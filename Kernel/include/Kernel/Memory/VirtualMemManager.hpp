@@ -21,5 +21,6 @@ public:
 	static VMM& get();
 	static void init();
 
-	void parse_multiboot_mmap(uintptr_t*);
+	void map(uintptr_t*, uintptr_t*);
+	void unmap(uintptr_t*);
 };

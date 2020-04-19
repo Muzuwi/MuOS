@@ -21,9 +21,25 @@ void PageDirectoryEntry::set_flag(DirectoryFlag flag, bool set) {
 	m_data |= set ? (uint32_t)flag : 0;
 }
 
+void PageDirectoryEntry::set_table(PageTable *table) {
+	if(this->get_table()) {
+		kdebugf("[PDE] refusing to set new table: table already set (to %x) \n", this->get_table());
+		return;
+	}
+
+	if((uint32_t)table & 0xFFF) {
+		kdebugf("[PDE] refusing to set new table: unaligned table address\n");
+		return;
+	}
+	m_data = (m_data & 0xFFF) | ((uint32_t)table);
+}
+
 extern uint32_t _ukernel_virtual_offset;
 PageTable* PageDirectoryEntry::get_table() const {
-	return reinterpret_cast<PageTable*>((m_data & 0xFFFFF000) + (uint32_t)&_ukernel_virtual_offset);
+	if(m_data == 0)
+		return nullptr;
+	else
+		return reinterpret_cast<PageTable*>((m_data & 0xFFFFF000) + (uint32_t)&_ukernel_virtual_offset);
 }
 
 void PageDirectory::dump() {
@@ -70,4 +86,23 @@ void PageDirectory::load_cr3() {
 	    : ""(&m_entries[0])
 	    :
 	 );
+}
+
+/*
+ *	Creates a PageTable that would contain the given virtual address, if one
+ *	does not exist already
+ */
+extern uint32_t _ukernel_pages_start;
+void PageDirectory::create_table(uint32_t *address) {
+	auto& pde = this->get_entry(address);
+
+	if(pde.get_flag(DirectoryFlag::Present) && pde.get_table()) {
+		kdebugf("[PD] table already exists at %x\n", pde.get_table());
+		return;
+	}
+
+	uint32_t *table_start = (uint32_t*)(GET_DIR(address)*1024 - GET_DIR((uint32_t)&_ukernel_virtual_offset)*1024);
+//	kdebugf("[PD] start at %x\n", (unsigned)table_start);
+	pde.set_table(reinterpret_cast<PageTable*>(table_start));
+
 }

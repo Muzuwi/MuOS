@@ -26,6 +26,8 @@ public:
 	PageTable* get_table() const;
 	uint16_t raw_flags() const;
 
+	void set_table(PageTable*);
+
 	bool get_flag(DirectoryFlag) const;
 	void set_flag(DirectoryFlag, bool);
 };
@@ -42,4 +44,10 @@ public:
 	void dump();
 
 	void load_cr3();
+
+	void create_table(uint32_t*);
 } __attribute__((aligned(4096)));
+
+
+static_assert(sizeof(PageDirectoryEntry) == sizeof(uint32_t), "Invalid PDE class size!");
+static_assert(sizeof(PageDirectory) == 1024 * sizeof(uint32_t), "Invalid Page Directory size!");

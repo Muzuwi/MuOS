@@ -3,16 +3,17 @@ temp:
 	dd 0
 
 reg_store:
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
+	dd 0    ; eax
+	dd 0    ; ebx
+	dd 0    ; ecx
+	dd 0    ; edx
+	dd 0    ; esp
+	dd 0    ; ebp
+	dd 0    ; edi
+	dd 0    ; esi
+	dd 0    ; eip
+	dd 0    ; cr2
+	dd 0    ; fault error code
 
 
 
@@ -27,13 +28,15 @@ reg_store:
 	mov [reg_store + 28], esi
 	pop eax 
 	mov [reg_store + 32], eax
+	mov eax, cr2
+	mov [reg_store + 36], eax
 	push eax
 %endmacro
 
 %macro save_error_code 0
 	mov [temp], eax
 	pop eax
-	mov [reg_store + 36], eax
+	mov [reg_store + 40], eax
 	mov eax, [temp]
 %endmacro
 

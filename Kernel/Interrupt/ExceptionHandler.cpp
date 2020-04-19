@@ -118,13 +118,16 @@ extern "C" void _kernel_exception_pagefault(Registers& regs){
 	kerrorf("Page Fault exception at %x\n", regs.eip);
 	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
 	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, regs.esp, regs.esi, regs.edi);
-	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("eip: %x, cr2: %x\n", regs.eip, regs.cr2);
 	kerrorf("Error code: %x\n", regs.error_code);
 	kerrorf("Fault reason: %s - caused by a %s, CPL %i\n",
 	        regs.error_code & 1 ? "Page-Protection violation" : "Non-present page",
 	        regs.error_code & 2 ? "write" : "read",
 	        regs.error_code & 4 ? 3 : 0
 	        );
+	if(regs.cr2 == 0) {
+		kerrorf("Notice: Possible null pointer dereference - tried accessing address 0\n");
+	}
 	asm volatile(
 	    "cli\n"
 	    "hlt\t\n"

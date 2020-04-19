@@ -11,5 +11,6 @@ struct Registers {
 	uint32_t edi;
 	uint32_t esi; 
 	uint32_t eip;
+	uint32_t cr2;
 	uint32_t error_code;
 } __attribute__((packed));

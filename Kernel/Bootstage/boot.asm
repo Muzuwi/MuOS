@@ -56,6 +56,9 @@ _start:
 	push eax
 	ret
 higher:
+    ;  Set up proper higher-half stack address
+    mov eax, stack_top
+    mov esp, eax
 
 	;   Call fancy init
 	extern _init
@@ -70,11 +73,6 @@ higher:
 
 	extern _fini
 	call _fini
-
-    push dword 0
-	extern __cxa_finalize
-	call __cxa_finalize
-	add esp, 4
 
 	loopLabel:
 		cli

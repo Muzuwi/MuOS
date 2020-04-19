@@ -15,6 +15,18 @@ extern "C" void out(uint16_t port, uint8_t value){
 }
 
 /*
+	Writes a word to the specified I/O port
+*/
+extern "C" void outw(uint16_t port, uint16_t value){
+	asm volatile("mov %%ax, %0\n"
+	             "mov %%dx, %1\n"
+	             "out %%dx, %%ax\t\n"
+	:
+	:""(value), ""(port)
+	: "eax");
+}
+
+/*
  *  Writes a dword to the specified I/O port
  */
 extern "C" void outd(uint16_t port, uint32_t value) {
@@ -53,6 +65,21 @@ extern "C" uint32_t ind(uint16_t port){
 	             : ""(port)
 	             : "memory"
 	             );
+	return data;
+}
+
+/*
+	Reads a word from the specified I/O port
+*/
+extern "C" uint16_t inw(uint16_t port) {
+	uint16_t data = 0;
+	asm volatile("mov %%dx, %1\n"
+	             "in %%ax, %%dx\n"
+	             "mov %0, %%ax\t\n"
+				: "=r"(data)
+				: ""(port)
+				: "memory"
+				);
 	return data;
 }
 

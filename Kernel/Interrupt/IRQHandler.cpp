@@ -1,5 +1,5 @@
 #include <Arch/i386/PortIO.hpp>
-#include <Arch/i386/VGA.h>
+#include <Arch/i386/vga.h>
 #include <Arch/i386/Timer.hpp>
 
 /*

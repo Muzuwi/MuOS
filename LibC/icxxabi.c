@@ -4,10 +4,14 @@
 extern "C"
 #endif
 
-extern void* __dso_handle;
+void* __dso_handle;
 
 struct atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
 uarch_t __atexit_func_cnt = 0;
+
+void __cxa_pure_virtual() {
+
+}
 
 int __cxa_atexit(void (*dtor)(void*), void *objptr, void *dso_handle) {
 	if(__atexit_func_cnt >= ATEXIT_MAX_FUNCS) return -1;

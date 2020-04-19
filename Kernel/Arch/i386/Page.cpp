@@ -1,6 +1,20 @@
 #include <Arch/i386/Page.hpp>
 
 /*
+ *	Invalidates TLB entries for virt_addr
+ */
+void invlpg(uintptr_t *virt_addr) {
+	asm volatile("mov %%eax, %0\n"
+	             "invlpg [%%eax]\t\n"
+	             :
+	             : ""(virt_addr)
+	             : "eax"
+	            );
+}
+
+
+
+/*
  *	Pages
  */
 Page::Page() {

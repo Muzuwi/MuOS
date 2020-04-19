@@ -33,3 +33,5 @@ public:
 
 	Page& get_page(uint32_t*);
 } __attribute__((aligned(4096)));
+
+void invlpg(uintptr_t*);

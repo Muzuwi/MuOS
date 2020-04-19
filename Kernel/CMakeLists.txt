@@ -36,10 +36,8 @@ add_library(Kernel
         Arch/i386/PortIO.cpp
         Arch/i386/tty.c
         Arch/i386/vga.c
-        Arch/Makefile.objs
         Bootstage/boot.asm
         Bootstage/BootConfig.cpp
-        Bootstage/Makefile.objs
         Debug/kassert.cpp
         Debug/kdebugf.cpp
         Debug/kpanic.cpp
@@ -82,7 +80,6 @@ add_library(Kernel
         Interrupt/asm/ExceptionEntrypoint.asm
         Interrupt/ExceptionHandler.cpp
         Interrupt/IRQHandler.cpp
-        IO/Makefile.objs
         Kernel/kernel.cpp
         Kernel/ksleep.cpp
         Memory/kmalloc.cpp

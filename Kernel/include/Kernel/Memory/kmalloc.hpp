@@ -42,7 +42,7 @@ public:
 	
 	void init();
 	uint64_t getPoolSize();
-	void* kmalloc_alloc(size_t);
+	void* kmalloc_alloc(size_t,size_t=1);
 	void kmalloc_free(void*);
 	uint64_t getCurrentAllocations();
 	uint64_t getTotalAllocations();

@@ -106,7 +106,7 @@ void KMalloc::mark_range(size_t start_chunk, size_t end_chunk, bool clear=false)
 /*
  *  Allocates a memory region
  */
-void* KMalloc::kmalloc_alloc(size_t size) {
+void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
 	//  We're using a structure at the beginning of the 
 	//  allocated memory to make freeing memory easier
 	size_t proper_size = size + sizeof(allocation_t);
@@ -125,8 +125,17 @@ void* KMalloc::kmalloc_alloc(size_t size) {
 
 		size_t mask = bitmask(chunk % bits(chunk_t));
 
+		bool isAligned = true;
+		if(align != 1) {
+			uint32_t mem_offset = chunk*KMALLOC_CHUNK;
+			uint32_t* memory_begin = (uint32_t*)(m_kmalloc_mem_range.m_start + mem_offset);
+			uint32_t allocated_begin = (uint32_t)memory_begin+sizeof(allocation_t);
+
+			isAligned = (uint32_t)allocated_begin % 16 == 0;
+		}
+
 		if(!(mask & m_mem_allocations[arr_index])) {
-			if(start == -1)
+			if(start == -1 && isAligned)
 				start = chunk;
 			available++;
 		} else {

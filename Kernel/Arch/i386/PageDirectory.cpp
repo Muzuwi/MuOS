@@ -28,7 +28,7 @@ void PageDirectoryEntry::set_table(PageTable *table) {
 	}
 
 	if((uint32_t)table & 0xFFF) {
-		kdebugf("[PDE] refusing to set new table: unaligned table address\n");
+		kdebugf("[PDE] refusing to set new table: unaligned table address [%x]\n", (unsigned)table);
 		return;
 	}
 	m_data = (m_data & 0xFFF) | ((uint32_t)table);
@@ -101,8 +101,11 @@ void PageDirectory::create_table(uint32_t *address) {
 		return;
 	}
 
-	uint32_t *table_start = (uint32_t*)(GET_DIR(address)*1024 - GET_DIR((uint32_t)&_ukernel_virtual_offset)*1024);
-//	kdebugf("[PD] start at %x\n", (unsigned)table_start);
+	uint32_t pages_start_physical = (uint32_t)&_ukernel_pages_start - (uint32_t)&_ukernel_virtual_offset;
+	uint32_t table_start = GET_DIR((uint32_t)address) - GET_DIR((uint32_t)&_ukernel_virtual_offset);
+	table_start *= 4096;
+	table_start += pages_start_physical;
+
 	pde.set_table(reinterpret_cast<PageTable*>(table_start));
 
 }

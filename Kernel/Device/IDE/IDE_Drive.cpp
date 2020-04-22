@@ -20,8 +20,6 @@ IDE_Drive::IDE_Drive(IDE_Channel& channel, IDE_Drive_Type drive_type, ATA_TYPE a
 #define byte(a) (*((uint8_t*)((uint32_t)conf_space + a)))
 #define word(a) (*((uint16_t*)((uint32_t)conf_space + a)))
 #define dword(a) (*((uint32_t*)((uint32_t)conf_space + a)))
-	kdebugf("[ide] Drive is an %s drive\n", ata_type == ATA_TYPE::ATA ? "ATA"
-	                                                                  : "ATAPI");
 	m_channel = &channel;
 	m_drive_type = drive_type;
 	m_ata_type = ata_type;
@@ -41,8 +39,12 @@ IDE_Drive::IDE_Drive(IDE_Channel& channel, IDE_Drive_Type drive_type, ATA_TYPE a
 	}
 	m_model[40] = '\0';
 
-	kdebugf("[ide] Found %s drive '%s'\n", m_drive_type == IDE_Drive_Type::Master ? "master" : "slave", &m_model[0]);
-	kdebugf("[ide] Drive size: %i\n", m_size);
+	kdebugf("[ide] %s %s drive, size: %i, label: '%s'\n",
+	        m_drive_type == IDE_Drive_Type::Master ? "master" : "slave",
+			ata_type == ATA_TYPE::ATA ? "ATA" : "ATAPI",
+			m_size,
+			&m_model[0]
+			);
 }
 
 /*

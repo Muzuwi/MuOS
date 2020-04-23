@@ -45,18 +45,22 @@ _start:
 	;  This basically sets up higher half mappings
 	;  but in c, because ASM does not bring joy to me
 	;  The kernel is mapped to 0xd0000000+1MiB
-
+	;  The boostrap takes care of jumping to _ukernel_higher_entrypoint
     extern _paging_bootstrap
 	mov eax, _paging_bootstrap
 	sub eax, _ukernel_virtual_offset
 	call eax
 
-    ;  Do a far jump into higher half
-	mov eax, higher
-	push eax
-	ret
-higher:
-    ;  Set up proper higher-half stack address
+    ;  If we reach this, something has gone terribly wrong
+dead:
+    cli
+    hlt
+    jmp dead
+
+;       Calling constructors and calling the actual kernel entrypoint
+global _ukernel_higher_entrypoint
+_ukernel_higher_entrypoint:
+    ;  Reset stack address
     mov eax, stack_top
     mov esp, eax
 

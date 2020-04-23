@@ -3,6 +3,7 @@
 
 extern uint32_t s_kernel_directory_table;
 extern uint32_t _ukernel_virtual_offset, _ukernel_pages_start, _ukernel_end;
+extern uint32_t _ukernel_higher_entrypoint;
 
 #define TO_PHYSICAL(a) ((uintptr_t*)((uintptr_t)a - (uintptr_t)&_ukernel_virtual_offset))
 #define GET_DIR(a) ((uint32_t)a >> 22)
@@ -52,25 +53,25 @@ extern "C" void _paging_bootstrap() {
 		}
 	}
 
-	//  Update CR3 and enable paging bit
 	asm volatile(
+	//  Update CR3 and enable paging bit
 	    "mov %%eax, %0\n"
 	    "mov cr3, %%eax\n"
 	    "mov %%eax, cr0\n"
 	    "or %%eax, 0x80000001\n"
 	    "mov cr0, %%eax\n"
-	    :
-	    : ""((uint32_t)phys_dir)
-	    : "eax"
-	);
-
-	//  Correct ESP to point to higher half
-	asm volatile(
+	 //  Fix esp
 	    "mov %%eax, %%esp\n"
 	    "add %%eax, %0\n"
-	    "mov %%esp, %%eax\t\n"
-	    :
-	    : ""((uint32_t)&_ukernel_virtual_offset)
+	    "mov %%esp, %%eax\n"
+	 //  Jump to higher half
+	    "mov %%eax, %1\n"
+	    "push %%eax\n"
+	    "ret\n"     //  Cannot trust normal function returns at this point, as stack protector
+	                //  initializes the canary to an undefined value because virtual mappings
+	                //  have not been initialized yet. Instead the bootstrap now jumps to the
+	                //  kernel higher entrypoint by itself.
+	    :: ""((uint32_t)phys_dir), ""((uint32_t)&_ukernel_higher_entrypoint)
 	    : "eax"
 	);
 }

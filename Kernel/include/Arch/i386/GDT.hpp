@@ -1,6 +1,23 @@
 #pragma once
 #include <stdint.h>
 
+constexpr unsigned kernelcdescr_offset = 1,
+		kernelddescr_offset = 2,
+		usercdescr_offset = 3,
+		userddescr_offset = 4,
+		tss_offset = 5;
+
+constexpr unsigned user_CS = usercdescr_offset * 8,
+		user_DS = userddescr_offset * 8,
+		kernel_CS = kernelcdescr_offset * 8,
+		kernel_DS = kernelddescr_offset * 8,
+		TSS_sel = tss_offset * 8;
+
+
+#define TSS_ESP0 1
+#define TSS_SS0  2
+#define TSS_IOPB 25
+
 #define SEGMENT_DESCTYPE(x) ((x) << 0x04)
 #define SEGMENT_PRESENT(x) ((x) << 0x07)
 #define SEGMENT_SAVAIL(x) ((x) << 0x0C) 
@@ -41,4 +58,20 @@ namespace GDT {
 	void init_GDT();
 	void gdtentry_from_struct(uint16_t*, gdt_entry_t);
 	uint64_t create_descriptor(uint32_t, uint32_t, uint16_t);
+
+	constexpr unsigned get_user_CS() {
+		return user_CS;
+	}
+
+	constexpr unsigned get_user_DS() {
+		return user_DS;
+	}
+
+	constexpr unsigned get_kernel_CS() {
+		return kernel_CS;
+	}
+
+	constexpr unsigned get_kernel_DS() {
+		return kernel_DS;
+	}
 }

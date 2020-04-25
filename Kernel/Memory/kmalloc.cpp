@@ -131,7 +131,7 @@ void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
 			uint32_t* memory_begin = (uint32_t*)(m_kmalloc_mem_range.m_start + mem_offset);
 			uint32_t allocated_begin = (uint32_t)memory_begin+sizeof(allocation_t);
 
-			isAligned = (uint32_t)allocated_begin % 16 == 0;
+			isAligned = (uint32_t)allocated_begin % align == 0;
 		}
 
 		if(!(mask & m_mem_allocations[arr_index])) {

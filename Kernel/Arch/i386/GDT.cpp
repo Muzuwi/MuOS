@@ -34,7 +34,6 @@ void GDT::init_GDT(){
 			 			SEGMENT_DESCTYPE(1) | SEGMENT_PRESENT(1) | SEGMENT_SAVAIL(0) |
 			 			SEGMENT_LONG(0) | SEGMENT_SIZE(1) | SEGMENT_GRAN(1) | 
 			 			SEGMENT_PRIV(3) | SEG_DATA_RW );
-	kdebugf("tss loc: %x\n", &TSS[0]);
 	uint64_t tss = create_descriptor((uint32_t)&TSS[0], sizeof(TSS)-1, 0xc9);
 
 

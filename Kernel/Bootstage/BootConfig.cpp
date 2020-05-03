@@ -4,10 +4,7 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/Memory/PMM.hpp>
-
-extern uint32_t _ukernel_virtual_offset;
-
-#define TO_PHYS(a) ((uint32_t*)((uintptr_t)a - (uintptr_t)&_ukernel_virtual_offset))
+#include <Kernel/Symbols.hpp>
 
 /*
 	This function takes a pointer from a multiboot structure

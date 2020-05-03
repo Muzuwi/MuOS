@@ -2,11 +2,6 @@
 #include <stdint.h>
 #include <Kernel/SystemTypes.hpp>
 
-//  Symbols from the kernel linker script for the kmalloc section
-extern uint32_t _ukernel_kmalloc_start;
-extern uint32_t _ukernel_kmalloc_end;
-extern uint32_t _ukernel_kmalloc_size;
-
 #define MiB 0x100000
 
 //  This MUST match the size of the kmalloc section provided in the kernel

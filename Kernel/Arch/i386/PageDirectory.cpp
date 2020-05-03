@@ -1,4 +1,5 @@
 ﻿#include <Arch/i386/PageDirectory.hpp>
+#include <Kernel/Symbols.hpp>
 
 PageDirectoryEntry::PageDirectoryEntry() {
 	m_data = 0;
@@ -34,7 +35,6 @@ void PageDirectoryEntry::set_table(PageTable *table) {
 	m_data = (m_data & 0xFFF) | ((uint32_t)table);
 }
 
-extern uint32_t _ukernel_virtual_offset;
 PageTable* PageDirectoryEntry::get_table() const {
 	if(m_data == 0)
 		return nullptr;
@@ -92,7 +92,6 @@ void PageDirectory::load_cr3() {
  *	Creates a PageTable that would contain the given virtual address, if one
  *	does not exist already
  */
-extern uint32_t _ukernel_pages_start;
 void PageDirectory::create_table(uint32_t *address) {
 	auto& pde = this->get_entry(address);
 

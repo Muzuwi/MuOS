@@ -3,8 +3,7 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/PageDirectory.hpp>
 #include <Kernel/Debug/kpanic.hpp>
-
-extern uint32_t _ukernel_start, _ukernel_end, _ukernel_virtual_start, _ukernel_RO_begin, _ukernel_RO_end;
+#include <Kernel/Symbols.hpp>
 
 uint32_t s_kernel_directory_table[1024] __attribute__((aligned(4096)));
 PageDirectory* VMM::s_kernel_directory = reinterpret_cast<PageDirectory*>(&s_kernel_directory_table[0]);

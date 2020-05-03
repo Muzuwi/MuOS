@@ -1,7 +1,7 @@
 #include <string.h>
 #include <Arch/i386/vga.h>
+#include <Kernel/Symbols.hpp>
 
-extern uint32_t _ukernel_virtual_offset;
 static uint16_t* vga_buffer_base_address = (uint16_t*)(0xB8000);
 
 uint8_t vga_console_position_x = 0, vga_console_position_y = 0;

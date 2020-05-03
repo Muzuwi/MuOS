@@ -1,17 +1,7 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
 #include <Arch/i386/PageDirectory.hpp>
-
-/*
- *	Start of kernel virtual address space
- */
-extern uint32_t _ukernel_virtual_offset;
-
-/*
- *	Convert between physical-virtual addresses
- */
-#define TO_VIRT(a) ((uintptr_t)a + (uintptr_t)&_ukernel_virtual_offset)
-
+#include <Kernel/Symbols.hpp>
 
 class VMM final {
 	VMM() {}

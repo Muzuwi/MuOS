@@ -2,6 +2,7 @@
 #include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
+#include <Kernel/Symbols.hpp>
 #include <string.h>
 
 //#define KMALLOC_DEBUG

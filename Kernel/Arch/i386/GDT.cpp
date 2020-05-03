@@ -1,8 +1,7 @@
 #include <Arch/i386/GDT.hpp>
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
-
-extern uint32_t _ukernel_interrupt_stack;
+#include <Kernel/Symbols.hpp>
 
 /*
 	Descriptor table storage

@@ -3,8 +3,7 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Arch/i386/Multiboot.hpp>
-
-extern uint32_t _ukernel_start, _ukernel_end;
+#include <Kernel/Symbols.hpp>
 
 void PMM::handle_multiboot_memmap(uintptr_t *multiboot_mmap) {
 	auto mmap_len = multiboot_mmap[0];

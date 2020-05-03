@@ -1,27 +1,25 @@
 ﻿#include <stdint.h>
 #include <stddef.h>
+#include <Kernel/Symbols.hpp>
 
-extern uint32_t s_kernel_directory_table;
-extern uint32_t _ukernel_virtual_offset, _ukernel_pages_start, _ukernel_end;
-extern uint32_t _ukernel_higher_entrypoint;
 
-#define TO_PHYSICAL(a) ((uintptr_t*)((uintptr_t)a - (uintptr_t)&_ukernel_virtual_offset))
 #define GET_DIR(a) ((uint32_t)a >> 22)
-
 
 //  Page Table used for bootstrapping higher-half, otherwise we would
 //  triple fault the moment paging is enabled
 uint32_t zerodir_trampoline[1024] __attribute__((aligned(4096)));
 
-
 /*
  *	Initializes paging for the kernel in the higher-half
  */
 extern "C" void _paging_bootstrap() {
+	//  Kernel page directory
+	extern uint32_t s_kernel_directory_table;
+
 	//  Physical addresses of the page directory and page memory of the kernel
-	uint32_t *phys_dir = TO_PHYSICAL(&s_kernel_directory_table);
-	uint32_t *phys_trampoline = TO_PHYSICAL(zerodir_trampoline);
-	uint32_t *phys_kernel_pages = TO_PHYSICAL(&_ukernel_pages_start);
+	uint32_t *phys_dir = TO_PHYS(&s_kernel_directory_table);
+	uint32_t *phys_trampoline = TO_PHYS(zerodir_trampoline);
+	uint32_t *phys_kernel_pages = TO_PHYS(&_ukernel_pages_start);
 
 	//  First PD of kernel virtual address space
 	uint32_t first_dir = GET_DIR((uint32_t)(&_ukernel_virtual_offset));

@@ -1,6 +1,6 @@
 ﻿#include <Arch/i386/BootConfig.hpp>
 #include <Arch/i386/Multiboot.hpp>
-#include <Kernel/Memory/VirtualMemManager.hpp>
+#include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/Memory/PMM.hpp>

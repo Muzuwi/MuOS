@@ -12,6 +12,10 @@ extern uint32_t _ukernel_virtual_offset;
 #define TO_VIRT(a) ((uintptr_t)a + (uintptr_t)&_ukernel_virtual_offset)
 #define TO_PHYS(a) ((uintptr_t*)((uintptr_t)a - (uintptr_t)&_ukernel_virtual_offset))
 
+//  Stack area for kernel tasks
+//  TODO:  Will be removed
+extern uint32_t _ukernel_tasks_stack;
+
 //  Interrupt stack of the kernel
 extern uint32_t _ukernel_interrupt_stack;
 

@@ -1,5 +1,8 @@
 ﻿#include <Arch/i386/PageDirectory.hpp>
 #include <Kernel/Symbols.hpp>
+#include <Kernel/Memory/kmalloc.hpp>
+#include <Kernel/Memory/VMM.hpp>
+#include <string.h>
 
 PageDirectoryEntry::PageDirectoryEntry() {
 	m_data = 0;
@@ -107,4 +110,20 @@ void PageDirectory::create_table(uint32_t *address) {
 
 	pde.set_table(reinterpret_cast<PageTable*>(table_start));
 
+}
+
+/*
+ *  Allocates space for a page directory for the current process, and copies over kernel mappings to it
+ */
+PageDirectory* PageDirectory::create_for_user() {
+	//  TODO:  Should allocate a page instead of using kernel malloc
+	auto* mem = KMalloc::get().kmalloc_alloc(4096, 0x1000);
+	kdebugf("Creating page dir for user process\n");
+	if(mem) {
+		auto* kernel_dir = VMM::get_directory();
+		memcpy(mem, kernel_dir, 4096);
+	} else {
+		kerrorf("Page directory creation for user failed!");
+	}
+	return reinterpret_cast<PageDirectory*>(mem);
 }

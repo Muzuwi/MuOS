@@ -11,7 +11,9 @@
 #include <Kernel/Device/PCI.hpp>
 #include <Kernel/Device/IDE.hpp>
 #include <Kernel/Filesystem/VDM.hpp>
-#include <Kernel/Memory/VirtualMemManager.hpp>
+#include <Kernel/Memory/VMM.hpp>
+#include <Kernel/Process/Process.hpp>
+#include <Kernel/Process/Scheduler.hpp>
 
 namespace uKernel {
 	extern "C" void kernel_entrypoint(uintptr_t*);
@@ -21,14 +23,14 @@ namespace uKernel {
 	Main kernel entrypoint
 */
 extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
+	KMalloc::get().init();
 	tty_init();
 	Timer::getTimer();
+
 	kdebugf("[uKernel] uKernel booting\n");
 
 	VMM::init();
 
-	KMalloc::get().init();
-	
 	GDT::init_GDT();
 	IDT::init_PIC();
 	IDT::init_IDT();
@@ -46,10 +48,11 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 
 	VDM::debug();
 
+	Scheduler::initialize();
+
 	KMalloc::get().logAllocationStats();
 
 	kdebugf("[uKernel] Initialization took %ims\n", (int)Timer::getTimer().getTimeSinceStart());
-	while(true){
-		// kdebugf("%ims\n", (int)Timer::getTimer().getTimeSinceStart());
-	}
+
+	Scheduler::enter_scheduler_loop();
 }

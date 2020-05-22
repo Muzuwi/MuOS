@@ -63,6 +63,11 @@ SECTIONS
 	    . += ((0x100000000 - _ukernel_virtual_offset) / 0x100000) * 1024;
 	}
 
+    _ukernel_tasks_stack = .;
+	.kernel_tasks_stack ALIGN(4K) : AT(ADDR(.kernel_tasks_stack) - _ukernel_virtual_offset)
+	{
+	    . += 4096 * 4;
+	}
 
     _ukernel_interrupt_stack = .;
     .irq_stack ALIGN(4K) : AT(ADDR(.irq_stack) - _ukernel_virtual_offset)

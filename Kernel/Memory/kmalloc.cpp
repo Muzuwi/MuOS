@@ -1,6 +1,6 @@
 #include <LibGeneric/StdRequired.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
-#include <Kernel/Memory/VirtualMemManager.hpp>
+#include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/Symbols.hpp>

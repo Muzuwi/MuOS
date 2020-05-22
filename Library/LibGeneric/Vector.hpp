@@ -86,7 +86,11 @@ void gen::vector<T>::clear() {
 
 template<class T>
 void gen::vector<T>::resize(size_t new_size) {
-	if(new_size <= m_size) return;
+	if(new_size == 0) return;
+	if(new_size < m_size) {
+		m_size = new_size;
+		return;
+	}
 
 	T* old = m_base;
 	m_base = new T[new_size];

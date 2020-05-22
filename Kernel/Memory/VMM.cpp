@@ -1,9 +1,14 @@
-﻿#include <Kernel/Memory/VirtualMemManager.hpp>
+﻿#include <Kernel/Memory/VMM.hpp>
 #include <Arch/i386/Multiboot.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/PageDirectory.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/Symbols.hpp>
+#include <Kernel/Process/Process.hpp>
+#include <Kernel/Memory/VMapping.hpp>
+#include <Arch/i386/IRQDisabler.hpp>
+#include <include/Kernel/Memory/kmalloc.hpp>
+#include <string.h>
 
 uint32_t s_kernel_directory_table[1024] __attribute__((aligned(4096)));
 PageDirectory* VMM::s_kernel_directory = reinterpret_cast<PageDirectory*>(&s_kernel_directory_table[0]);
@@ -91,4 +96,64 @@ void VMM::unmap(uintptr_t *virt_addr) {
 
 	page.set_flag(PageFlag::Present, false);
 	invlpg(virt_addr);
+}
+
+/*
+ *  Allocates stack space with given size for the current process
+ */
+void* VMM::allocate_user_stack(size_t stack_size) {
+	IRQDisabler disabler;
+	//  Process stacks are allocated right before the kernel virtual address space
+	auto* stack_top = (void*)((uint32_t)&_ukernel_virtual_offset-stack_size);
+	auto* mapping = new VMapping(stack_top, stack_size, PROT_READ | PROT_WRITE, MAP_SHARED);
+
+	//  FIXME: For some reason, this PF's
+	//	Process::m_current->m_maps.push_back(mapping);
+	//  ... but this does not. WTF?
+	gen::List<VMapping*> maps{};
+	maps.push_back(mapping);
+	Process::m_current->m_maps = maps;
+
+	return (void*)((uint32_t)&_ukernel_virtual_offset - 1);
+}
+
+void VMM::notify_create_VMapping(VMapping& mapping) {
+	kdebugf("[VMM] Created VMapping(%x)\n", &mapping);
+	auto dir = Process::m_current->m_directory;
+	auto current_virt_addr = mapping.addr();
+	for(auto& map : mapping.pages()) {
+		kdebugf("Virt: %x -> Phys %x\n", current_virt_addr, map->address());
+		//  FIXME: Move table creation when it does not exist somewhere else
+		auto& pde = dir->get_entry((uint32_t*)current_virt_addr);
+
+		pde.set_flag(DirectoryFlag::Present, true);
+		pde.set_flag(DirectoryFlag::User, Process::m_current->m_ring == Ring::CPL3);
+		if(mapping.flags() & PROT_WRITE)
+			pde.set_flag(DirectoryFlag::RW, true);
+
+		auto* table = pde.get_table();
+		if(!table) {
+			kdebugf("[VMM] Table for %x does not exist\n", (unsigned)current_virt_addr);
+			//  FIXME:  Nasty
+//			table = reinterpret_cast<PageTable*>(PMM::allocate_page_user()->address());
+			table = reinterpret_cast<PageTable*>(KMalloc::get().kmalloc_alloc(4096, 0x1000));
+			memset(&table, 0x0, 4096);
+
+			pde.set_table(reinterpret_cast<PageTable*>(TO_PHYS(table)));
+		}
+
+		auto& page = table->get_page((uint32_t*)current_virt_addr);
+		page.set_physical((uintptr_t*)(map->address()));
+		page.set_flag(PageFlag::Present, true);
+		page.set_flag(PageFlag::User, Process::m_current->m_ring == Ring::CPL3);
+		if(mapping.flags() & PROT_WRITE)
+			page.set_flag(PageFlag::RW, true);
+
+		current_virt_addr = (void*)((uint64_t)current_virt_addr + 4096);
+	}
+}
+
+void VMM::notify_free_VMapping(VMapping& mapping) {
+	kdebugf("[VMM] Freeing VMapping(%x)\n", &mapping);
+	//  TODO:
 }

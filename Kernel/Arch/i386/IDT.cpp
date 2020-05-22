@@ -1,6 +1,7 @@
 #include <Arch/i386/IDT.hpp>
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
+#include <Arch/i386/GDT.hpp>
 
 /*
 	Actual Interrupt descriptor table in memory
@@ -50,6 +51,7 @@ extern "C" int isr_except_machinecheck();
 extern "C" int isr_except_simdfp();
 extern "C" int isr_except_virtfault();
 extern "C" int isr_except_security();
+extern "C" void _kernel_syscall_entry();
 
 inline void lidt(uint64_t *idtr) {
 	asm volatile(
@@ -138,6 +140,14 @@ void IDT::init_IDT(){
 	SETIRQ(irq13, 45)
 	SETIRQ(irq14, 46)
 	SETIRQ(irq15, 47)
+
+	//  Setup syscall handler
+	interrupts_table[0x80].zero = 0;
+	interrupts_table[0x80].offset_lower = (uint32_t)(_kernel_syscall_entry) & 0xFFFF;
+	interrupts_table[0x80].offset_higher = ((uint32_t)(_kernel_syscall_entry) & 0xFFFF0000) >> 16;
+	interrupts_table[0x80].selector = GDT::get_kernel_CS();
+	interrupts_table[0x80].type_attr = 0xF | (0b11 << 5) | (1 << 7);
+
 
 	uint16_t idt_size = sizeof(interrupts_table)*sizeof(IDT_Entry);
 	IDTR |= idt_size;

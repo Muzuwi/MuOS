@@ -1,8 +1,8 @@
 #include <Arch/i386/Timer.hpp>
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
+#include <Arch/i386/IRQDisabler.hpp>
 
-#define assert(a)
 #define BASE_FREQ 1193182
 
 /*
@@ -13,8 +13,13 @@ void update_timer_reload(uint16_t freq){
 	out(0x40, (freq >> 8) & 0xFF);
 }
 
+static void subscriber_trampoline(const TrapFrame&) {
+	Timer::getTimer().tick();
+}
 
-Timer::Timer(){
+Timer::Timer()
+: IRQSubscriber(0, subscriber_trampoline) {
+	IRQDisabler disabler;
 	m_frequency = 1000;
 	out(0x43, 0b00110100);
 	update_timer_reload(BASE_FREQ/m_frequency);

@@ -1,7 +1,8 @@
 #pragma once
 #include <stdint.h>
+#include <Kernel/Interrupt/IRQSubscriber.hpp>
 
-class Timer final {
+class Timer final : protected IRQSubscriber {
 	uint16_t m_frequency;
 	uint64_t m_ticks;
 public:

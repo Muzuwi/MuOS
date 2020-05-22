@@ -99,6 +99,7 @@ add_dependencies(Kernel
 target_compile_options(Kernel
         PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding>
         PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
+        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>
 )
 
 target_compile_definitions(Kernel

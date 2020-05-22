@@ -1,3 +1,4 @@
+#include <LibGeneric/StdRequired.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
@@ -274,5 +275,13 @@ void operator delete[](void* pointer, size_t) {
 }
 
 void operator delete[](void* pointer) {
+	KMalloc::get().kmalloc_free(pointer);
+}
+
+void operator delete(void* pointer, size_t, std::align_val_t) {
+	KMalloc::get().kmalloc_free(pointer);
+}
+
+void operator delete[](void* pointer, size_t, std::align_val_t) {
 	KMalloc::get().kmalloc_free(pointer);
 }

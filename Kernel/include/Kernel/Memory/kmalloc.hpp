@@ -20,7 +20,8 @@ void operator delete(void*);
 void operator delete(void*, size_t);
 void operator delete[](void*, size_t);
 void operator delete[](void*);
-
+void operator delete(void* pointer, size_t, std::align_val_t);
+void operator delete[](void* pointer, size_t, std::align_val_t);
 
 class KMalloc {
 	KMalloc();

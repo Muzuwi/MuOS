@@ -4,7 +4,7 @@
 extern "C"
 #endif
 
-void* __dso_handle;
+extern void* __dso_handle;
 
 struct atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
 uarch_t __atexit_func_cnt = 0;

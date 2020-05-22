@@ -1,13 +1,23 @@
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
-#include <Kernel/Memory/VirtualMemManager.hpp>
 #include <Arch/i386/Multiboot.hpp>
 #include <Kernel/Symbols.hpp>
+#include <Kernel/Memory/PRegion.hpp>
+#include <LibGeneric/List.hpp>
 
-void PMM::handle_multiboot_memmap(uintptr_t *multiboot_mmap) {
-	auto mmap_len = multiboot_mmap[0];
-	auto mmap_addr = (uint32_t)TO_VIRT(multiboot_mmap[1]);
+//  Amount of physical memory to reserve for kernel data
+static const unsigned kernel_reserved = 16 * MiB;
+
+//  Memory regions dedicated to the kernel (1MiB - 16MiB physical)
+static gen::List<PRegion*> s_kernel_area;
+
+//  Memory region dedicated to userland (16MiB+)
+static gen::List<PRegion*> s_user_area;
+
+void PMM::handle_multiboot_memmap(void* multiboot_mmap) {
+	auto mmap_len = ((uintptr_t*)multiboot_mmap)[0];
+	auto mmap_addr = (uint32_t)TO_VIRT(((uintptr_t*)multiboot_mmap)[1]);
 
 #ifdef LEAKY_LOG
 	kdebugf("[PMM] mmap size: %x\n", mmap_len);
@@ -33,6 +43,26 @@ void PMM::handle_multiboot_memmap(uintptr_t *multiboot_mmap) {
 			case USABLE:
 				kdebugf("usable\n");
 				memory_amount += range;
+
+				//  FIXME:
+				if(end < 1 * MiB)
+					break;
+
+				if(start < kernel_reserved) {
+					//  Split the region, if on the boundary
+					if(end > kernel_reserved) {
+						size_t size_kernel = kernel_reserved - start;
+						size_t size_user   = end - kernel_reserved;
+
+						s_kernel_area.push_back(new PRegion(start, size_kernel));
+						s_user_area.push_back(new PRegion(kernel_reserved, size_user));
+					} else {
+						s_kernel_area.push_back(new PRegion(start, range));
+					}
+				} else {
+					s_user_area.push_back(new PRegion(start, range));
+				}
+
 				break;
 
 			case HIBERN:
@@ -64,9 +94,38 @@ void PMM::handle_multiboot_memmap(uintptr_t *multiboot_mmap) {
 	kdebugf("[PMM] Kernel-used memory: %i MiB\n", (kernel_end - kernel_start) / 0x100000);
 	kdebugf("[PMM] Total usable memory: %i MiB\n", mem_mib);
 	kdebugf("[PMM] Reserved memory: %i bytes\n", reserved_amount);
+	kdebugf("[PMM] Kernel-reserved regions: %i\n", s_kernel_area.size());
+#ifndef LEAKY_LOG
+	for(auto& reg : s_kernel_area) {
+		kdebugf("  - PRegion(%x): start %x, size %i\n", reg, reg->addr(), reg->size());
+	}
+
+	kdebugf("[PMM] User-reserved regions: %i\n", s_user_area.size());
+	for(auto& reg : s_user_area) {
+		kdebugf("  - PRegion(%x): start %x, size %i\n", reg, reg->addr(), reg->size());
+	}
+#endif
 }
 
 
-uintptr_t* PMM::allocate_page() {
+PageToken* PMM::allocate_page_user() {
+	for(auto& range : s_user_area) {
+		void* allocation = range->alloc_page();
+		if(allocation)
+			return new PageToken(allocation);
+	}
 
+	kerrorf("[PMM] Could not find suitable region for allocating user page!");
+	kpanic();
+}
+
+PageToken* PMM::allocate_page_kernel() {
+	for(auto& range : s_kernel_area) {
+		void* allocation = range->alloc_page();
+		if(allocation)
+			return new PageToken(allocation);
+	}
+
+	kerrorf("[PMM] Could not find suitable region for allocating kernel page!");
+	kpanic();
 }

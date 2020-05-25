@@ -31,26 +31,26 @@ extern "C" int irq12();
 extern "C" int irq13();
 extern "C" int irq14();
 extern "C" int irq15();
-extern "C" int isr_except_divbyzero();
-extern "C" int isr_except_dbg();
-extern "C" int isr_except_nmi();
-extern "C" int isr_except_break();
-extern "C" int isr_except_overflow();
-extern "C" int isr_except_bound();
-extern "C" int isr_except_invalidop();
-extern "C" int isr_except_nodevice();
-extern "C" int isr_except_doublefault();
-extern "C" int isr_except_invalidtss();
-extern "C" int isr_except_invalidseg();
-extern "C" int isr_except_segstackfault();
-extern "C" int isr_except_gpf();
-extern "C" int isr_except_pagefault();
-extern "C" int isr_except_x87fpfault();
-extern "C" int isr_except_aligncheck();
-extern "C" int isr_except_machinecheck();
-extern "C" int isr_except_simdfp();
-extern "C" int isr_except_virtfault();
-extern "C" int isr_except_security();
+extern "C" int _exception_entry_divbyzero();
+extern "C" int _exception_entry_dbg();
+extern "C" int _exception_entry_nmi();
+extern "C" int _exception_entry_break();
+extern "C" int _exception_entry_overflow();
+extern "C" int _exception_entry_bound();
+extern "C" int _exception_entry_invalidop();
+extern "C" int _exception_entry_nodevice();
+extern "C" int _exception_entry_doublefault();
+extern "C" int _exception_entry_invalidtss();
+extern "C" int _exception_entry_invalidseg();
+extern "C" int _exception_entry_segstackfault();
+extern "C" int _exception_entry_gpf();
+extern "C" int _exception_entry_pagefault();
+extern "C" int _exception_entry_x87fpfault();
+extern "C" int _exception_entry_aligncheck();
+extern "C" int _exception_entry_machinecheck();
+extern "C" int _exception_entry_simdfp();
+extern "C" int _exception_entry_virtfault();
+extern "C" int _exception_entry_security();
 extern "C" void _kernel_syscall_entry();
 
 inline void lidt(uint64_t *idtr) {
@@ -97,29 +97,29 @@ void IDT::init_IDT(){
 		interrupts_table[number].selector = 0x08;	\
 		interrupts_table[number].type_attr = 0x8f;
 
-	SETEXCEPTION(isr_except_divbyzero, 0)
-	SETEXCEPTION(isr_except_dbg, 1)
-	SETEXCEPTION(isr_except_nmi, 2)
-	SETEXCEPTION(isr_except_break, 3)
-	SETEXCEPTION(isr_except_overflow, 4)
-	SETEXCEPTION(isr_except_bound, 5)
-	SETEXCEPTION(isr_except_invalidop, 6)
-	SETEXCEPTION(isr_except_nodevice, 7)
-	SETEXCEPTION(isr_except_doublefault, 8)
+	SETEXCEPTION(_exception_entry_divbyzero, 0)
+	SETEXCEPTION(_exception_entry_dbg, 1)
+	SETEXCEPTION(_exception_entry_nmi, 2)
+	SETEXCEPTION(_exception_entry_break, 3)
+	SETEXCEPTION(_exception_entry_overflow, 4)
+	SETEXCEPTION(_exception_entry_bound, 5)
+	SETEXCEPTION(_exception_entry_invalidop, 6)
+	SETEXCEPTION(_exception_entry_nodevice, 7)
+	SETEXCEPTION(_exception_entry_doublefault, 8)
 	//  9 legacy
-	SETEXCEPTION(isr_except_invalidtss, 10)
-	SETEXCEPTION(isr_except_invalidseg, 11)
-	SETEXCEPTION(isr_except_segstackfault, 12)
-	SETEXCEPTION(isr_except_gpf, 13)
-	SETEXCEPTION(isr_except_pagefault, 14)
+	SETEXCEPTION(_exception_entry_invalidtss, 10)
+	SETEXCEPTION(_exception_entry_invalidseg, 11)
+	SETEXCEPTION(_exception_entry_segstackfault, 12)
+	SETEXCEPTION(_exception_entry_gpf, 13)
+	SETEXCEPTION(_exception_entry_pagefault, 14)
 	//  15 reserved
-	SETEXCEPTION(isr_except_x87fpfault, 16)
-	SETEXCEPTION(isr_except_aligncheck, 17)
-	SETEXCEPTION(isr_except_machinecheck, 18)
-	SETEXCEPTION(isr_except_simdfp, 19)
-	SETEXCEPTION(isr_except_virtfault, 20)
+	SETEXCEPTION(_exception_entry_x87fpfault, 16)
+	SETEXCEPTION(_exception_entry_aligncheck, 17)
+	SETEXCEPTION(_exception_entry_machinecheck, 18)
+	SETEXCEPTION(_exception_entry_simdfp, 19)
+	SETEXCEPTION(_exception_entry_virtfault, 20)
 	//  21-29 reserved
-	SETEXCEPTION(isr_except_security, 30)
+	SETEXCEPTION(_exception_entry_security, 30)
 	//  31 reserved
 
 

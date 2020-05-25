@@ -12,6 +12,18 @@ static bool ready = false;
 
 static gen::List<Process*> s_processes;
 
+auto find(gen::BidirectionalIterator<gen::List<Process*>> begin,
+		gen::BidirectionalIterator<gen::List<Process*>> end,
+		pid_t pid ) -> gen::BidirectionalIterator<gen::List<Process*>> {
+	auto it = begin;
+	while(it != end) {
+		if((*it)->pid() == pid)
+			return it;
+		++it;
+	}
+	return it;
+};
+
 /*
  *  Initializes the kernel idle task
  */
@@ -49,16 +61,6 @@ void Scheduler::enter_scheduler_loop() {
 	IRQDisabler disabler;
 
 	Process::m_current = Process::m_kernel_idle;
-
-//	uint32_t temp = 0;
-//	asm volatile(
-//	"mov %0, %%esp"
-//	:
-//	: ""(temp)
-//	);
-//
-//	Process::m_current->m_registers.esp = temp;
-//	Process::m_current->m_registers.ebp = temp;
 
 	ready = true;
 
@@ -103,62 +105,73 @@ void Scheduler::yield(TrapFrame frame) {
 	if(Process::m_current->m_state != ProcessState::Leaving)
 		Process::m_current->m_state = ProcessState::Ready;
 
-	auto find = [](gen::BidirectionalIterator<gen::List<Process*>> begin, gen::BidirectionalIterator<gen::List<Process*>> end, pid_t pid) -> gen::BidirectionalIterator<gen::List<Process*>> {
-		auto it = begin;
-		while(it != end) {
-			if((*it)->m_pid == pid)
-				return it;
-			++it;
-		}
-		return it;
-	};
+	auto* next_process = Scheduler::pick_next();
+	while(Scheduler::handle_process_pick(next_process) != SchedulerAction::Use)
+		next_process = Scheduler::pick_next();
 
-	if(s_processes.size() == 0)
-		Process::m_current = Process::m_kernel_idle;
-	else if(Process::m_current == Process::m_kernel_idle)
-		Process::m_current = s_processes.front();
-	else {
-		auto pr = find(s_processes.begin(), s_processes.end(), Process::m_current->m_pid);
-		pr = ++pr;
-		if(pr != s_processes.end())
-			Process::m_current = *pr;
-		else
-			Process::m_current = s_processes.front();
-	}
-
-	if(Process::m_current->m_state == ProcessState::New) {
-		if(Process::m_current->finalize_creation())
-			Process::m_current->m_state = ProcessState::Ready;
-	}
-
-	if(Process::m_current->m_state == ProcessState::Ready) {
-		Process::m_current->enter();
-	} else if (Process::m_current->m_state == ProcessState::Leaving){
-		kdebugf("[Scheduler] Cleaning up process PID %i \n", Process::m_current->m_pid);
-
-		auto it = find(s_processes.begin(), s_processes.end(), Process::m_current->m_pid);
-		if(it != s_processes.end()) {
-			s_processes.erase(it);
-		} else {
-			kpanic();
-		}
-
-		it = find(Process::m_all_processes.begin(), Process::m_all_processes.end(), Process::m_current->m_pid);
-		if(it != Process::m_all_processes.end()) {
-			Process::m_all_processes.erase(it);
-		} else {
-			kpanic();
-		}
-
-		delete Process::m_current;
-		Process::m_current = Process::m_kernel_idle;
-	} else {
-		kpanic();
-	}
-
+	Process::m_current = next_process;
 	Process::m_current->enter();
 }
 
 void Scheduler::notify_new_process(Process* v) {
 	s_processes.push_back(v);
+}
+
+Process* Scheduler::pick_next() {
+	if(s_processes.size() == 0)
+		return Process::m_kernel_idle;
+	else if(Process::m_current == Process::m_kernel_idle)
+		return s_processes.front();
+	else {
+		auto pr = find(s_processes.begin(), s_processes.end(), Process::m_current->m_pid);
+		pr = ++pr;
+		if(pr != s_processes.end())
+			return *pr;
+		else
+			return s_processes.front();
+	}
+}
+
+SchedulerAction Scheduler::handle_process_pick(Process* next_process) {
+	switch(next_process->m_state) {
+		case ProcessState::New: {
+			auto* old = Process::m_current;
+
+			//  FIXME:  Cludge
+			Process::m_current = next_process;
+			if(next_process->finalize_creation())
+				next_process->m_state = ProcessState::Ready;
+			Process::m_current = old;
+
+			return SchedulerAction::PickAgain;
+		}
+		case ProcessState::Ready:
+			return SchedulerAction::Use;
+
+		case ProcessState::Leaving: {
+			kdebugf("[Scheduler] Cleaning up process PID %i \n", next_process->m_pid);
+
+			auto it = find(s_processes.begin(), s_processes.end(), next_process->m_pid);
+			if(it != s_processes.end()) {
+				s_processes.erase(it);
+			}
+
+			it = find(Process::m_all_processes.begin(), Process::m_all_processes.end(), next_process->m_pid);
+			if(it != Process::m_all_processes.end()) {
+				Process::m_all_processes.erase(it);
+			}
+
+			delete next_process;
+
+			return SchedulerAction::PickAgain;
+		}
+
+		case ProcessState::Blocking:
+			//  TODO: Check if block is done, if so we can use this process, otherwise pick another
+			kpanic();
+		case ProcessState::Running:
+			kpanic();
+		case ProcessState::Frozen:
+			kpanic();
+	}
 }

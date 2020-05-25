@@ -18,7 +18,8 @@ Process* Process::m_kernel_idle = nullptr;
 static pid_t nextPID = 1;
 static pid_t nextUserPID = 1000;
 
-Process::Process(pid_t pid, void* entrypoint) {
+Process::Process(pid_t pid, void* entrypoint)
+: m_maps() {
 	IRQDisabler disabler;
 	this->m_pid = pid;
 	this->m_registers = {};
@@ -29,7 +30,6 @@ Process::Process(pid_t pid, void* entrypoint) {
 	this->m_ring = Ring::CPL0;
 	this->m_state = ProcessState::New;
 	this->m_directory = VMM::get_directory();
-	this->m_maps = {};
 }
 
 Process::Process(pid_t pid, void (* entrypoint)(int, char**))
@@ -112,7 +112,7 @@ void Process::enter() {
 	::"r"(m_ring == Ring::CPL3 ? (GDT::get_user_DS() | 3) : GDT::get_kernel_DS())
 	);
 
-	void* ptr = TO_PHYS(m_current->m_directory);
+	void* ptr = (m_ring == Ring::CPL3) ? (void*)m_current->m_directory : TO_PHYS(m_current->m_directory);
 	//  Reload CR3
 	asm volatile(
 	"mov %%cr3, %0\n"
@@ -212,8 +212,16 @@ Process::~Process() {
 	if (m_fpu_state)
 		delete m_fpu_state;
 
-	if (m_directory)
-		delete m_directory;
+	if (m_directory) {
+		if((uint64_t)m_directory < (uint64_t)&_ukernel_virtual_offset) {
+			kerrorf("[Process] FIXME: Leaked page for process page directory!\n");
+		} else {
+			delete m_directory;
+		}
+	}
+
+	for(auto map : m_maps)
+		delete map;
 }
 
 /*

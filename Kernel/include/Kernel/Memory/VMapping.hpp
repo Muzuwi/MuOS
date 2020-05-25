@@ -30,11 +30,11 @@ private:
 
 	VMapping(const VMapping&) = delete;
 	VMapping(VMapping&&) = delete;
-
+public:
 	~VMapping() {
 		VMM::notify_free_VMapping(*this);
 	}
-public:
+
 	int type() const {
 		return m_type;
 	}

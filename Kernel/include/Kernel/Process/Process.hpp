@@ -62,4 +62,6 @@ public:
 	static pid_t create_user(void (*call));
 	static Process* current() { return Process::m_current; }
 	static void kill(pid_t);
+
+	PageDirectory* directory() { return m_directory; }
 };

@@ -20,6 +20,7 @@ KMalloc::KMalloc() {
 	m_total_allocations = 0;
 	m_current_allocations = 0;
 	m_total_frees = 0;
+	this->init();
 }
 
 

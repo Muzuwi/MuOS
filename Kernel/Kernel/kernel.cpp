@@ -23,7 +23,6 @@ namespace uKernel {
 	Main kernel entrypoint
 */
 extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
-	KMalloc::get().init();
 	tty_init();
 	Timer::getTimer();
 

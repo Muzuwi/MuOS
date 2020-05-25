@@ -5,6 +5,7 @@
 #include <Kernel/Symbols.hpp>
 #include <Kernel/Memory/PRegion.hpp>
 #include <LibGeneric/List.hpp>
+#include <Kernel/Memory/PageToken.hpp>
 
 //  Amount of physical memory to reserve for kernel data
 static const unsigned kernel_reserved = 16 * MiB;
@@ -127,5 +128,25 @@ PageToken* PMM::allocate_page_kernel() {
 	}
 
 	kerrorf("[PMM] Could not find suitable region for allocating kernel page!");
+	kpanic();
+}
+
+void PMM::free_page_from_token(PageToken* token) {
+	for(auto& range : s_user_area) {
+		if(range->has_address(token->address())) {
+			range->free_page(token->address());
+			kdebugf("[PMM] Freed %x from token! [user]\n", token->address());
+			return;
+		}
+	}
+
+	for(auto& range : s_kernel_area) {
+		if(range->has_address(token->address())) {
+			range->free_page(token->address());
+			kdebugf("[PMM] Freed %x from token! [kernel]\n", token->address());
+			return;
+		}
+	}
+
 	kpanic();
 }

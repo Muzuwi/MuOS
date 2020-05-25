@@ -8,6 +8,7 @@
 #include <Kernel/Memory/VMapping.hpp>
 #include <Arch/i386/IRQDisabler.hpp>
 #include <include/Kernel/Memory/kmalloc.hpp>
+#include <Kernel/Memory/QuickMap.hpp>
 #include <string.h>
 
 uint32_t s_kernel_directory_table[1024] __attribute__((aligned(4096)));
@@ -102,32 +103,36 @@ void VMM::unmap(uintptr_t *virt_addr) {
  *  Allocates stack space with given size for the current process
  */
 void* VMM::allocate_user_stack(size_t stack_size) {
-	IRQDisabler disabler;
 	//  Process stacks are allocated right before the kernel virtual address space
 	auto* stack_top = (void*)((uint32_t)&_ukernel_virtual_offset-stack_size);
 	auto* mapping = new VMapping(stack_top, stack_size, PROT_READ | PROT_WRITE, MAP_SHARED);
+	auto* process = Process::m_current;
 
-	//  FIXME: For some reason, this PF's
-	//	Process::m_current->m_maps.push_back(mapping);
-	//  ... but this does not. WTF?
-	gen::List<VMapping*> maps{};
-	maps.push_back(mapping);
-	Process::m_current->m_maps = maps;
+	process->m_maps.push_back(mapping);
 
 	return (void*)((uint32_t)&_ukernel_virtual_offset - 1);
 }
 
 void VMM::notify_create_VMapping(VMapping& mapping) {
 	kdebugf("[VMM] Created VMapping(%x)\n", &mapping);
-	auto dir = Process::m_current->m_directory;
+
+	auto* process = Process::m_current;
+	auto* dir = process->m_directory;
+	QuickMap mapper{dir};
+
+	if((uint64_t)dir < (uint64_t)&_ukernel_virtual_offset) {
+		dir = reinterpret_cast<PageDirectory*>(mapper.address());
+	}
+
 	auto current_virt_addr = mapping.addr();
+
 	for(auto& map : mapping.pages()) {
 		kdebugf("Virt: %x -> Phys %x\n", current_virt_addr, map->address());
 		//  FIXME: Move table creation when it does not exist somewhere else
 		auto& pde = dir->get_entry((uint32_t*)current_virt_addr);
 
 		pde.set_flag(DirectoryFlag::Present, true);
-		pde.set_flag(DirectoryFlag::User, Process::m_current->m_ring == Ring::CPL3);
+		pde.set_flag(DirectoryFlag::User, process->m_ring == Ring::CPL3);
 		if(mapping.flags() & PROT_WRITE)
 			pde.set_flag(DirectoryFlag::RW, true);
 
@@ -145,7 +150,7 @@ void VMM::notify_create_VMapping(VMapping& mapping) {
 		auto& page = table->get_page((uint32_t*)current_virt_addr);
 		page.set_physical((uintptr_t*)(map->address()));
 		page.set_flag(PageFlag::Present, true);
-		page.set_flag(PageFlag::User, Process::m_current->m_ring == Ring::CPL3);
+		page.set_flag(PageFlag::User, process->m_ring == Ring::CPL3);
 		if(mapping.flags() & PROT_WRITE)
 			page.set_flag(PageFlag::RW, true);
 
@@ -155,5 +160,6 @@ void VMM::notify_create_VMapping(VMapping& mapping) {
 
 void VMM::notify_free_VMapping(VMapping& mapping) {
 	kdebugf("[VMM] Freeing VMapping(%x)\n", &mapping);
-	//  TODO:
+	for(auto& page : mapping.pages())
+		delete page;
 }

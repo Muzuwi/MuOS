@@ -7,6 +7,7 @@
 class VMapping {
 private:
 	friend class VMM;
+	friend class Process;  //  FIXME:  I don't like this friendship
 
 	gen::List<PageToken*> m_pages;
 

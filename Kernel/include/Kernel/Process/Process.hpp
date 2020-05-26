@@ -20,6 +20,19 @@ enum class Ring {
 	CPL3
 };
 
+enum class ExecutableType {
+	Flat,
+	ELF
+};
+
+struct ExecutableImage {
+	void* m_base;
+	size_t m_size;
+	ExecutableType m_type;
+	ExecutableImage(void* base, size_t size, ExecutableType type)
+	: m_base(base), m_size(size), m_type(type) { }
+};
+
 struct FPUState {
 	uint8_t state[512];
 } __attribute((aligned(16)));
@@ -38,15 +51,21 @@ class Process {
 	ProcessState m_state;
 	FPUState* m_fpu_state;
 	PageDirectory* m_directory;
+	ExecutableImage m_executable;
 	gen::List<VMapping*> m_maps;
 
-	//  Spawns kernel task
-	Process(pid_t, void (*entrypoint)(int argc, char** argv));
-	Process(pid_t, void*);
+	Process(pid_t, ExecutableImage);
 	~Process();
 
 	[[noreturn]] void enter();
 	bool finalize_creation();
+	bool load_process_executable();
+
+	bool load_flat_binary();
+	bool load_ELF_binary();
+	bool finalize_creation_for_user();
+	bool finalize_creation_for_kernel();
+
 
 	FPUState& fpu_state() { return *m_fpu_state; }
 	void save_regs_from_trap(TrapFrame frame);

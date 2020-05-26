@@ -24,6 +24,11 @@ auto find(gen::BidirectionalIterator<gen::List<Process*>> begin,
 	return it;
 };
 
+[[noreturn]] void _kernel_idle_task() {
+	while(true)
+		asm volatile("hlt");
+}
+
 /*
  *  Initializes the kernel idle task
  */
@@ -31,11 +36,7 @@ void Scheduler::initialize() {
 	IRQDisabler disabler;
 	kdebugf("[Scheduler] Init kernel idle task\n");
 
-	Process::m_kernel_idle = new Process(0, [](int, char**) {
-		while(true) {
-			asm volatile ("hlt");
-		}
-	});
+	Process::m_kernel_idle = new Process(0, {(void*)_kernel_idle_task, 0, ExecutableType::Flat});
 
 	auto& regs = Process::m_kernel_idle->m_registers;
 	regs.eax = 0xdeadc0de;
@@ -76,11 +77,8 @@ void Scheduler::yield(TrapFrame frame) {
 
 	IRQDisabler disabler;
 
-#ifdef SCHEDULE_LOG
-	kdebugf("[Scheduler] yield, trap frame: \n");
-#endif
-
 #ifdef SCHEDULE_LOG_DUMP_REG_SWITCH
+	kdebugf("[Scheduler] yield, trap frame: \n");
 	kdebugf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", frame.eax, frame.ebx, frame.ecx, frame.edx);
 	kdebugf("ebp: %x, esp: %x, esi: %x, edi: %x\n", frame.ebp, frame.user_esp, frame.esi, frame.edi);
 	kdebugf("eip: %x, CS: %x, EFLAGS: %x\n", frame.eip, frame.CS, frame.EFLAGS);

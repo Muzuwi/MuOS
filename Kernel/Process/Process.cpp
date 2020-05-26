@@ -21,7 +21,7 @@ static pid_t nextPID = 1;
 static pid_t nextUserPID = 1000;
 
 Process::Process(pid_t pid, ExecutableImage image)
-: m_maps(), m_executable(image) {
+: m_executable(image), m_maps() {
 	IRQDisabler disabler;
 	this->m_pid = pid;
 	this->m_registers = {};
@@ -169,6 +169,8 @@ void Process::enter() {
 		: "eax", "ebx", "ecx", "edx", "edi", "esi"
 		);
 	}
+
+	kpanic();
 }
 
 /*

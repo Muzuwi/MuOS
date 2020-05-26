@@ -1,4 +1,5 @@
 #include <LibGeneric/StdRequired.hpp>
+#include <LibGeneric/BitMap.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Debug/kdebugf.hpp>

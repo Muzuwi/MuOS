@@ -2,6 +2,7 @@
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <LibGeneric/Vector.hpp>
+#include <Kernel/Debug/kpanic.hpp>
 
 //  Devices found during detection
 gen::vector<PCI_Device> pci_devices;
@@ -285,7 +286,7 @@ uint16_t PCI_Device::readConfigField8(PCI_FIELD8 field) const {
 		case B_CACHESIZE:
 			return (this->getConfigRegister(0x0c) & 0x000000ff);
 	}
-	assert(false);
+	kpanic();
 }
 
 
@@ -303,7 +304,7 @@ uint16_t PCI_Device::readConfigField16(PCI_FIELD16 field) const {
 		case W_COMMAND:
 			return (this->getConfigRegister(0x4) & 0x0000FFFF);
 	}
-	assert(false);
+	kpanic();
 }
 
 /*

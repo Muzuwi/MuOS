@@ -156,11 +156,11 @@ size_t IDE_Drive::getSectorSize() {
 
 
 uint64_t IDE_Drive::getFreeBytes() {
-	assert(false);
+	kpanic();
 }
 
 uint64_t IDE_Drive::getTotalBytes() {
-	assert(false);
+	kpanic();
 }
 
 /*
@@ -175,8 +175,8 @@ IOResult IDE_Drive::read_block(lba_t address, uintptr_t *destination_buffer, siz
 	return 1;
 }
 
-IOResult IDE_Drive::write_block(lba_t address, uintptr_t *destination_buffer, size_t size) {
-	assert(false);
+IOResult IDE_Drive::write_block(lba_t, uintptr_t*, size_t) {
+	kpanic();
 }
 
 size_t IDE_Drive::getBlockSize() {

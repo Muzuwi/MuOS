@@ -171,5 +171,7 @@ SchedulerAction Scheduler::handle_process_pick(Process* next_process) {
 			kpanic();
 		case ProcessState::Frozen:
 			kpanic();
+		default:
+			kpanic();
 	}
 }

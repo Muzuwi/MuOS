@@ -311,7 +311,7 @@ uint8_t i8042::read_data(){
 
 
 bool i8042::read_status(){
-
+	return false;
 }
 
 

@@ -9,7 +9,7 @@ uint8_t vga_color = 0;
 
 //  Set a character at x y without affecting the current console position
 void vga_putdebugch(size_t x, size_t y, char ch, uint8_t bg, uint8_t fg){
-	if(x >= VGA_WIDTH || y >= VGA_HEIGHT || x < 0 || y < 0){
+	if(x >= VGA_WIDTH || y >= VGA_HEIGHT){
 		return;
 	}
 

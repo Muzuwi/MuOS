@@ -1,6 +1,7 @@
 #include <Kernel/Device/IDE/IDE_Channel.hpp>
 #include <Kernel/ksleep.hpp>
 #include <Arch/i386/PortIO.hpp>
+#include <Kernel/Debug/kpanic.hpp>
 
 /*	===========================================================================
  *								IDE Channel class
@@ -68,6 +69,7 @@ uint16_t IDE_Channel::get_register_port(ATA_REG reg) {
 		case ATA_REG::DevAddress:
 			return m_base_ctrl + (uint8_t)reg - 0xA;
 	}
+	kpanic();
 }
 
 

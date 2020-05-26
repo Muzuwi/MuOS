@@ -9,8 +9,6 @@
 #define KMALLOC_POOL_SIZE  (4 * MiB)
 #define KMALLOC_CHUNK 	2
 #define KMALLOC_ARR_COUNT ((KMALLOC_POOL_SIZE / KMALLOC_CHUNK) / (sizeof(chunk_t)*8))
-#define bits(a) (sizeof(a)*8)
-#define bitmask(a) (1 << a)
 
 typedef uint32_t chunk_t; 
 

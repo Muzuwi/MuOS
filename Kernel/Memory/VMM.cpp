@@ -128,31 +128,19 @@ void VMM::notify_create_VMapping(VMapping& mapping) {
 
 	for(auto& map : mapping.pages()) {
 		kdebugf("Virt: %x -> Phys %x\n", current_virt_addr, map->address());
-		//  FIXME: Move table creation when it does not exist somewhere else
+
 		auto& pde = dir->get_entry((uint32_t*)current_virt_addr);
+		auto& table = VMM::ensure_page_table(pde);
+		auto& page = table.get_page((uint32_t*)current_virt_addr);
 
 		pde.set_flag(DirectoryFlag::Present, true);
 		pde.set_flag(DirectoryFlag::User, process->m_ring == Ring::CPL3);
-		if(mapping.flags() & PROT_WRITE)
-			pde.set_flag(DirectoryFlag::RW, true);
+		pde.set_flag(DirectoryFlag::RW, (mapping.flags() & PROT_WRITE));
 
-		auto* table = pde.get_table();
-		if(!table) {
-			kdebugf("[VMM] Table for %x does not exist\n", (unsigned)current_virt_addr);
-			//  FIXME:  Nasty
-//			table = reinterpret_cast<PageTable*>(PMM::allocate_page_user()->address());
-			table = reinterpret_cast<PageTable*>(KMalloc::get().kmalloc_alloc(4096, 0x1000));
-			memset(&table, 0x0, 4096);
-
-			pde.set_table(reinterpret_cast<PageTable*>(TO_PHYS(table)));
-		}
-
-		auto& page = table->get_page((uint32_t*)current_virt_addr);
 		page.set_physical((uintptr_t*)(map->address()));
 		page.set_flag(PageFlag::Present, true);
 		page.set_flag(PageFlag::User, process->m_ring == Ring::CPL3);
-		if(mapping.flags() & PROT_WRITE)
-			page.set_flag(PageFlag::RW, true);
+		page.set_flag(PageFlag::RW, (mapping.flags() & PROT_WRITE));
 
 		current_virt_addr = (void*)((uint64_t)current_virt_addr + 4096);
 	}
@@ -162,4 +150,18 @@ void VMM::notify_free_VMapping(VMapping& mapping) {
 	kdebugf("[VMM] Freeing VMapping(%x)\n", &mapping);
 	for(auto& page : mapping.pages())
 		delete page;
+}
+
+PageTable& VMM::ensure_page_table(PageDirectoryEntry& pde) {
+	if(pde.get_table())
+		return *pde.get_table();
+
+	//  FIXME:  Nasty
+	auto* table = reinterpret_cast<PageTable*>(KMalloc::get().kmalloc_alloc(4096, 0x1000));
+	if(!table)
+		kpanic();
+	memset(table, 0x0, 4096);
+	pde.set_table(reinterpret_cast<PageTable*>(TO_PHYS(table)));
+
+	return *table;
 }

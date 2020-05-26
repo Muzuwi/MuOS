@@ -12,6 +12,7 @@ class VMM final {
 	static PageDirectory* s_kernel_directory;
 	static void notify_create_VMapping(VMapping&);
 	static void notify_free_VMapping(VMapping&);
+	static PageTable& ensure_page_table(PageDirectoryEntry&);
 public:
 	static PageDirectory* get_directory();
 	static VMM& get();

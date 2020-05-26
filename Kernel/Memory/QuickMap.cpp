@@ -3,6 +3,8 @@
 #include <Kernel/Memory/QuickMap.hpp>
 #include <Arch/i386/IRQDisabler.hpp>
 
+//#define QUICKMAP_LOG_MAPS
+
 PageTable* s_table_for_quick_map;
 gen::BitMap s_free_pages {1024};
 
@@ -43,7 +45,9 @@ QuickMap::QuickMap(void* addr) {
 	page.set_physical((uintptr_t *)addr);
 	invlpg((uintptr_t*)address());
 
+#ifdef QUICKMAP_LOG_MAPS
 	kdebugf("QuickMap(%x): mapped %x to %x\n", this, addr, address());
+#endif
 }
 
 void* QuickMap::address() {
@@ -51,7 +55,10 @@ void* QuickMap::address() {
 }
 
 QuickMap::~QuickMap() {
+#ifdef QUICKMAP_LOG_MAPS
 	kdebugf("QuickMap(%x): freed %x\n", this, address());
+#endif
+
 	s_free_pages.set(m_index, false);
 	auto& page = s_table_for_quick_map->get_page(reinterpret_cast<uint32_t*>(m_index * 0x1000));
 	page.set_flag(PageFlag::Present, false);

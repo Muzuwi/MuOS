@@ -113,13 +113,22 @@ extern "C" void _kernel_exception_segstackfault(ErrorCodeTrapFrame regs){
 
 
 extern "C" void _kernel_exception_gpf(ErrorCodeTrapFrame regs){
-	kerrorf("General Protection Fault exception at %x\n", regs.eip);
+	asm volatile("cli\n");
+
+	bool is_kernel_crash = regs.eip >= (uint32_t)&_ukernel_virtual_offset;
+	kerrorf("%s(%i): General Protection Fault exception at %x\n",
+	        is_kernel_crash ? "Kernel" : "Process",
+	        is_kernel_crash ? 0 : Process::current()->pid(),
+	        regs.eip);
 	dump_reg_from_trap(regs);
-	kerrorf("Error code: %x", regs.error_code);
-	asm volatile(
-		"cli\n"
-		"hlt\t\n"
-		);
+	kerrorf("Error code: %x\n", regs.error_code);
+
+	if(is_kernel_crash) {
+		kpanic();
+	} else {
+		Process::kill(Process::current()->pid());
+		Scheduler::yield({});
+	}
 }
 
 

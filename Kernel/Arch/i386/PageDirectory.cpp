@@ -42,7 +42,7 @@ void PageDirectoryEntry::set_table(PageTable *table) {
 }
 
 PageTable* PageDirectoryEntry::get_table() const {
-	if(m_data == 0)
+	if((m_data & 0xFFFFF000) == 0)
 		return nullptr;
 	else
 		return reinterpret_cast<PageTable*>((m_data & 0xFFFFF000) + (uint32_t)&_ukernel_virtual_offset);
@@ -119,13 +119,19 @@ void PageDirectory::create_table(uint32_t *address) {
  *  Allocates space for a page directory for the current process, and copies over kernel mappings to it
  */
 PageDirectory* PageDirectory::create_for_user() {
+	//  FIXME: Leaking the PD page here
 	auto* page =  PMM::allocate_page_user();
 	auto* mem = page->address();
-	kdebugf("Creating page dir for user process\n");
+	kdebugf("Allocated PD for user at phys: %x\n", mem);
 	if(mem) {
 		auto* kernel_dir = VMM::get_directory();
 		QuickMap mapper {mem};
-		memcpy(mapper.address(), kernel_dir, 4096);
+		memset(mapper.address(), 0, 4096);
+
+		auto* kernel_as_arr = reinterpret_cast<uint32_t*>(kernel_dir);
+		for(unsigned i = GET_DIR(&_ukernel_virtual_offset); i < 1024; ++i) {
+			reinterpret_cast<uint32_t*>(mapper.address())[i] = kernel_as_arr[i];
+		}
 	} else {
 		kerrorf("Page directory creation for user failed!");
 	}

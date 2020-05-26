@@ -1,7 +1,6 @@
 #include <Arch/i386/i8042.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
-
-ps2_device_t i8042::devices[I8042_MAX_DEVICES] = {};
+#include <Arch/i386/PortIO.hpp>
 
 void identify_device(unsigned char* response, size_t len){
 	if(len == 1){
@@ -15,7 +14,7 @@ void identify_device(unsigned char* response, size_t len){
 			case 0x4:
 				kdebugf("[i8042_ctrl]: Device PS/2 Mouse 5 button\n");
 				break;
-			default: 
+			default:
 				kdebugf("[i8042_ctrl]: Unknown device id %x\n", response[0]);
 		}
 	} else if(len == 2){
@@ -52,7 +51,6 @@ void i8042::init_controller(){
 
 	//  disable 1st device
 	write_command(0xAD);
-	// flush_out_buffer();
 
 	//  disable 2nd device
 	write_command(0xA7);
@@ -68,6 +66,9 @@ void i8042::init_controller(){
 		//  2nd port not present
 	}
 	data &= ~0xCB;
+	data |= 1;
+	if(has_second_port)
+		data |= 2;
 
 	//  Send configuration
 	write_command(0x60);
@@ -191,7 +192,7 @@ void i8042::init_controller(){
 	size_t cnt = 0;
 
 	//  Enable working PS/2 ports
-	if(first_good == true){
+	if(first_good){
 		kdebugf("[i8042_ctrl]: Enabling channel 1\n");
 		write_command(0xAE);
 		write_data(0xFF);
@@ -220,59 +221,57 @@ void i8042::init_controller(){
 		}
 	}
 
-	// flush_out_buffer();
-
 	//  Check device type
 	//  Device 1
-	/*if(first_good == true){
+	if(first_good){
 		write_data(0xF5);
-		while(read_data() != 0xFA){
-			//kdebugf("[i8042_ctrl]: waiting for ack %n");
-			
-		}
+		while(read_data() != 0xFA)
+			;
 		write_data(0xF2);
-		while(read_data() != 0xFA){
-			//kdebugf("[i8042_ctrl] waiting for ack\n");
-		}
+		while(read_data() != 0xFA)
+			;
+		
 		cnt = 0;
-		while(check_timeout() && cnt < 2){
+		while(!check_timeout() && cnt < 2){  
 			response[cnt++] = read_data();
 		}
-		identify_device(response, cnt);		
+		identify_device(response, cnt);
 	}
 
 	//  Device 2
-	if(second_good == true){
+	if(second_good){
 		write_command(0xD4);
 		write_data(0xF5);
-		while(read_data() != 0xFA){
-			// kdebugf("[i8042_ctrl]: waiting for ack %n");
-		}
+		while(read_data() != 0xFA);
 		write_command(0xD4);
 		write_data(0xF2);
-		while(read_data() != 0xFA){
-			// kdebugf("[i8042_ctrl] waiting for ack\n");
-		}
+
+		while(read_data() != 0xFA)
+			;
 		cnt = 0;
 		while(check_timeout() && cnt < 2){
 			response[cnt++] = read_data();
 		}
 		identify_device(response, cnt);
-	}*/
+	}
 
 	if(first_good){
-		kdebugf(I8042_LOG "Reenabling scan mode for device 1\n");
+		kdebugf("[i8042_ctrl] Reenabling scan mode for device 1\n");
 		write_data(0xF4);
+		while(read_data() != 0xFA)
+			;
 	}
 
 	if(second_good){
-		kdebugf(I8042_LOG "Reenabling scan mode for device 2\n");
+		kdebugf("[i8042_ctrl] Reenabling scan mode for device 2\n");
 		write_command(0xD4);
 		write_data(0xF4);
+		while(read_data() != 0xFA)
+			;
 	}
 
 	if(first_good || second_good){
-		kdebugf(I8042_LOG "One or more devices have been successfully initialized\n");
+		kdebugf("[i8042_ctrl] One or more devices have been successfully initialized\n");
 	}
 }
 
@@ -281,10 +280,10 @@ void i8042::init_controller(){
 	This function is blocking, and will wait for the input buffer
 	to clear before sending
 */
-extern "C" void ps2ctrl_write_data(unsigned char);
 void i8042::write_data(uint8_t data){
-	wait_input_empty();
-	ps2ctrl_write_data(data);
+	while(in(0x64) & 2)
+		;
+	out(0x60, data);
 }
 
 /*
@@ -292,10 +291,10 @@ void i8042::write_data(uint8_t data){
 	This function is blocking, and will wait for the input buffer 
 	to clear before sending the command
 */
-extern "C" void ps2ctrl_write_command(unsigned char);
 void i8042::write_command(uint8_t cmd){
-	wait_input_empty();
-	ps2ctrl_write_command(cmd);
+	while(in(0x64) & 2)
+		;
+	out(0x64, cmd);
 }
 
 /*
@@ -304,10 +303,10 @@ void i8042::write_command(uint8_t cmd){
 	This function is blocking, and will wait for new data
 	from the output buffer
 */
-extern "C" unsigned char ps2ctrl_read();
-uint8_t i8042::read_data(){
-	wait_output_full();
- 	return ps2ctrl_read();
+uint8_t i8042::read_data(){  
+ 	while(!(in(0x64) & 1))
+		;
+	return in(0x60);
 }
 
 
@@ -321,9 +320,9 @@ bool i8042::read_status(){
 	the output buffer was filled and ready to read data from	
 	This function is blocking (obviously)
 */
-extern "C" void ps2ctrl_wait_output_full();
 void i8042::wait_output_full(){
-	ps2ctrl_wait_output_full();
+	while(!(in(0x64) & 1))
+		;
 }
 
 /*
@@ -331,16 +330,15 @@ void i8042::wait_output_full(){
 	i.e. the input buffer is empty	
 	This function is blocking (obviously)
 */
-extern "C" void ps2ctrl_wait_input_empty();
 void i8042::wait_input_empty(){
-	ps2ctrl_wait_input_empty();
+	while(in(0x64) & 2)
+		;
 }
 
 /*
 	Checks the timeout flag, 
 	TODO: Terrible, replace this
 */
-extern "C" int ps2ctrl_timeout_error();
 bool i8042::check_timeout(){
-	return (ps2ctrl_timeout_error() >= 0);
+	return in(0x64) & (1 << 6);
 }

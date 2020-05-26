@@ -1,38 +1,17 @@
-#ifndef I8042_HEADER
-#define I8042_HEADER
-
+#pragma once
 #include <stdint.h>
 #include <stddef.h>
 
-#define I8042_MAX_DEVICES 2
-
-#define I8042_LOG "[i8042_ctrl]: "
-
-struct ps2_device_t {
-	bool enabled = false, good = false;
-};
-
-struct ps2_status_t {
-	uint8_t out_status : 1;
-	uint8_t in_status  : 1;
-	uint8_t sys_flag   : 1;
-	uint8_t command    : 1;
-	uint8_t opt_1 	   : 1;
-	uint8_t opt_2 	   : 1;
-	uint8_t timeout	   : 1;
-	uint8_t parity	   : 1;
-};
-
-/*template<typename T>
-struct Promise{
-private:
-
-
-public:
-	void operator=(T val){
-
-	}
-};*/
+//struct ps2_status_t {
+//	uint8_t out_status : 1;
+//	uint8_t in_status  : 1;
+//	uint8_t sys_flag   : 1;
+//	uint8_t command    : 1;
+//	uint8_t opt_1 	   : 1;
+//	uint8_t opt_2 	   : 1;
+//	uint8_t timeout	   : 1;
+//	uint8_t parity	   : 1;
+//};
 
 /*
 	This header is for the i8042 PS/2 kernel driver
@@ -40,9 +19,6 @@ public:
 	controller and connected devices
 */
 namespace i8042 {
-	//  Device config and status
-	extern ps2_device_t devices[I8042_MAX_DEVICES];
-
 	void init_controller();
 
 	//  Writing data
@@ -61,5 +37,3 @@ namespace i8042 {
 	bool check_timeout();
 
 }
-
-#endif

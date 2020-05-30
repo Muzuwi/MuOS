@@ -102,6 +102,12 @@ int _vsnprintf_internal(const char* format, struct dest_t destination, va_list a
 						break;
 					}
 
+					if(num < 0)  {
+						dst_bfr[dst_cnt++] = '-';
+						total_chars_written++;
+						num = -1 * num;
+					}
+
 					int workPointer = 0;
 					while(num != 0){
 						buffer[workPointer++] = (ascii_lookup_table[47 + (num % 10)]);

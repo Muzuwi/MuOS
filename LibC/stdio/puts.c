@@ -1,10 +1,10 @@
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 int puts(const char* ch){
-	unsigned int ptr = 0;
-	while(ch[ptr] != '\0'){
-		putchar(ch[ptr]);
-		ptr++;
-	}
-	return 0;
+	if(write(0, ch, strlen(ch)) < 0)
+		return EOF;
+	else
+		return 1;
 }

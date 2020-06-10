@@ -118,7 +118,7 @@ extern "C" void _kernel_exception_gpf(ErrorCodeTrapFrame regs){
 	bool is_kernel_crash = regs.eip >= (uint32_t)&_ukernel_virtual_offset;
 	kerrorf("%s(%i): General Protection Fault exception at %x\n",
 	        is_kernel_crash ? "Kernel" : "Process",
-	        is_kernel_crash ? 0 : Process::current()->pid(),
+	        Process::current() ? Process::current()->pid() : 0,
 	        regs.eip);
 	dump_reg_from_trap(regs);
 	kerrorf("Error code: %x\n", regs.error_code);
@@ -145,7 +145,7 @@ extern "C" void _kernel_exception_pagefault(ErrorCodeTrapFrame regs){
 
 	kerrorf("%s(%i): Page Fault exception at %x\n",
 			is_kernel_crash ? "Kernel" : "Process",
-			is_kernel_crash ? 0 : Process::current()->pid(),
+			Process::current() ? Process::current()->pid() : 0,
 			regs.eip);
 	dump_reg_from_trap(regs);
 	kerrorf("Error code: %x [%s - caused by a %s, CPL %i]\n", regs.error_code,

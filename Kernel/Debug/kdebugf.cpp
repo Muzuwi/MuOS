@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <Arch/i386/IRQDisabler.hpp>
 
 #define KDEBUGF_BUFFER_SIZE 512
 
@@ -17,6 +18,7 @@ int kdebugf(const char* format, ...){
 
 	va_end(args);
 
+	IRQDisabler disabler;
 	out(0x3f8, '\u001b');
 	out(0x3f8, '[');
 	out(0x3f8, '3');
@@ -50,6 +52,7 @@ int kerrorf(const char* format, ...){
 
 	va_end(args);
 
+	IRQDisabler disabler;
 	out(0x3f8, '\u001b');
 	out(0x3f8, '[');
 	out(0x3f8, '1');

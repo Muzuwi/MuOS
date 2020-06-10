@@ -48,6 +48,10 @@ void PMM::handle_multiboot_memmap(void* multiboot_mmap) {
 				//  FIXME:
 				if(end < 1 * MiB)
 					break;
+				if(end > 0xffffffff) {
+					kdebugf("unaddressable, ignoring\n");
+					break;
+				}
 
 				if(start < kernel_reserved) {
 					//  Split the region, if on the boundary

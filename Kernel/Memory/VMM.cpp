@@ -114,7 +114,9 @@ void* VMM::allocate_user_stack(size_t stack_size) {
 }
 
 void VMM::notify_create_VMapping(VMapping& mapping) {
+#ifdef VMM_LOG_VMAPPING
 	kdebugf("[VMM] Created VMapping(%x)\n", &mapping);
+#endif
 
 	auto* process = Process::m_current;
 	auto* dir = process->m_directory;
@@ -127,7 +129,9 @@ void VMM::notify_create_VMapping(VMapping& mapping) {
 	auto current_virt_addr = mapping.addr();
 
 	for(auto& map : mapping.pages()) {
+#ifdef VMM_LOG_VMAPPING
 		kdebugf("Virt: %x -> Phys %x\n", current_virt_addr, map->address());
+#endif
 
 		auto& pde = dir->get_entry((uint32_t*)current_virt_addr);
 		auto& table = VMM::ensure_page_table(pde);
@@ -147,7 +151,10 @@ void VMM::notify_create_VMapping(VMapping& mapping) {
 }
 
 void VMM::notify_free_VMapping(VMapping& mapping) {
+#ifdef VMM_LOG_VMAPPING
 	kdebugf("[VMM] Freeing VMapping(%x)\n", &mapping);
+#endif
+
 	for(auto& page : mapping.pages())
 		delete page;
 }

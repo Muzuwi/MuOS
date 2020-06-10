@@ -3,7 +3,6 @@
 #include <Kernel/Memory/QuickMap.hpp>
 #include <Arch/i386/IRQDisabler.hpp>
 
-//#define QUICKMAP_LOG_MAPS
 
 PageTable* s_table_for_quick_map;
 gen::BitMap s_free_pages {1024};

@@ -135,7 +135,9 @@ void PMM::free_page_from_token(PageToken* token) {
 	for(auto& range : s_user_area) {
 		if(range->has_address(token->address())) {
 			range->free_page(token->address());
+#ifdef PMM_LOG_TOKEN_FREES
 			kdebugf("[PMM] Freed %x from token! [user]\n", token->address());
+#endif
 			return;
 		}
 	}
@@ -143,7 +145,9 @@ void PMM::free_page_from_token(PageToken* token) {
 	for(auto& range : s_kernel_area) {
 		if(range->has_address(token->address())) {
 			range->free_page(token->address());
+#ifdef PMM_LOG_TOKEN_FREES
 			kdebugf("[PMM] Freed %x from token! [kernel]\n", token->address());
+#endif
 			return;
 		}
 	}

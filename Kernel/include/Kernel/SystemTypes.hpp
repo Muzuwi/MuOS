@@ -1,6 +1,8 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <asm/errno.h>
+#include <sys/mman.h>
 
 struct mem_range_t {
 	uint64_t m_start, m_end;
@@ -27,12 +29,3 @@ typedef int IOResult;
 typedef int FSResult;
 typedef uint64_t lba_t;
 typedef char* path_t;
-
-
-#define PROT_READ 1
-#define PROT_WRITE 2
-#define PROT_EXEC 3
-
-#define MAP_SHARED 1
-#define MAP_PRIVATE 2
-#define MAP_FIXED 3

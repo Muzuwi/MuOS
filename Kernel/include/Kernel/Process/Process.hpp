@@ -40,6 +40,7 @@ struct FPUState {
 class Process {
 	friend class VMM;
 	friend class Scheduler;
+	friend class Syscall;
 
 	static gen::List<Process*> m_all_processes;
 	static Process* m_current;
@@ -79,6 +80,9 @@ public:
 	static pid_t create(void (*call)());
 	static pid_t create_user(void (*pFunction)());
 	static pid_t create_user(void (*call));
+
+	static pid_t create_from_ELF(void* base, size_t size);
+
 	static Process* current() { return Process::m_current; }
 	static void kill(pid_t);
 

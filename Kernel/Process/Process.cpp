@@ -9,6 +9,7 @@
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Debug/kassert.hpp>
 #include <Kernel/Memory/QuickMap.hpp>
+#include <LibGeneric/ELFParser.hpp>
 #include <string.h>
 
 //#define SCHEDULE_LOG
@@ -50,14 +51,19 @@ pid_t Process::create(void* call) {
 }
 
 /*
- *  Creates a user process with defined entrypoint and returns its' PID
- *  TODO:  Remove this and replace with create_user_from_ELF
+ *  Wrapper for C++ lambdas
  */
-pid_t Process::create_user(void* call) {
-	IRQDisabler disabler;
-	kdebugf("[Process] New userland process, entry %x, pid %i\n", call, nextUserPID);
+pid_t Process::create(void (* call)()) {
+	return Process::create((void*) call);
+}
 
-	auto process = new Process(nextUserPID, {call, 4096, ExecutableType::Flat});
+
+pid_t Process::create_from_ELF(void* base, size_t size) {
+	if(!base) return -1;
+	IRQDisabler disabler;
+	kdebugf("[Process] New userland process, from ELF, pid %i\n", nextUserPID);
+
+	auto process = new Process(nextUserPID, {base, size, ExecutableType::ELF});
 	process->m_registers.CS = GDT::get_user_CS();
 	process->m_ring = Ring::CPL3;
 
@@ -65,17 +71,6 @@ pid_t Process::create_user(void* call) {
 	Scheduler::notify_new_process(process);
 
 	return nextUserPID++;
-}
-
-/*
- *  Wrappers for C++ lambdas
- */
-pid_t Process::create(void (* call)()) {
-	return Process::create((void*) call);
-}
-
-pid_t Process::create_user(void (* pFunction)()) {
-	return Process::create_user((void*) pFunction);
 }
 
 /*
@@ -258,23 +253,108 @@ bool Process::finalize_creation_for_kernel() {
 }
 
 bool Process::load_ELF_binary() {
+#ifdef PROCESS_DEBUG_ELF_PARSING
+	kdebugf("[Process] Loading ELF binary, base: %x, size: %i\n", m_executable.m_base, m_executable.m_size);
+#endif
 
+	auto* parser = ELFParser32::from_image(m_executable.m_base, m_executable.m_size);
+	if(!parser) {
+		kerrorf("Process(%i): Invalid ELF binary\n", m_pid);
+		return false;
+	}
+
+	const auto prog_headers = parser->program_headers();
+
+	const void* file_base  = m_executable.m_base;
+	const size_t file_size = m_executable.m_size;
+
+	constexpr auto round_to_page_size = [](size_t size) -> size_t {
+		return (size + 0x1000) & ~0xFFF;
+	};
+
+	const auto within_executable = [&](void* addr) -> bool {
+		return (addr >= file_base) && (addr < (void*)((uintptr_t)file_base+file_size));
+	};
+
+	for(unsigned i = 0; i < prog_headers.size(); ++i) {
+		const auto& header = prog_headers[i];
+		if(header.p_type == SegType::Load) {
+#ifdef PROCESS_LOG_ELF_CREATION
+			kdebugf("[Process] Segment offset: %x, size: %i (rounded to %i), virt: %x\n",
+			        header.p_offset,
+			        header.p_memsz,
+			        round_to_page_size(header.p_memsz),
+			        header.p_vaddr);
+#endif
+
+			if(header.p_align != 0x1000) {
+				kerrorf("[Process] Unsupported segment alignment!\n");
+				continue;
+			}
+
+			const bool readable = (header.p_flags & PermFlags::Read);
+			const bool writable = (header.p_flags & PermFlags::Write);
+			const bool executable = (header.p_flags & PermFlags::Execute);
+
+			const int flags = (readable ? PROT_READ : 0)  |
+							  (writable ? PROT_WRITE : 0) |
+						      (executable ? PROT_EXEC : 0);
+
+			auto& mapping = VMapping::create_for_user(
+										(void*)(header.p_vaddr & ~0xFFF), round_to_page_size(header.p_memsz),
+			                            flags,
+			                            MAP_SHARED);
+
+			void* file_position = (void*)((uintptr_t)file_base + header.p_offset);
+			if(!within_executable(file_position))
+				return false;
+			if(!within_executable((void*)((uintptr_t)file_position + header.p_filesz)))
+				return false;
+
+			unsigned copy_size = header.p_filesz;
+			for(auto& pages : mapping.pages()) {
+				void* phys_addr = pages->address();
+				QuickMap mapper {phys_addr};
+
+				void* destination = (void*)((uintptr_t)mapper.address() + (header.p_vaddr & 0xFFF));
+				const void* source = (void*)((uintptr_t)file_position + (header.p_filesz - copy_size));
+#ifdef PROCESS_LOG_ELF_CREATION
+				kdebugf("[Process] Copying %x <- %x, size: %i\n", destination, source, copy_size);
+#endif
+				memcpy(destination, source, copy_size);
+
+				if(copy_size < 0x1000)
+					break;
+				copy_size -= 0x1000;
+			}
+		}
+	}
+
+	m_registers.eip = (uint32_t)parser->entrypoint();
+
+	delete parser;
 	return true;
 }
 
 bool Process::load_flat_binary() {
 	if(m_executable.m_size == 0) return true;
-	kdebugf("[Process] Loading flat binary, size: %i\n", m_executable.m_size);
 
-	auto* mapping = new VMapping((void*)0x100000, m_executable.m_size, PROT_READ | PROT_WRITE, MAP_SHARED);
-	m_maps.push_back(mapping);
+#ifdef PROCESS_LOG_BIN_CREATION
+	kdebugf("[Process] Loading flat binary, size: %i\n", m_executable.m_size);
+#endif
+
+	auto& mapping = VMapping::create_for_user((void*)0x100000, m_executable.m_size, PROT_READ | PROT_WRITE, MAP_SHARED);
 
 	unsigned left = m_executable.m_size;
-	for(auto& page : mapping->pages()) {
+	for(auto& page : mapping.pages()) {
 		QuickMap map{page->address()};
 
 		unsigned copy_size = (left > 4096) ? left - 4096 : left;
+
+#ifdef PROCESS_LOG_BIN_CREATION
 		kdebugf("Copying %x -> %x\n", m_executable.m_base, page->address());
+#endif
+
 		memcpy(map.address(), m_executable.m_base, copy_size);
 	}
 

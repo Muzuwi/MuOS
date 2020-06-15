@@ -6,6 +6,7 @@ _kernel_syscall_entry:
     pusha
     extern _ukernel_syscall_handler
     call _ukernel_syscall_handler
+    mov [esp+28], eax   ;  Set syscall return value by modifying process eax
     popa
     sti
     iret

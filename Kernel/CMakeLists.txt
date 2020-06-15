@@ -25,7 +25,6 @@ add_library(CRTend OBJECT
     crtend.o)
 
 add_library(Kernel
-        Arch/i386/asm/IRQEntrypoint.asm
         Arch/i386/asm/LGDT.asm
         Arch/i386/GDT.cpp
         Arch/i386/IDT.cpp
@@ -74,18 +73,30 @@ add_library(Kernel
         include/Kernel/ksleep.hpp
         include/Kernel/Memory/kmalloc.hpp
         include/Kernel/Memory/PMM.hpp
-        include/Kernel/Memory/VirtualMemManager.hpp
+        include/Kernel/Memory/VMM.hpp
         include/Kernel/Process/Process.hpp
         include/Kernel/SystemTypes.hpp
         Interrupt/asm/ExceptionEntrypoint.asm
         Interrupt/ExceptionHandler.cpp
-        Interrupt/IRQHandler.cpp
+        Interrupt/SyscallHandler.cpp
+        Interrupt/asm/IRQEntrypoint.asm
+        Interrupt/IRQDispatcher.cpp
+        Interrupt/IRQSubscriber.cpp
         Kernel/kernel.cpp
         Kernel/ksleep.cpp
         Memory/kmalloc.cpp
         Memory/PMM.cpp
-        Memory/VirtualMemManager.cpp
+        Memory/VMM.cpp
         Kernel/stackchk.cpp
+        Arch/i386/IRQDisabler.hpp
+        Process/Process.cpp
+        Process/Scheduler.cpp
+        Arch/i386/CPU.cpp
+        Memory/QuickMap.cpp
+        Syscalls/Syscalls.cpp
+        Kernel/test.cpp
+        Device/PS2Keyboard.cpp
+        Device/PS2Mouse.cpp
 )
 
 add_dependencies(Kernel
@@ -94,6 +105,7 @@ add_dependencies(Kernel
         CRTbegin
         CRTend
         LibC
+        LibGeneric
 )
 
 target_compile_options(Kernel

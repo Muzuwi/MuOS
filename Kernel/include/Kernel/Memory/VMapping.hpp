@@ -7,7 +7,6 @@
 class VMapping {
 private:
 	friend class VMM;
-	friend class Process;  //  FIXME:  I don't like this friendship
 
 	gen::List<PageToken*> m_pages;
 
@@ -22,16 +21,33 @@ private:
 			kerrorf("[VMapping] Creating VMapping with unaligned size (%x)!\n", size);
 		if((uint64_t)addr % 4096 != 0)
 			kerrorf("[VMapping] Creating VMapping with unaligned addr (%x)!\n", addr);
-
-		for(unsigned i = 0; i < size / 4096; ++i)
-			m_pages.push_back(PMM::allocate_page_user());
-
-		VMM::notify_create_VMapping(*this);
 	}
 
 	VMapping(const VMapping&) = delete;
 	VMapping(VMapping&&) = delete;
 public:
+	static VMapping& create_for_user(void* addr, size_t size, int flags, int type) {
+		auto* mapping = new VMapping(addr, size, flags, type);
+
+		for(unsigned i = 0; i < size / 4096; ++i)
+			mapping->m_pages.push_back(PMM::allocate_page_user());
+
+		VMM::notify_create_VMapping(*mapping);
+
+		return *mapping;
+	}
+
+	static VMapping& create_for_kernel(void* addr, size_t size, int flags, int type) {
+		auto* mapping = new VMapping(addr, size, flags, type);
+
+		for(unsigned i = 0; i < size / 4096; ++i)
+			mapping->m_pages.push_back(PMM::allocate_page_kernel());
+
+		VMM::notify_create_VMapping(*mapping);
+
+		return *mapping;
+	}
+
 	~VMapping() {
 		VMM::notify_free_VMapping(*this);
 	}
@@ -42,6 +58,10 @@ public:
 
 	int flags() const {
 		return m_flags;
+	}
+
+	size_t size() const {
+		return m_size;
 	}
 
 	gen::List<PageToken*>& pages() {

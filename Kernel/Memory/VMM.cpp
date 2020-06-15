@@ -105,10 +105,7 @@ void VMM::unmap(uintptr_t *virt_addr) {
 void* VMM::allocate_user_stack(size_t stack_size) {
 	//  Process stacks are allocated right before the kernel virtual address space
 	auto* stack_top = (void*)((uint32_t)&_ukernel_virtual_offset-stack_size);
-	auto* mapping = new VMapping(stack_top, stack_size, PROT_READ | PROT_WRITE, MAP_SHARED);
-	auto* process = Process::m_current;
-
-	process->m_maps.push_back(mapping);
+	auto& mapping = VMapping::create_for_user(stack_top, stack_size, PROT_READ | PROT_WRITE, MAP_SHARED);
 
 	return (void*)((uint32_t)&_ukernel_virtual_offset - 1);
 }
@@ -148,6 +145,8 @@ void VMM::notify_create_VMapping(VMapping& mapping) {
 
 		current_virt_addr = (void*)((uint64_t)current_virt_addr + 4096);
 	}
+
+	process->m_maps.push_back(reinterpret_cast<VMapping*>(&mapping));
 }
 
 void VMM::notify_free_VMapping(VMapping& mapping) {

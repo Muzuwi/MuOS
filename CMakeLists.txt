@@ -6,13 +6,14 @@ cmake_minimum_required(VERSION 3.15)
 #  Compile modules
 add_subdirectory(LibC/)
 add_subdirectory(Kernel/)
+add_subdirectory(Library/LibGeneric/)
 
 #  Toolchain configuration
 include (Toolchain/CMakeLists.txt)
 
 #  Linking the kernel executable
 #  TODO: Move this elsewhere?
-set(KERNEL_OBJECTS "$<TARGET_OBJECTS:CRTi>;Kernel/crtbegin.o;$<TARGET_FILE:Kernel>;$<TARGET_FILE:LibC>;Kernel/crtend.o;$<TARGET_OBJECTS:CRTn>")
+set(KERNEL_OBJECTS "$<TARGET_OBJECTS:CRTi>;Kernel/crtbegin.o;$<TARGET_FILE:Kernel>;$<TARGET_FILE:LibC>;$<TARGET_FILE:LibGeneric>;Kernel/crtend.o;$<TARGET_OBJECTS:CRTn>")
 add_custom_target( KernelExecutable
     DEPENDS Kernel LibC
     COMMAND ${CMAKE_C_COMPILER} -o uKernel.bin ${KERNEL_OBJECTS} ${MU_LINKER_FLAGS}

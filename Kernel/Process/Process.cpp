@@ -10,6 +10,7 @@
 #include <Kernel/Debug/kassert.hpp>
 #include <Kernel/Memory/QuickMap.hpp>
 #include <LibGeneric/ELFParser.hpp>
+#include <Arch/i386/CPU.hpp>
 #include <string.h>
 
 //#define SCHEDULE_LOG
@@ -92,19 +93,10 @@ void Process::enter() {
 	m_state = ProcessState::Running;
 
 	//  Restore FPU state
-	asm volatile(
-	"fxrstor %0"
-	::"m"(fpu_state())
-	);
+	m_fpu_state->restore();
 
 	//  Reload selectors
-	asm volatile(
-	"mov %%ds, %0\n"
-	"mov %%es, %0\n"
-	"mov %%fs, %0\n"
-	"mov %%gs, %0\n"
-	::"r"(m_ring == Ring::CPL3 ? (GDT::get_user_DS() | 3) : GDT::get_kernel_DS())
-	);
+	load_segment_registers();
 
 	void* ptr = (m_ring == Ring::CPL3) ? (void*)m_directory : TO_PHYS(m_directory);
 	//  Reload CR3
@@ -114,68 +106,19 @@ void Process::enter() {
 	);
 
 	//  Switch to kernel task
-	if (m_ring == Ring::CPL0) {
-		asm volatile(
-		"mov %%eax, %0\n"
-		"mov %%ebx, %1\n"
-		"mov %%ecx, %2\n"
-		"mov %%edx, %3\n"
-		"mov %%edi, %4\n"
-		"mov %%esi, %5\n"
-
-		"mov %%esp, %9\n"
-		"add %%esp, 12\n"
-		"push %8\n"
-		"push %7\n"
-		"push %6\n"
-		"mov %%ebp, %10\n"
-		"iret"
-		:
-		: ""(m_registers.eax), ""(m_registers.ebx), ""(m_registers.ecx), ""(m_registers.edx), ""(m_registers.edi), ""(m_registers.esi),
-		""(m_registers.eip), ""(m_registers.CS), ""(m_registers.EFLAGS), ""(m_registers.handler_esp), ""(m_registers.ebp)
-		: "eax", "ebx", "ecx", "edx", "edi", "esi"
-		);
-	}
-		//  Switch to user process
-	else {
-		asm volatile(
-		"mov %%esp, %2\n"
-		//				"mov %%eax, %%0\n"
-		"push %0\n" //  DS
-		"push %2\n" //  SS
-		//				"push %%eax\n"  //  SS
-
-		"mov %%eax, %3\n"
-		"mov %%ebx, %4\n"
-		"mov %%ecx, %5\n"
-		"mov %%edx, %6\n"
-		"mov %%edi, %7\n"
-		"mov %%esi, %8\n"
-		"push %9\n" //  EFLAGS
-		"push %1\n" //  CS
-		"push %10\n"    //  EIP
-		"mov %%ebp, %11\n"
-		"iret\n"
-		::""(GDT::get_user_DS() | 3), ""(GDT::get_user_CS() | 3),
-		""(m_registers.user_esp),
-		""(m_registers.eax), ""(m_registers.ebx), ""(m_registers.ecx),
-		""(m_registers.edx), ""(m_registers.edi), ""(m_registers.esi), ""(m_registers.EFLAGS),
-		""(m_registers.eip), ""(m_registers.ebp)
-		: "eax", "ebx", "ecx", "edx", "edi", "esi"
-		);
-	}
-
-	kpanic();
+	if (m_ring == Ring::CPL0)
+		CPU::jump_to_trap_ring0(m_registers);
+	else //  Switch to user process
+		CPU::jump_to_trap_ring3(m_registers);
 }
 
 /*
  *  Saves the TrapFrame associated with a process and the current fpu context
+ *  FIXME: The FPU context might be getting corrupted by the kernel on its' way from the irq handler to here
  */
 void Process::save_regs_from_trap(TrapFrame frame) {
 	m_registers = frame;
-	//  FIXME: The FPU context might be getting corrupted by the kernel on its' way from the irq handler to here
-	asm volatile("fxsave %0"
-	: "=m"(m_current->fpu_state()));
+	m_fpu_state->store();
 }
 
 /*
@@ -368,4 +311,14 @@ bool Process::load_process_executable() {
 		return load_flat_binary();
 	else
 		return load_ELF_binary();
+}
+
+void Process::load_segment_registers() {
+	asm volatile(
+	"mov %%ds, %0\n"
+	"mov %%es, %0\n"
+	"mov %%fs, %0\n"
+	"mov %%gs, %0\n"
+	::"r"(m_ring == Ring::CPL3 ? (GDT::get_user_DS() | 3) : GDT::get_kernel_DS())
+	);
 }

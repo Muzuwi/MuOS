@@ -35,6 +35,18 @@ struct ExecutableImage {
 
 struct FPUState {
 	uint8_t state[512];
+
+	inline void restore() {
+		asm volatile("fxrstor %0"
+		::"m"(*this)
+		:"memory");
+	}
+
+	inline void store() {
+		asm volatile("fxsave %0"
+		: "=m"(*this)
+		::"memory");
+	}
 } __attribute((aligned(16)));
 
 class Process {
@@ -70,8 +82,10 @@ class Process {
 
 	FPUState& fpu_state() { return *m_fpu_state; }
 	void save_regs_from_trap(TrapFrame frame);
-//	[[noreturn]] void enter_cr3_from_trap(TrapFrame);
-//	[[noreturn]] void enter_cr0_from_trap(TrapFrame);
+	void load_segment_registers();
+
+	[[noreturn]] static void jump_to_trap_ring3(const TrapFrame&);
+	[[noreturn]] static void jump_to_trap_ring0(const TrapFrame&);
 public:
 	Ring ring() const { return m_ring; }
 	pid_t pid() const { return m_pid; }

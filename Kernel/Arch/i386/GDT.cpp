@@ -34,7 +34,7 @@ void GDT::init_GDT(){
 			 			SEGMENT_DESCTYPE(1) | SEGMENT_PRESENT(1) | SEGMENT_SAVAIL(0) |
 			 			SEGMENT_LONG(0) | SEGMENT_SIZE(1) | SEGMENT_GRAN(1) | 
 			 			SEGMENT_PRIV(3) | SEG_DATA_RW );
-	uint64_t tss = create_descriptor((uint32_t)&TSS[0], sizeof(TSS)-1, 0xc9);
+	uint64_t tss = create_descriptor((uint32_t)&TSS[0], sizeof(TSS)-1, 0x40e9);
 
 
 	//  Set descriptors
@@ -107,4 +107,8 @@ void GDT::gdtentry_from_struct(uint16_t* dst, gdt_entry_t entry){
 	dst[1] = (entry.base & 0xFFFF);
 	dst[2] = ((entry.base & 0xFF0000) >> 16) | ((entry.access) << 8);
 	dst[3] = ((entry.base & 0xFF000000) >> 16) | ((entry.flags & 0xF) << 4) | ((entry.limit & 0xF0000) >> 16);
+}
+
+void GDT::set_TSS_stack(void* stack) {
+	TSS[TSS_ESP0] = reinterpret_cast<uint32_t>(stack);
 }

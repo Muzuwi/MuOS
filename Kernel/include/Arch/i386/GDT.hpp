@@ -59,6 +59,8 @@ namespace GDT {
 	void gdtentry_from_struct(uint16_t*, gdt_entry_t);
 	uint64_t create_descriptor(uint32_t, uint32_t, uint16_t);
 
+	void set_TSS_stack(void*);
+
 	constexpr unsigned get_user_CS() {
 		return user_CS;
 	}

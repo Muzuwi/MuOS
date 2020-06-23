@@ -51,54 +51,6 @@ VMM& VMM::get(){
 	return virtual_memory_manager;
 }
 
-
-
-/*
- *	Maps a page of memory at 'phys_addr' to virtual address 'virt_addr'
- */
-void VMM::map(uintptr_t *virt_addr, uintptr_t *phys_addr) {
-//	kdebugf("[vmm] map %x -> %x\n", (unsigned)virt_addr, (unsigned)phys_addr);
-	auto& dir = s_kernel_directory->get_entry(virt_addr);
-	auto* table = dir.get_table();
-
-	if(!table) {
-		kdebugf("[vmm] table for %x does not exist\n", (unsigned)virt_addr);
-		s_kernel_directory->create_table(virt_addr);
-		table = dir.get_table();
-		if(!table) kpanic();
-	}
-
-
-	auto& page = table->get_page(virt_addr);
-
-	if(!dir.get_flag(DirectoryFlag::Present)) dir.set_flag(DirectoryFlag::Present, true);
-	dir.set_flag(DirectoryFlag::RW, true);
-
-	page.set_physical(phys_addr);
-	page.set_flag(PageFlag::Present, true);
-	page.set_flag(PageFlag::Global, true);
-	page.set_flag(PageFlag::RW, true);
-
-	invlpg(virt_addr);
-}
-
-/*
- *	Unmaps a page of memory previously mapped at virt_addr
- *	FIXME: Untested, adding in for completeness, not used currently and will most likely get rewritten
- */
-void VMM::unmap(uintptr_t *virt_addr) {
-	auto dir = s_kernel_directory->get_entry(virt_addr);
-	auto table = dir.get_table();
-
-	//  Nonexistent address
-	if(!table) return;
-
-	auto page = table->get_page(virt_addr);
-
-	page.set_flag(PageFlag::Present, false);
-	invlpg(virt_addr);
-}
-
 /*
  *  Allocates stack space with given size for the current process
  */

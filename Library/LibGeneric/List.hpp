@@ -2,19 +2,25 @@
 #include <LibGeneric/BidirectionalIterator.hpp>
 
 namespace gen {
+
+	template<class T> class _BidirectionalIterator_List;
+	template<class T> class _BidirectionalIterator_List_Const;
+
 	/*
 	 *  Class implementing a doubly-linked list
 	 */
 	template<class T>
 	class List {
 	protected:
-		friend class BidirectionalIterator<List<T>>;
+		friend class _BidirectionalIterator_List<T>;
+		friend class _BidirectionalIterator_List_Const<T>;
 
 		class Node {
 		protected:
 			friend class List;
 
-			friend class BidirectionalIterator<List<T>>;
+			friend class _BidirectionalIterator_List<T>;
+			friend class _BidirectionalIterator_List_Const<T>;
 
 			Node* m_next;
 			Node* m_prev;
@@ -63,8 +69,8 @@ namespace gen {
 			a->m_next->m_prev = a->m_prev;
 		}
 
-		typedef BidirectionalIterator<List<T>> iterator;
-		typedef const BidirectionalIterator<List<T>> const_iterator;
+		typedef _BidirectionalIterator_List<T> iterator;
+		typedef _BidirectionalIterator_List_Const<T> const_iterator;
 
 	private:
 		Node m_head;
@@ -231,60 +237,123 @@ namespace gen {
 
 	};
 
-	/*
-	 *  Iterator specialization for linked lists
-	 */
 	template<class T>
-	class BidirectionalIterator<gen::List<T>> : Iterator<gen::List<T>> {
+	class _BidirectionalIterator_List : Iterator<T> {
 		friend class gen::List<T>;
 
 		typedef gen::List<T> list_type;
-		typedef typename gen::List<T>::Node* node_type;
-		typedef typename gen::List<T>::DataNode* datanode_type;
-		node_type m_it;
+		typedef typename gen::List<T>::Node         node_type;
+		typedef typename gen::List<T>::DataNode     datanode_type;
+		typedef T value_type;
+
+		typedef _BidirectionalIterator_List<T> iter_type;
+
+		node_type* m_it;
 	public:
-		BidirectionalIterator(const list_type& list) {
+		_BidirectionalIterator_List(const list_type& list) {
 			m_it = list.m_head.m_next;
 		}
 
-		BidirectionalIterator(node_type node) {
+		_BidirectionalIterator_List(node_type* node) {
 			m_it = node;
 		}
 
-		BidirectionalIterator& operator++() {
+		iter_type& operator++() {
 			m_it = m_it->m_next;
 			return *this;
 		}
 
-		BidirectionalIterator operator++(int) {
-			BidirectionalIterator temp {m_it};
+		iter_type operator++(int) {
+			iter_type temp {*this};
 			m_it = m_it->m_next;
 			return temp;
 		}
 
-		BidirectionalIterator& operator--() {
+		iter_type& operator--() {
 			m_it = m_it->m_prev;
 			return *this;
 		}
 
-		BidirectionalIterator operator--(int) {
-			BidirectionalIterator temp {m_it};
+		iter_type operator--(int) {
+			iter_type temp {*this};
 			m_it = m_it->m_prev;
 			return temp;
 		}
 
-		bool operator==(const BidirectionalIterator& rhs) const {
-			return m_it == rhs.m_it;
-		}
-
-		bool operator!=(const BidirectionalIterator& rhs) const {
+		bool operator!=(const iter_type& rhs) const {
 			return m_it != rhs.m_it;
 		}
 
-		typename Iterator<T>::value_type& operator*() {
-			return reinterpret_cast<datanode_type>(m_it)->value();
+		bool operator==(const iter_type& rhs) const {
+			return m_it == rhs.m_it;
+		}
+
+
+		value_type& operator*() {
+			return reinterpret_cast<datanode_type*>(m_it)->value();
+		}
+
+		const value_type& operator*() const {
+			return reinterpret_cast<datanode_type const*>(m_it)->value();
 		}
 	};
+
+	template<class T>
+	class _BidirectionalIterator_List_Const : Iterator<T> {
+		friend class gen::List<T>;
+
+		typedef gen::List<T> list_type;
+		typedef typename gen::List<T>::Node         node_type;
+		typedef typename gen::List<T>::DataNode     datanode_type;
+		typedef T value_type;
+
+		typedef _BidirectionalIterator_List_Const<T> iter_type;
+
+		node_type const* m_it;
+	public:
+		_BidirectionalIterator_List_Const(const list_type& list) {
+			m_it = list.m_head.m_next;
+		}
+
+		_BidirectionalIterator_List_Const(const node_type* node) {
+			m_it = node;
+		}
+
+		_BidirectionalIterator_List_Const& operator++() {
+			m_it = m_it->m_next;
+			return *this;
+		}
+
+		iter_type operator++(int) {
+			iter_type temp {m_it};
+			m_it = m_it->m_next;
+			return temp;
+		}
+
+		iter_type& operator--() {
+			m_it = m_it->m_prev;
+			return *this;
+		}
+
+		iter_type operator--(int) {
+			iter_type temp {m_it};
+			m_it = m_it->m_prev;
+			return temp;
+		}
+
+		bool operator!=(const iter_type& rhs) const {
+			return m_it != rhs.m_it;
+		}
+
+		bool operator==(const iter_type& rhs) const {
+			return m_it == rhs.m_it;
+		}
+
+		const value_type& operator*() const {
+			return reinterpret_cast<datanode_type const*>(m_it)->value();
+		}
+	};
+
 }
 
 

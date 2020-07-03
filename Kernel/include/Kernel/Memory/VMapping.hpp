@@ -4,6 +4,11 @@
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Memory/PMM.hpp>
 
+enum class MappingPrivilege {
+	KernelMode,
+	UserMode
+};
+
 class VMapping {
 private:
 	friend class VMM;
@@ -32,7 +37,7 @@ public:
 		for(unsigned i = 0; i < size / 4096; ++i)
 			mapping->m_pages.push_back(PMM::allocate_page_user());
 
-		VMM::notify_create_VMapping(*mapping);
+		VMM::notify_create_VMapping(*mapping, MappingPrivilege::UserMode);
 
 		return *mapping;
 	}
@@ -43,7 +48,7 @@ public:
 		for(unsigned i = 0; i < size / 4096; ++i)
 			mapping->m_pages.push_back(PMM::allocate_page_kernel());
 
-		VMM::notify_create_VMapping(*mapping);
+		VMM::notify_create_VMapping(*mapping, MappingPrivilege::KernelMode);
 
 		return *mapping;
 	}

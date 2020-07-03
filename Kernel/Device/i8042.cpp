@@ -1,6 +1,7 @@
 #include <Arch/i386/i8042.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/PortIO.hpp>
+#include <Arch/i386/IRQDisabler.hpp>
 
 void identify_device(unsigned char* response, size_t len){
 	if(len == 1){
@@ -46,6 +47,8 @@ void identify_device(unsigned char* response, size_t len){
 	self checks to see which ones are present
 */
 void i8042::init_controller(){
+	IRQDisabler disabler;
+
 	unsigned char data;
 	bool has_second_port = true;
 
@@ -54,6 +57,10 @@ void i8042::init_controller(){
 
 	//  disable 2nd device
 	write_command(0xA7);
+
+	//  Flush any existing data
+	while(in(0x64) & 1u)
+		(void)in(0x60);
 
 	//  Set configuration
 	write_command(0x20);

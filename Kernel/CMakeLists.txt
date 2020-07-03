@@ -97,6 +97,9 @@ add_library(Kernel
         Kernel/test.cpp
         Device/PS2Keyboard.cpp
         Device/PS2Mouse.cpp
+        Process/ProcessFinalize.asm
+        Process/SwitchTask.asm
+        Arch/i386/asm/CPU_jump_to_irq_frame.asm
 )
 
 add_dependencies(Kernel

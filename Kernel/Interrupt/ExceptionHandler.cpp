@@ -8,19 +8,21 @@
 	This file contains exception handling routines for the kernel	
 */
 
-void dump_reg_from_trap(TrapFrame regs) {
+void dump_reg_from_trap(const TrapFrame& regs) {
 	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, !Process::current() || Process::current()->ring() == Ring::CPL0 ? regs.handler_esp : regs.user_esp, regs.esi, regs.edi);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, (!Process::current() || (Process::current()->ring() == Ring::CPL0)) ? regs.handler_esp : regs.user_esp, regs.esi, regs.edi);
 	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("Current IRQ trap frame: %x\n", Process::current()->irq_trap_frame());
 }
 
-void dump_reg_from_trap(ErrorCodeTrapFrame regs) {
+void dump_reg_from_trap(const ErrorCodeTrapFrame& regs) {
 	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, !Process::current() || Process::current()->ring() == Ring::CPL0 ? regs.handler_esp : regs.user_esp, regs.esi, regs.edi);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, (!Process::current() || (Process::current()->ring() == Ring::CPL0)) ? regs.handler_esp : regs.user_esp, regs.esi, regs.edi);
 	kerrorf("eip: %x\n", regs.eip);
+	kerrorf("Current IRQ trap frame: %x\n", Process::current()->irq_trap_frame());
 }
 
-extern "C" void _kernel_exception_divbyzero(TrapFrame regs){
+extern "C" void _kernel_exception_divbyzero(const TrapFrame& regs){
 	kerrorf("Divide by zero exception at %x, KERNEL ABORT\n", regs.eip);
 
 	kerrorf("System halted\n");
@@ -31,50 +33,56 @@ extern "C" void _kernel_exception_divbyzero(TrapFrame regs){
 }
 
 
-extern "C" void _kernel_exception_dbg(TrapFrame){
+extern "C" void _kernel_exception_dbg(const TrapFrame&){
 		
 }
 
 
-extern "C" void _kernel_exception_nmi(TrapFrame){
+extern "C" void _kernel_exception_nmi(const TrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_break(TrapFrame){
+extern "C" void _kernel_exception_break(const TrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_overflow(TrapFrame){
+extern "C" void _kernel_exception_overflow(const TrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_bound(TrapFrame){
+extern "C" void _kernel_exception_bound(const TrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_invalidop(TrapFrame regs){
-	kerrorf("Invalid opcode exception at %x, KERNEL ABORT\n", regs.eip);
+extern "C" void _kernel_exception_invalidop(const TrapFrame& regs){
+	bool is_kernel_crash = regs.eip >= (uint32_t)&_ukernel_virtual_offset;
+
+	kerrorf("%s(%i): Illegal opcode exception at %x\n",
+	        is_kernel_crash ? "Kernel" : "Process",
+	        Process::current() ? Process::current()->pid() : 0,
+	        regs.eip);
 	dump_reg_from_trap(regs);
-	kerrorf("Offending instruction: %x", *((uint32_t*)regs.eip));
-	kerrorf("System halted\n");
-	asm volatile(
-		"cli\n"
-		"hlt\t\n"
-		);
+
+	if(is_kernel_crash) {
+		kpanic();
+	} else {
+		Process::kill(Process::current()->pid());
+		Scheduler::switch_task();
+	}
 
 }
 
 
-extern "C" void _kernel_exception_nodevice(TrapFrame){
+extern "C" void _kernel_exception_nodevice(const TrapFrame&){
 
 }
 
 
-extern "C" void _kernel_exception_doublefault(ErrorCodeTrapFrame regs){
+extern "C" void _kernel_exception_doublefault(const ErrorCodeTrapFrame& regs){
 	kerrorf("Double Fault exception, ABORT\n");
 	dump_reg_from_trap(regs);
 	asm volatile(
@@ -84,12 +92,12 @@ extern "C" void _kernel_exception_doublefault(ErrorCodeTrapFrame regs){
 }
 
 
-extern "C" void _kernel_exception_invalidtss(ErrorCodeTrapFrame){
+extern "C" void _kernel_exception_invalidtss(const ErrorCodeTrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_invalidseg(ErrorCodeTrapFrame regs){
+extern "C" void _kernel_exception_invalidseg(const ErrorCodeTrapFrame& regs){
 	asm volatile("cli\n");
 	kerrorf("Segment not present fault at %x\n", regs.eip);
 	dump_reg_from_trap(regs);
@@ -100,7 +108,7 @@ extern "C" void _kernel_exception_invalidseg(ErrorCodeTrapFrame regs){
 }
 
 
-extern "C" void _kernel_exception_segstackfault(ErrorCodeTrapFrame regs){
+extern "C" void _kernel_exception_segstackfault(const ErrorCodeTrapFrame& regs){
 	kerrorf("Stack segment fault at %x, KERNEL ABORT\n", regs.eip);
 	dump_reg_from_trap(regs);
 	kerrorf("Error code: %x\n", regs.error_code);
@@ -112,9 +120,7 @@ extern "C" void _kernel_exception_segstackfault(ErrorCodeTrapFrame regs){
 }
 
 
-extern "C" void _kernel_exception_gpf(ErrorCodeTrapFrame regs){
-	asm volatile("cli\n");
-
+extern "C" void _kernel_exception_gpf(const ErrorCodeTrapFrame& regs){
 	bool is_kernel_crash = regs.eip >= (uint32_t)&_ukernel_virtual_offset;
 	kerrorf("%s(%i): General Protection Fault exception at %x\n",
 	        is_kernel_crash ? "Kernel" : "Process",
@@ -127,12 +133,12 @@ extern "C" void _kernel_exception_gpf(ErrorCodeTrapFrame regs){
 		kpanic();
 	} else {
 		Process::kill(Process::current()->pid());
-		Scheduler::yield({});
+		Scheduler::switch_task();
 	}
 }
 
 
-extern "C" void _kernel_exception_pagefault(ErrorCodeTrapFrame regs){
+extern "C" void _kernel_exception_pagefault(const ErrorCodeTrapFrame& regs){
 	asm volatile("cli\n");
 
 	uint32_t cr2;
@@ -163,37 +169,37 @@ extern "C" void _kernel_exception_pagefault(ErrorCodeTrapFrame regs){
 		kpanic();
 	} else { //  Ring 3
 		Process::kill(Process::current()->pid());
-		Scheduler::yield({});
+		Scheduler::switch_task();
 	}
 
 }
 
 
-extern "C" void _kernel_exception_x87fpfault(TrapFrame){
+extern "C" void _kernel_exception_x87fpfault(const TrapFrame&){
+	kpanic();
+}
+
+
+extern "C" void _kernel_exception_aligncheck(const ErrorCodeTrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_aligncheck(ErrorCodeTrapFrame){
+extern "C" void _kernel_exception_machinecheck(const TrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_machinecheck(TrapFrame){
+extern "C" void _kernel_exception_simdfp(const TrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_simdfp(TrapFrame){
+extern "C" void _kernel_exception_virtfault(const TrapFrame&){
 	
 }
 
 
-extern "C" void _kernel_exception_virtfault(TrapFrame){
-	
-}
-
-
-extern "C" void _kernel_exception_security(ErrorCodeTrapFrame){
+extern "C" void _kernel_exception_security(const ErrorCodeTrapFrame&){
 	
 }

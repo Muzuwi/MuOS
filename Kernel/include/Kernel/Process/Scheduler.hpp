@@ -13,6 +13,8 @@ class Scheduler {
 public:
 	static void initialize();
 	static void enter_scheduler_loop();
-	static void yield(TrapFrame frame);
 	static void notify_new_process(Process*);
+
+	static void yield_with_irq_frame(uint32_t esp);
+	static void switch_task();
 };

@@ -12,9 +12,9 @@
 #include <LibGeneric/ELFParser.hpp>
 #include <Arch/i386/CPU.hpp>
 #include <string.h>
+#include <LibGeneric/Algorithm.hpp>
+#include <Arch/i386/TrapFrame.hpp>
 
-//#define SCHEDULE_LOG
-//#define SCHEDULE_LOG_DUMP_REG_SWITCH
 
 gen::List<Process*> Process::m_all_processes {};
 Process* Process::m_current = nullptr;
@@ -22,18 +22,32 @@ Process* Process::m_kernel_idle = nullptr;
 static pid_t nextPID = 1;
 static pid_t nextUserPID = 1000;
 
-Process::Process(pid_t pid, ExecutableImage image)
+Process::Process(pid_t pid, Ring ring, ExecutableImage image)
 : m_executable(image), m_maps() {
-	IRQDisabler disabler;
-	this->m_pid = pid;
-	this->m_registers = {};
-	this->m_registers.eip = (uint32_t)image.m_base;
-	this->m_registers.CS = GDT::get_kernel_CS();
-	this->m_registers.EFLAGS = 0x0002 | 0x0200;
-
-	this->m_ring = Ring::CPL0;
 	this->m_state = ProcessState::New;
-	this->m_directory = VMM::get_directory();
+	this->m_ring = ring;
+	this->m_pid = pid;
+	this->m_exit_code = 0;
+
+	this->m_kernel_stack_bottom = nullptr;
+	this->m_current_irq_trap_frame = nullptr;
+	this->m_directory = nullptr;
+	this->m_fpu_state = nullptr;
+	this->m_is_finalized = false;
+}
+
+Process::~Process() {
+	ASSERT_IRQ_DISABLED();
+
+	if (m_fpu_state)
+		delete m_fpu_state;
+
+	if (m_directory) {
+		kerrorf("[Process] FIXME: Leaked page for process page directory!\n");
+	}
+
+	for(auto map : m_maps)
+		delete map;
 }
 
 /*
@@ -43,7 +57,7 @@ pid_t Process::create(void* call) {
 	IRQDisabler disabler;
 	kdebugf("[Process] New kernel task, entry %x, pid %i\n", call, nextPID);
 
-	auto process = new Process(nextPID, {call, 0, ExecutableType::Flat});
+	auto process = new Process(nextPID, Ring::CPL0, {call, 0, ExecutableType::Flat});
 
 	m_all_processes.push_back(process);
 	Scheduler::notify_new_process(process);
@@ -62,11 +76,9 @@ pid_t Process::create(void (* call)()) {
 pid_t Process::create_from_ELF(void* base, size_t size) {
 	if(!base) return -1;
 	IRQDisabler disabler;
-	kdebugf("[Process] New userland process, from ELF, pid %i\n", nextUserPID);
 
-	auto process = new Process(nextUserPID, {base, size, ExecutableType::ELF});
-	process->m_registers.CS = GDT::get_user_CS();
-	process->m_ring = Ring::CPL3;
+	auto process = new Process(nextUserPID, Ring::CPL3,  {base, size, ExecutableType::ELF});
+	kdebugf("[Process] New userland process, from ELF, pid %i\n", nextUserPID);
 
 	m_all_processes.push_back(process);
 	Scheduler::notify_new_process(process);
@@ -75,100 +87,29 @@ pid_t Process::create_from_ELF(void* base, size_t size) {
 }
 
 /*
- *  Enters a process, sets up the stack addresses and everything else to context switch to this process
- */
-void Process::enter() {
-	IRQDisabler disabler;
-
-#ifdef SCHEDULE_LOG
-	kdebugf("[Process] context switch to pid %i [resuming at %x, SP at %x], ring %i\n", m_pid, m_registers.eip, m_registers.user_esp, m_ring == Ring::CPL0 ? 0 : 3);
-#endif
-
-#ifdef SCHEDULE_LOG_DUMP_REG_SWITCH
-	kdebugf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", m_registers.eax, m_registers.ebx, m_registers.ecx, m_registers.edx);
-	kdebugf("ebp: %x, esp: %x, esi: %x, edi: %x\n", m_registers.ebp, m_registers.user_esp, m_registers.esi, m_registers.edi);
-	kdebugf("eip: %x, CS: %x, EFLAGS: %x\n", m_registers.eip, m_registers.CS, m_registers.EFLAGS);
-#endif
-
-	m_state = ProcessState::Running;
-
-	//  Restore FPU state
-	m_fpu_state->restore();
-
-	//  Reload selectors
-	load_segment_registers();
-
-	void* ptr = (m_ring == Ring::CPL3) ? (void*)m_directory : TO_PHYS(m_directory);
-	//  Reload CR3
-	asm volatile(
-	"mov %%cr3, %0\n"
-	::"r"(ptr)
-	);
-
-	//  Switch to kernel task
-	if (m_ring == Ring::CPL0)
-		CPU::jump_to_trap_ring0(m_registers);
-	else //  Switch to user process
-		CPU::jump_to_trap_ring3(m_registers);
-}
-
-/*
- *  Saves the TrapFrame associated with a process and the current fpu context
- *  FIXME: The FPU context might be getting corrupted by the kernel on its' way from the irq handler to here
- */
-void Process::save_regs_from_trap(TrapFrame frame) {
-	m_registers = frame;
-	m_fpu_state->store();
-}
-
-/*
  *  Kills a process specified by a PID
  */
 void Process::kill(pid_t pid) {
 	IRQDisabler disabler;
-	auto find = [](gen::BidirectionalIterator<gen::List<Process*>> begin,
-	               gen::BidirectionalIterator<gen::List<Process*>> end,
-	               pid_t pid) -> gen::BidirectionalIterator<gen::List<Process*>> {
-		auto it = begin;
-		while (it != end) {
-			if ((*it)->m_pid == pid)
-				return it;
-			++it;
-		}
-		return it;
-	};
 
-	auto it = find(m_all_processes.begin(), m_all_processes.end(), pid);
+	auto it = gen::find_if(m_all_processes, [&](Process* proc) -> bool {
+		return proc->m_pid == pid;
+	});
 	if (it == m_all_processes.end()) {
 		kerrorf("WTF? Tried killing non-existant process!");
 		return;
 	}
 
 	kdebugf("[Process] Process PID %i state: Leaving\n", pid);
-	(*it)->m_state = ProcessState::Leaving;
-}
-
-Process::~Process() {
-	if (m_fpu_state)
-		delete m_fpu_state;
-
-	if (m_directory) {
-		if((uint64_t)m_directory < (uint64_t)&_ukernel_virtual_offset) {
-			kerrorf("[Process] FIXME: Leaked page for process page directory!\n");
-		} else {
-			delete m_directory;
-		}
-	}
-
-	for(auto map : m_maps)
-		delete map;
+	(*it)->set_state(ProcessState::Leaving);
 }
 
 /*
  *  Finish process creation, allocate stack, create a page directory and fpu state buffer for the process
  */
-bool Process::finalize_creation() {
-	IRQDisabler disabler;
+__attribute__((used))
+void Process::_finalize_internal() {
+	ASSERT_IRQ_DISABLED();
 	kdebugf("[Process] Finalizing process %i creation\n", this->m_pid);
 
 	this->m_fpu_state = (FPUState*) KMalloc::get().kmalloc_alloc(512, 16);
@@ -176,26 +117,66 @@ bool Process::finalize_creation() {
 		m_fpu_state->state[i] = 0;
 
 	if(m_ring == Ring::CPL0) {
-		return finalize_creation_for_kernel();
+		_finalize_for_kernel();
 	} else {
-		return finalize_creation_for_user();
+		_finalize_for_user();
 	}
 }
 
-bool Process::finalize_creation_for_user() {
-	this->m_directory = PageDirectory::create_for_user();
-	this->m_registers.user_esp = (uint32_t) VMM::allocate_user_stack(16384);
+void Process::_finalize_for_user() {
+	ASSERT_IRQ_DISABLED();
 
-	return this->load_process_executable();
+	auto task_personal_stack = (uint32_t) VMM::allocate_user_stack(16384);
+
+	TrapFrame frame {};
+	frame.eip = 0xdeaddead;
+	frame.eax = 0xaaaaaaaa;
+	frame.ecx = 0xcccccccc;
+	frame.edx = 0xdddddddd;
+	frame.ebx = 0xbbbbbbbb;
+	frame.user_esp = task_personal_stack;
+	frame.ebp = 0xbdbdbdbd;
+	frame.esi = 0x0d0d0d0d;
+	frame.edi = 0xd0d0d0d0;
+	frame.CS = GDT::get_user_CS() | 3u;
+	frame.user_SS = GDT::get_user_DS() | 3u;
+	frame.EFLAGS = 0x202;
+
+	assert(this->load_process_executable(frame));
+	CPU::load_segment_registers_for(Ring::CPL3);
+	m_is_finalized = true;
+	m_state = ProcessState::Running;
+	CPU::jump_to_trap_ring3(frame);
 }
 
-bool Process::finalize_creation_for_kernel() {
-	this->m_registers.handler_esp = (uint32_t) &_ukernel_tasks_stack + 4096 * (nextPID);
+void Process::_finalize_for_kernel() {
+	ASSERT_IRQ_DISABLED();
 
-	return this->load_process_executable();
+	auto task_personal_stack = (uint32_t) VMM::allocate_kerneltask_stack();
+
+	TrapFrame frame {};
+	frame.eip = (uint32_t)m_executable.m_base;
+	frame.eax = 0xaaaaaaaa;
+	frame.ecx = 0xcccccccc;
+	frame.edx = 0xdddddddd;
+	frame.ebx = 0xbbbbbbbb;
+	frame.user_esp = task_personal_stack;
+	frame.ebp = 0xbdbdbdbd;
+	frame.esi = 0x0d0d0d0d;
+	frame.edi = 0xd0d0d0d0;
+	frame.CS = GDT::get_kernel_CS();
+	frame.user_SS = GDT::get_kernel_DS();
+	frame.EFLAGS = 0x202;
+
+	assert(this->load_process_executable(frame));
+	CPU::load_segment_registers_for(Ring::CPL0);
+	m_is_finalized = true;
+	m_state = ProcessState::Running;
+	CPU::jump_to_trap_ring0(frame);
 }
 
-bool Process::load_ELF_binary() {
+bool Process::load_ELF_binary(TrapFrame& frame) {
+	ASSERT_IRQ_DISABLED();
 #ifdef PROCESS_DEBUG_ELF_PARSING
 	kdebugf("[Process] Loading ELF binary, base: %x, size: %i\n", m_executable.m_base, m_executable.m_size);
 #endif
@@ -273,13 +254,14 @@ bool Process::load_ELF_binary() {
 		}
 	}
 
-	m_registers.eip = (uint32_t)parser->entrypoint();
+	frame.eip = (uint32_t)parser->entrypoint();
 
 	delete parser;
 	return true;
 }
 
-bool Process::load_flat_binary() {
+bool Process::load_flat_binary(TrapFrame& frame) {
+	ASSERT_IRQ_DISABLED();
 	if(m_executable.m_size == 0) return true;
 
 #ifdef PROCESS_LOG_BIN_CREATION
@@ -301,24 +283,74 @@ bool Process::load_flat_binary() {
 		memcpy(map.address(), m_executable.m_base, copy_size);
 	}
 
-	m_registers.eip = 0x100000;
+	frame.eip = 0x100000;
 
 	return true;
 }
 
-bool Process::load_process_executable() {
+bool Process::load_process_executable(TrapFrame& frame) {
+	ASSERT_IRQ_DISABLED();
 	if(m_executable.m_type == ExecutableType::Flat)
-		return load_flat_binary();
+		return load_flat_binary(frame);
 	else
-		return load_ELF_binary();
+		return load_ELF_binary(frame);
 }
 
-void Process::load_segment_registers() {
-	asm volatile(
-	"mov %%ds, %0\n"
-	"mov %%es, %0\n"
-	"mov %%fs, %0\n"
-	"mov %%gs, %0\n"
-	::"r"(m_ring == Ring::CPL3 ? (GDT::get_user_DS() | 3) : GDT::get_kernel_DS())
-	);
+/*
+ *  Called by the task switch assembly entrypoint
+ */
+__attribute__((used))
+PageDirectory* Process::ensure_directory() {
+	ASSERT_IRQ_DISABLED();
+	if(m_ring == Ring::CPL0)
+		m_directory = PageDirectory::create_for_kernel();
+	else
+		m_directory = PageDirectory::create_for_user();
+
+	kdebugf("Process(%i) received directory at physical %x\n", m_pid, m_directory);
+
+	return m_directory;
+}
+
+/*
+ *  Called by the task switch assembly entrypoint
+ */
+__attribute__((used))
+void* Process::ensure_kernel_stack() {
+	ASSERT_IRQ_DISABLED();
+	m_kernel_stack_bottom = (void*)(VMM::allocate_interrupt_stack());
+	return m_kernel_stack_bottom;
+}
+
+
+void Process::set_state(ProcessState v) {
+	auto state_str = [](ProcessState state) -> const char* {
+		switch (state) {
+			case ProcessState::New:
+				return "New";
+			case ProcessState::Ready:
+				return "Ready";
+			case ProcessState::Leaving:
+				return "Leaving";
+			case ProcessState::Blocking:
+				return "Blocking";
+			case ProcessState::Running:
+				return "Running";
+			case ProcessState::Sleeping:
+				return "Sleeping";
+			default:
+				return "invalid";
+		}
+	};
+
+//	kdebugf("Process(%i) state changed: %s -> %s\n", m_pid, state_str(m_state), state_str(v));
+	m_state = v;
+}
+
+void Process::exit(int rc) {
+	IRQDisabler disabler;
+	auto* process = Process::m_current;
+	process->set_state(ProcessState::Leaving);
+	process->m_exit_code = rc;
+	Scheduler::switch_task();
 }

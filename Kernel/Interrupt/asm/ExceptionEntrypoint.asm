@@ -4,8 +4,15 @@ section .text
 global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
     pusha
+
+    mov eax, esp
+    push eax
+
     extern _kernel_exception_%{1:1}
     call _kernel_exception_%{1:1}
+
+    pop eax
+
     popa
     iret
 %endmacro
@@ -14,8 +21,15 @@ _exception_entry_%{1:1}:
 global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
     pusha
+
+    mov eax, esp
+    push eax
+
     extern _kernel_exception_%{1:1}
     call _kernel_exception_%{1:1}
+
+    pop eax
+
     popa
     add esp, 4
     iret

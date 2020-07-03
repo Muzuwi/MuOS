@@ -12,7 +12,7 @@ enum class ProcessState {
 	Running,
 	Blocking,
 	Leaving,
-	Frozen
+	Sleeping
 };
 
 enum class Ring {
@@ -60,45 +60,51 @@ class Process {
 
 	Ring m_ring;
 	pid_t m_pid;
-	TrapFrame m_registers;
 	ProcessState m_state;
 	FPUState* m_fpu_state;
 	PageDirectory* m_directory;
 	ExecutableImage m_executable;
 	gen::List<VMapping*> m_maps;
 
-	Process(pid_t, ExecutableImage);
+	int m_exit_code;
+	TrapFrame* m_current_irq_trap_frame;
+	void* m_kernel_stack_bottom;
+	bool m_is_finalized;
+
+	Process(pid_t, Ring, ExecutableImage);
 	~Process();
 
-	[[noreturn]] void enter();
-	bool finalize_creation();
-	bool load_process_executable();
+	[[noreturn]] void finalize();
+	[[noreturn]] void _finalize_internal();
+	[[noreturn]] void _finalize_for_user();
+	[[noreturn]] void _finalize_for_kernel();
 
-	bool load_flat_binary();
-	bool load_ELF_binary();
-	bool finalize_creation_for_user();
-	bool finalize_creation_for_kernel();
+	bool load_process_executable(TrapFrame&);
+	bool load_flat_binary(TrapFrame&);
+	bool load_ELF_binary(TrapFrame&);
 
+	PageDirectory* ensure_directory();
+	void* ensure_kernel_stack();
 
 	FPUState& fpu_state() { return *m_fpu_state; }
-	void save_regs_from_trap(TrapFrame frame);
-	void load_segment_registers();
-
-	[[noreturn]] static void jump_to_trap_ring3(const TrapFrame&);
-	[[noreturn]] static void jump_to_trap_ring0(const TrapFrame&);
 public:
 	Ring ring() const { return m_ring; }
 	pid_t pid() const { return m_pid; }
+	void* irq_trap_frame() { return m_current_irq_trap_frame; }
+	bool is_finalized() const { return m_is_finalized; }
+	PageDirectory* directory() { return m_directory; }
 
-	static pid_t create(void (*call));
-	static pid_t create(void (*call)());
-	static pid_t create_user(void (*pFunction)());
-	static pid_t create_user(void (*call));
+	void set_state(ProcessState v);
 
-	static pid_t create_from_ELF(void* base, size_t size);
 
 	static Process* current() { return Process::m_current; }
+	static pid_t create(void (*call));
+	static pid_t create(void (*call)());
+	static pid_t create_from_ELF(void* base, size_t size);
 	static void kill(pid_t);
 
-	PageDirectory* directory() { return m_directory; }
+	/*
+	 *  Functions that affect the currently running process
+	 */
+	[[noreturn]] static void exit(int rc);
 };

@@ -6,7 +6,7 @@
 #include <include/Kernel/Debug/kpanic.hpp>
 
 uint32_t Syscall::dispatch(uint32_t function_id, const _SyscallParamPack& args) {
-	IRQDisabler disabler;
+	ASSERT_IRQ_DISABLED();
 
 	const auto syscall_number = static_cast<SyscallNumber>(function_id);
 	switch (syscall_number) {
@@ -21,9 +21,10 @@ uint32_t Syscall::dispatch(uint32_t function_id, const _SyscallParamPack& args) 
 }
 
 void Syscall::exit(int retval) {
+	ASSERT_IRQ_DISABLED();
 	kdebugf("[Syscall] Process %i wants to close! Exit: %i\n", Process::current()->pid(), retval);
 	Process::kill(Process::current()->pid());
-	Scheduler::yield({});
+	Scheduler::switch_task();
 	kpanic();
 }
 
@@ -33,6 +34,7 @@ unsigned Syscall::sleep(unsigned int seconds) {
 }
 
 size_t Syscall::write(int fildes, const void* buf, size_t nbyte) {
+	ASSERT_IRQ_DISABLED();
 	if(fildes != 0)
 		return -EBADF;
 	if(!verify_read(reinterpret_cast<const uint8_t*>(buf)))
@@ -55,6 +57,7 @@ size_t Syscall::write(int fildes, const void* buf, size_t nbyte) {
 
 template<class T>
 bool Syscall::verify_read(T* addr) {
+	ASSERT_IRQ_DISABLED();
 	auto* cur = Process::current();
 	for(const auto& map : cur->m_maps) {
 		if((uintptr_t)addr >= (uintptr_t)map->addr() &&
@@ -67,6 +70,7 @@ bool Syscall::verify_read(T* addr) {
 
 template<class T>
 bool Syscall::verify_write(T* addr) {
+	ASSERT_IRQ_DISABLED();
 	auto* cur = Process::current();
 	for(const auto& map : cur->m_maps) {
 		if((uintptr_t)addr >= (uintptr_t)map->addr() &&

@@ -114,6 +114,8 @@ void PMM::handle_multiboot_memmap(void* multiboot_mmap) {
 
 
 PageToken* PMM::allocate_page_user() {
+	ASSERT_IRQ_DISABLED();
+
 	for(auto& range : s_user_area) {
 		void* allocation = range->alloc_page();
 		if(allocation)
@@ -125,6 +127,8 @@ PageToken* PMM::allocate_page_user() {
 }
 
 PageToken* PMM::allocate_page_kernel() {
+	ASSERT_IRQ_DISABLED();
+
 	for(auto& range : s_kernel_area) {
 		void* allocation = range->alloc_page();
 		if(allocation)
@@ -136,6 +140,8 @@ PageToken* PMM::allocate_page_kernel() {
 }
 
 void PMM::free_page_from_token(PageToken* token) {
+	ASSERT_IRQ_DISABLED();
+
 	for(auto& range : s_user_area) {
 		if(range->has_address(token->address())) {
 			range->free_page(token->address());

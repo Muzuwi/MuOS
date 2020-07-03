@@ -6,39 +6,50 @@
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
 #include <Arch/i386/IRQDisabler.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
+#include <LibGeneric/Algorithm.hpp>
 
-static gen::List<IRQSubscriber*> s_irq_handlers[16];
+static gen::List<IRQSubscriber*> s_irq_handlers[16] {};
 
 extern "C"
-void _kernel_irq_dispatch(unsigned irq, TrapFrame trapFrame) {
+void _kernel_irq_dispatch(unsigned irq) {
 	if(irq > 7)
 		out(0xa0, 0x20);
 	out(0x20, 0x20);
 
-	IRQDispatcher::dispatch_irq(irq, trapFrame);
+	IRQDispatcher::dispatch_irq(irq);
 }
 
 /*
  *  Calls all subscribers for the specific IRQ
  */
-void IRQDispatcher::dispatch_irq(uint8_t irq, TrapFrame& frame) {
+void IRQDispatcher::dispatch_irq(uint8_t irq) {
 	if(irq > 15) return;
 
 	auto& list = s_irq_handlers[irq];
 	for(auto& subscriber : list) {
-		subscriber->handler()(frame);
+		subscriber->handler()();
 	}
 }
 
 /*
  *  Registers a new subscriber for an IRQ
  */
-void IRQDispatcher::register_subscriber(IRQSubscriber* subscriber) {
+void IRQDispatcher::register_subscriber(IRQSubscriber* subscriber, SubscriberPriority priority) {
 	IRQDisabler disabler;
 	if(!subscriber) return;
 	if(subscriber->irq() > 15) return;
 
-	s_irq_handlers[subscriber->irq()].push_back(subscriber);
+
+	if(priority == SubscriberPriority::Normal) {
+		auto& handlers = s_irq_handlers[subscriber->irq()];
+
+		if(!handlers.empty())
+			handlers.insert(handlers.end()--, subscriber);
+		else
+			handlers.push_back(subscriber);
+	} else {
+		s_irq_handlers[subscriber->irq()].push_back(subscriber);
+	}
 }
 
 /*
@@ -49,18 +60,8 @@ void IRQDispatcher::remove_subscriber(IRQSubscriber* subscriber) {
 	if(!subscriber) return;
 	if(subscriber->irq() > 15) return;
 
-	//  FIXME: Move this to LibGeneric
-	auto find = [](gen::BidirectionalIterator<gen::List<IRQSubscriber*>> begin, gen::BidirectionalIterator<gen::List<IRQSubscriber*>> end, IRQSubscriber* val){
-		auto it = begin;
-		while(it != end) {
-			if((*it) == val) return it;
-			++it;
-		}
-		return it;
-	};
-
 	auto& subscriber_list = s_irq_handlers[subscriber->irq()];
-	auto it = find(subscriber_list.begin(), subscriber_list.end(), subscriber);
+	auto it = gen::find(subscriber_list, subscriber);
 	if(it != subscriber_list.end())
 		subscriber_list.erase(it);
 }

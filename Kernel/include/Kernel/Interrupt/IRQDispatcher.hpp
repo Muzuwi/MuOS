@@ -1,13 +1,12 @@
 #pragma once
-#include <Arch/i386/TrapFrame.hpp>
 #include <Kernel/Interrupt/IRQSubscriber.hpp>
 
-extern "C" void  _kernel_irq_dispatch(unsigned, TrapFrame);
+extern "C" void  _kernel_irq_dispatch(unsigned);
 class IRQDispatcher {
 	friend class IRQSubscriber;
-	friend void _kernel_irq_dispatch(unsigned irq, TrapFrame trapFrame);
+	friend void _kernel_irq_dispatch(unsigned irq);
 protected:
-	static void dispatch_irq(uint8_t irq, TrapFrame& frame);
-	static void register_subscriber(IRQSubscriber* subscriber);
+	static void dispatch_irq(uint8_t irq);
+	static void register_subscriber(IRQSubscriber* subscriber, SubscriberPriority);
 	static void remove_subscriber(IRQSubscriber* subscriber);
 };

@@ -13,12 +13,12 @@ void update_timer_reload(uint16_t freq){
 	out(0x40, (freq >> 8) & 0xFF);
 }
 
-static void subscriber_trampoline(const TrapFrame&) {
+static void _timer_subscriber() {
 	Timer::getTimer().tick();
 }
 
 Timer::Timer()
-: IRQSubscriber(0, subscriber_trampoline) {
+: IRQSubscriber(0, _timer_subscriber) {
 	IRQDisabler disabler;
 	m_frequency = 1000;
 	out(0x43, 0b00110100);

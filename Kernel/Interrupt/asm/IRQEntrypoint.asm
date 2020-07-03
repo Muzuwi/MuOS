@@ -19,7 +19,7 @@ irq%{1:1}:
     push dword %{1:1}   ;  Push IRQ number
     extern _kernel_irq_dispatch
     call _kernel_irq_dispatch
-    pop eax             ;  Pop IRQ number
+    add esp, 4          ;  Pop IRQ number
     popa
     sti
     iret

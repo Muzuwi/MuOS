@@ -1,9 +1,9 @@
 #include <Kernel/Interrupt/IRQSubscriber.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
 
-IRQSubscriber::IRQSubscriber(uint8_t irq, HandlerFunc func)
+IRQSubscriber::IRQSubscriber(uint8_t irq, HandlerFunc func, SubscriberPriority priority)
 : irqNumber(irq), handlerFunction(func) {
-	IRQDispatcher::register_subscriber(this);
+	IRQDispatcher::register_subscriber(this, priority);
 }
 
 IRQSubscriber::HandlerFunc IRQSubscriber::handler() {

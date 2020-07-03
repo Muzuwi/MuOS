@@ -37,6 +37,7 @@ class PageDirectory {
 	PageDirectoryEntry m_entries[1024];
 public:
 	static PageDirectory* create_for_user();
+	static PageDirectory* create_for_kernel();
 	bool table_present(uint32_t*) const;
 
 	Page* get_page(uint32_t*) const;

@@ -143,3 +143,29 @@ PageDirectory* PageDirectory::create_for_user() {
 	}
 	return reinterpret_cast<PageDirectory*>(mem);
 }
+
+PageDirectory* PageDirectory::create_for_kernel() {
+	//  FIXME: Leaking the PD page here
+	auto* page =  PMM::allocate_page_kernel();
+	auto* mem = page->address();
+
+#ifdef LOG_PAGEDIR_CREATION
+	kdebugf("[PageDirectory] Allocated PD for user at phys: %x\n", mem);
+#endif
+
+	if(mem) {
+		auto* kernel_dir = VMM::get_directory();
+		QuickMap mapper {mem};
+		memset(mapper.address(), 0, 4096);
+
+		auto* kernel_as_arr = reinterpret_cast<uint32_t*>(kernel_dir);
+		for(unsigned i = GET_DIR(&_ukernel_virtual_offset); i < 1024; ++i) {
+			reinterpret_cast<uint32_t*>(mapper.address())[i] = kernel_as_arr[i];
+		}
+	} else {
+#ifdef LOG_PAGEDIR_CREATION
+		kerrorf("[PageDirectory] Page directory creation for user failed!\n");
+#endif
+	}
+	return reinterpret_cast<PageDirectory*>(mem);
+}

@@ -132,7 +132,21 @@ public:
 		m_sector_base = sector_base;
 		m_sector_count = sector_count;
 		m_sector_size = sector_size;
-		kdebugf("[ide_drive] New sector cache, sector count %i, base: %x, sector size: %x\n", sector_count, sector_base, sector_size);
+//		kdebugf("[ide_drive] New sector cache, sector count %i, base: %x, sector size: %x\n", sector_count, sector_base, sector_size);
+	}
+
+	SectorCache(const SectorCache& v)
+	: m_cache(v.m_cache), m_sector_base(v.m_sector_base), m_sector_size(v.m_sector_size), m_sector_count(v.m_sector_count){ }
+
+	SectorCache& operator=(const SectorCache& v) {
+		if(&v != this) {
+			m_cache = v.m_cache;
+			m_sector_base = v.m_sector_base;
+			m_sector_count = v.m_sector_count;
+			m_sector_size = v.m_sector_size;
+		}
+
+		return *this;
 	}
 
 	bool present() {
@@ -152,7 +166,14 @@ public:
 	}
 
 	bool contains(uint32_t address) {
-		return address >= m_sector_base && (address < m_sector_base + m_sector_size*m_sector_count);
+		return address >= m_sector_base*m_sector_size && (address < (m_sector_base + m_sector_count)*m_sector_size);
+	}
+
+	void* get_cache_at_addr(uint32_t addr) {
+		if(addr < m_sector_base*m_sector_size)
+			return nullptr;
+		else
+			return reinterpret_cast<void*>((uint8_t*)m_cache + (addr - m_sector_base*m_sector_size));
 	}
 
 	void invalidate() {

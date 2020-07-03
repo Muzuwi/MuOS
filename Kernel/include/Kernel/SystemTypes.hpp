@@ -25,7 +25,6 @@ typedef uint16_t allocation_t;
 
 //  FIXME:  Placeholders
 typedef int pid_t;
-typedef int IOResult;
 typedef int FSResult;
 typedef uint64_t lba_t;
 typedef char* path_t;

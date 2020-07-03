@@ -139,7 +139,6 @@ bool IDE_Drive::ide_access(bool read, uint32_t LBA, uint8_t sectors, uint32_t* b
 
 	uint32_t words = sectors * (m_sector_size / sizeof(uint32_t));
 	if(read) {
-		kdebugf("[ide] Requested %i sectors, %i dwords\n", sectors, words);
 		this->m_channel->read_buffer(ATA_REG::Data, buffer, words);
 	} else {
 		this->m_channel->write_buffer(ATA_REG::Data, buffer, words);
@@ -163,22 +162,38 @@ uint64_t IDE_Drive::getTotalBytes() {
 	kpanic();
 }
 
-/*
- *	VirtualDrive overloaded functions
- */
+IOResult IDE_Drive::read(uint32_t address, size_t count, Buffer& read_buffer, size_t offset) {
+	if(address > size() || address+count > size())
+		return IOResult::InvalidAddress;
 
-IOResult IDE_Drive::read_block(lba_t address, uintptr_t *destination_buffer, size_t size) {
-	size_t sectors = (size / m_sector_size) + (size % m_sector_size) ? 1 : 0;
-	if(!this->ide_access(true, address, sectors, destination_buffer)) {
-		kerrorf("[ide_drive] Read LBA %x failed\n");
+	if(read_buffer.size()-offset < count)
+		return IOResult::BufferTooSmall;
+
+	const uint32_t lba = address / m_sector_size;
+	const size_t sectors = (count / m_sector_size) + ((count % m_sector_size) ? 1 : 0);
+
+	if(!m_cache.present() || !(m_cache.contains(address) && m_cache.contains(address + count - 1))) {
+		m_cache.invalidate();
+
+		auto* cache = new uint8_t[sectors*m_sector_size];
+
+		if(!this->ide_access(true, lba, sectors, reinterpret_cast<uint32_t*>(cache))) {
+			kerrorf("[ide_drive] Read LBA %x failed\n");
+			return IOResult::DeviceFault;
+		}
+
+		m_cache = SectorCache(cache, sectors, lba, m_sector_size);
+		assert(m_cache.contains(address) && m_cache.contains(address + count - 1));
 	}
-	return 1;
+
+	memcpy(read_buffer.raw_ptr<uint8_t>() + offset,
+		   m_cache.get_cache_at_addr(address),
+		   count);
+
+	return IOResult::OK;
 }
 
-IOResult IDE_Drive::write_block(lba_t, uintptr_t*, size_t) {
+IOResult IDE_Drive::write(uint32_t address, size_t count, Buffer& to_write, size_t offset) {
 	kpanic();
-}
-
-size_t IDE_Drive::getBlockSize() {
-	return m_sector_size;
+	return IOResult::OK;
 }

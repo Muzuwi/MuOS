@@ -19,6 +19,8 @@ class IDE_Drive : public VirtualBlockDevice {
 	uint16_t m_capabilities;
 	char m_model[41];
 
+	SectorCache m_cache;
+
 
 public:
 	bool ide_access(bool read, uint32_t LBA, uint8_t sectors, uint32_t* buffer);
@@ -31,7 +33,10 @@ public:
 	uint64_t getFreeBytes();
 	uint64_t getTotalBytes();
 
-	IOResult read_block(lba_t address, uintptr_t *dst, size_t size) override;
-	IOResult write_block(lba_t address, uintptr_t *dst, size_t size) override;
-	size_t getBlockSize() override;
+	uint64_t size() const {
+		return m_size * m_sector_size;
+	}
+
+	IOResult read(uint32_t address, size_t count, Buffer& read_buffer, size_t offset) override;
+	IOResult write(uint32_t address, size_t count, Buffer& to_write, size_t offset) override;
 };

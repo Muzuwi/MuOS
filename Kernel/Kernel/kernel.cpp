@@ -28,12 +28,13 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 
 	kdebugf("[uKernel] uKernel booting\n");
 
-	VMM::init();
 
 	GDT::init_GDT();
 	IDT::init_PIC();
 	IDT::init_IDT();
 
+	VMM::init();
+	CPU::initialize_features();
 	BootConfig::parse_multiboot_structure(multiboot_info);
 
 	//  Find pci devices connected to the system
@@ -43,7 +44,7 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 
 	IDE::check_devices();
 
-	// i8042::init_controller();
+    i8042::init_controller();
 
 	VDM::debug();
 

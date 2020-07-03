@@ -1,5 +1,13 @@
 #pragma once
+#include <LibGeneric/Buffer.hpp>
 #include <Kernel/SystemTypes.hpp>
+
+enum class IOResult {
+	OK,
+	BufferTooSmall,
+	InvalidAddress,
+	DeviceFault
+};
 
 /*
  *	Abstract class representing a block device
@@ -7,17 +15,12 @@
 class VirtualBlockDevice {
 public:
 	/*
-	 *	Reads a block from the drive at the specified address to the provided buffer
+	 *	Reads a chunk of memory of the specified size from the drive at the specified address to the provided buffer
 	 */
-	virtual IOResult read_block(lba_t address, uintptr_t *destination_buffer, size_t size) = 0;
+	virtual IOResult read(uint32_t address, size_t count, Buffer& read_buffer, size_t offset) = 0;
 
 	/*
-	 *	Writes a block provided in an input buffer to the drive
+	 *	Writes a chunk of memory provided in an input buffer to the drive
 	 */
-	virtual IOResult write_block(lba_t address, uintptr_t *source_buffer, size_t size) = 0;
-
-	/*
-	 *	Returns the block size used by the drive
-	 */
-	virtual size_t getBlockSize() = 0;
+	virtual IOResult write(uint32_t address, size_t count, Buffer& to_write, size_t offset) = 0;
 };

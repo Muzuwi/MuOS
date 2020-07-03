@@ -68,7 +68,7 @@ void IDE::check_devices() {
 
 		//  We don't care about the channel
 		if(devices_secondary.size() == 0) {
-			delete primary;
+			delete secondary;
 		} else if(secondary->valid()) {
 			auto drives = secondary->getDrives();
 

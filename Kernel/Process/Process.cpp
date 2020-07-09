@@ -14,6 +14,7 @@
 #include <string.h>
 #include <LibGeneric/Algorithm.hpp>
 #include <Arch/i386/TrapFrame.hpp>
+#include <include/Arch/i386/Timer.hpp>
 
 
 gen::List<Process*> Process::m_all_processes {};
@@ -353,4 +354,14 @@ void Process::exit(int rc) {
 	process->set_state(ProcessState::Leaving);
 	process->m_exit_code = rc;
 	Scheduler::switch_task();
+}
+
+unsigned Process::sleep(unsigned int seconds) {
+	IRQDisabler disabler;
+	return Timer::sleep_for(seconds * 1000);
+}
+
+void Process::wake_up() {
+	assert(m_state == ProcessState::Sleeping);
+	m_state = ProcessState::Ready;
 }

@@ -13,6 +13,8 @@ uint32_t Syscall::dispatch(uint32_t function_id, const _SyscallParamPack& args) 
 		case SyscallNumber::Exit: Syscall::exit(args.arg1);
 		case SyscallNumber::Write:
 			return Syscall::write(args.arg1, args.get<2, const void*>(), args.arg3);
+		case SyscallNumber::Sleep:
+			return Syscall::sleep(args.arg1);
 		default:
 			kerrorf("Process(%i): Invalid syscall function number\n", Process::current()->pid());
 	}
@@ -29,8 +31,8 @@ void Syscall::exit(int retval) {
 }
 
 unsigned Syscall::sleep(unsigned int seconds) {
-	kdebugf("[Syscall] Process(%i): sleep\n");
-	Process::current()->m_state = ProcessState::Blocking;
+	kdebugf("[Syscall] Process(%i): sleep\n", Process::current()->pid());
+	return Process::sleep(seconds);
 }
 
 size_t Syscall::write(int fildes, const void* buf, size_t nbyte) {

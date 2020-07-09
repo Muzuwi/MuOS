@@ -96,6 +96,7 @@ public:
 
 	void set_state(ProcessState v);
 
+	void wake_up();
 
 	static Process* current() { return Process::m_current; }
 	static pid_t create(void (*call));
@@ -107,4 +108,5 @@ public:
 	 *  Functions that affect the currently running process
 	 */
 	[[noreturn]] static void exit(int rc);
+	static unsigned sleep(unsigned seconds);
 };

@@ -2,8 +2,13 @@
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/IRQDisabler.hpp>
+#include <LibGeneric/List.hpp>
+#include <Kernel/Process/Scheduler.hpp>
+#include <include/Kernel/Debug/kassert.hpp>
 
 #define BASE_FREQ 1193182
+
+static gen::List<Alarm> s_alarms {};
 
 /*
 	Updates the reload value on channel0 PIT
@@ -14,7 +19,19 @@ void update_timer_reload(uint16_t freq){
 }
 
 static void _timer_subscriber() {
-	Timer::getTimer().tick();
+	auto& timer = Timer::getTimer();
+	timer.tick();
+
+	const unsigned ticks = timer.getTicks();
+	for(auto& alarm : s_alarms) {
+		if(alarm.finished) continue;
+
+		if(ticks > alarm.start && ticks - alarm.start >= alarm.sleeping_for) {
+			alarm.finished = true;
+			alarm.sleeping_for = 0;
+			alarm.owner->wake_up();
+		}
+	}
 }
 
 Timer::Timer()
@@ -63,4 +80,22 @@ double Timer::getTimeSinceStart() const{
 */
 uint16_t Timer::getFrequency() const {
 	return m_frequency;
+}
+
+unsigned Timer::sleep_for(unsigned int ms) {
+	IRQDisabler disabler;
+
+	Process::current()->set_state(ProcessState::Sleeping);
+	s_alarms.push_back( {
+				false, Timer::getTimer().getTicks(), ((ms * 1000) / Timer::getTimer().getFrequency()), Process::current()
+			});
+	auto alarm_it = --s_alarms.end();
+	const auto& alarm = s_alarms.back();
+
+	Scheduler::switch_task();
+
+	unsigned ret = alarm.sleeping_for;
+	s_alarms.erase(alarm_it);
+
+	return ret;
 }

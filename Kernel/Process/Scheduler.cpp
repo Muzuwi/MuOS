@@ -57,25 +57,36 @@ void Scheduler::notify_new_process(Process* v) {
 	s_processes.push_back(v);
 }
 
+//  FIXME: Change the entire scheduler
 Process* Scheduler::pick_next() {
 	ASSERT_IRQ_DISABLED();
 	if(s_processes.size() == 0) {   //  FIXME:  Bug in gen::list
 		return Process::m_kernel_idle;
 	}
 	else if(Process::m_current == Process::m_kernel_idle) {
-		return s_processes.front();
+		if(s_processes.front()->m_state == ProcessState::Sleeping)
+			return Process::m_kernel_idle;
+		else
+			return s_processes.front();
 	}
 	else {
 		auto pr = gen::find_if(s_processes, [](Process* proc) -> bool {
 			return proc->m_pid == Process::m_current->pid();
 		});
-		pr = ++pr;
+		while(true) {
+			pr = ++pr;
 
-		if(pr != s_processes.end()) {
-			return *pr;
-		}
-		else {
-			return s_processes.front();
+			if((*pr)->m_state == ProcessState::Sleeping) continue;
+
+			if(pr != s_processes.end()) {
+				return *pr;
+			}
+			else {
+				if(s_processes.front()->m_state == ProcessState::Sleeping)
+					return Process::m_kernel_idle;
+				else
+					return s_processes.front();
+			}
 		}
 	}
 }
@@ -130,7 +141,7 @@ void Scheduler::yield_with_irq_frame(uint32_t esp) {
 	Process::m_current->m_current_irq_trap_frame = reinterpret_cast<TrapFrame*>(esp);
 	Process::m_current->fpu_state().store();
 
-	if (Process::m_current->m_state != ProcessState::Leaving)
+	if (Process::m_current->m_state == ProcessState::Running)
 		Process::m_current->m_state = ProcessState::Ready;
 
 	auto* next_process = Scheduler::pick_next();

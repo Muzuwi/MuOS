@@ -15,6 +15,7 @@ add_library(
         stdio/perror.c
         sys/write.c
         sys/syscall.c
+        sys/sleep.c
 )
 
 add_library(crt0 OBJECT

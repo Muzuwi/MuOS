@@ -9,6 +9,8 @@ extern "C" {
 
 ssize_t write(int, const void*, size_t);
 
+unsigned int sleep(unsigned int ms);
+
 #ifdef __cplusplus
 }
 #endif

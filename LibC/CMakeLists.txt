@@ -16,6 +16,7 @@ add_library(
         sys/write.c
         sys/syscall.c
         sys/sleep.c
+        sys/getpid.c
 )
 
 add_library(crt0 OBJECT

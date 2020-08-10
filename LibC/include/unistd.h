@@ -9,6 +9,7 @@ extern "C" {
 
 ssize_t write(int, const void*, size_t);
 
+pid_t getpid();
 unsigned int sleep(unsigned int ms);
 
 #ifdef __cplusplus

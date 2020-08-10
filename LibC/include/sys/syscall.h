@@ -21,6 +21,8 @@ uint32_t _syscall_generic_2(uint32_t func_id,
 uint32_t _syscall_generic_1(uint32_t func_id,
         uint32_t arg1);
 
+uint32_t _syscall_generic_0(uint32_t func_id);
+
 #ifdef __cplusplus
 };
 #endif

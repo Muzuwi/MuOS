@@ -52,7 +52,6 @@ struct FPUState {
 class Process {
 	friend class VMM;
 	friend class Scheduler;
-	friend class Syscall;
 
 	static gen::List<Process*> m_all_processes;
 	static Process* m_current;
@@ -87,6 +86,12 @@ class Process {
 	void* ensure_kernel_stack();
 
 	FPUState& fpu_state() { return *m_fpu_state; }
+
+	template<class T>
+	static bool verify_read(T*);
+
+	template<class T>
+	static bool verify_write(T*);
 public:
 	Ring ring() const { return m_ring; }
 	pid_t pid() const { return m_pid; }
@@ -105,8 +110,10 @@ public:
 	static void kill(pid_t);
 
 	/*
-	 *  Functions that affect the currently running process
+	 *  Syscalls
 	 */
 	[[noreturn]] static void exit(int rc);
 	static unsigned sleep(unsigned seconds);
+	static size_t write(int fildes, const void* buf, size_t nbyte);
+	static pid_t getpid();
 };

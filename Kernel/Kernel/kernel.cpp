@@ -15,6 +15,7 @@
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Process/Scheduler.hpp>
 
+#include <Kernel/Syscalls/SyscallList.hpp>
 namespace uKernel {
 	extern "C" void kernel_entrypoint(uintptr_t*);
 };
@@ -49,6 +50,7 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	VDM::debug();
 
 	Scheduler::initialize();
+	Syscall::init();
 
 	KMalloc::get().logAllocationStats();
 

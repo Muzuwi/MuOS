@@ -1,55 +1,41 @@
 #pragma once
 #include <sys/types.h>
+#include <asm/unistd.h>
 #include <Kernel/SystemTypes.hpp>
 
+typedef uint32_t _sysret_t;
+typedef uint32_t _sysarg_t;
+typedef _sysret_t (*_Syscall_Arg0)();
+typedef _sysret_t (*_Syscall_Arg1)(_sysarg_t);
+typedef _sysret_t (*_Syscall_Arg2)(_sysarg_t, _sysarg_t);
+typedef _sysret_t (*_Syscall_Arg3)(_sysarg_t, _sysarg_t, _sysarg_t);
+typedef _sysret_t (*_Syscall_Arg4)(_sysarg_t, _sysarg_t, _sysarg_t, _sysarg_t);
+typedef _sysret_t (*_Syscall_Arg5)(_sysarg_t, _sysarg_t, _sysarg_t, _sysarg_t, _sysarg_t);
+
+#define ENUM_SYSCALLS \
+	_ENUMERATE_SYSCALL(exit, 1)       \
+	_ENUMERATE_SYSCALL(write, 3)      \
+	_ENUMERATE_SYSCALL(sleep, 1)      \
+	_ENUMERATE_SYSCALL(getpid, 0)
+
 enum class SyscallNumber {
-	Exit = 1,
-	Write = 2,
-	Sleep = 3
+#define _ENUMERATE_SYSCALL(name,argc) name = __SYS_##name,
+	ENUM_SYSCALLS
+#undef _ENUMERATE_SYSCALL
 };
 
 struct _SyscallParamPack {
-	uint32_t arg1;
-	uint32_t arg2;
-	uint32_t arg3;
-	uint32_t arg4;
-	uint32_t arg5;
-	_SyscallParamPack(uint32_t _arg1, uint32_t _arg2, uint32_t _arg3, uint32_t _arg4, uint32_t _arg5)
-	: arg1(_arg1), arg2(_arg2), arg3(_arg3), arg4(_arg4), arg5(_arg5) {}
-
-	template<const unsigned count, class T>
-	T get() const {
-		static_assert(count <= 5, "Invalid parameter pack number");
-
-		if constexpr(count == 1)
-			return reinterpret_cast<T>(arg1);
-		else if constexpr(count == 2)
-			return reinterpret_cast<T>(arg2);
-		else if constexpr(count == 3)
-			return reinterpret_cast<T>(arg3);
-		else if constexpr(count == 4)
-			return reinterpret_cast<T>(arg4);
-		else if constexpr(count == 5)
-			return reinterpret_cast<T>(arg5);
-	}
+	_sysarg_t arg1;
+	_sysarg_t arg2;
+	_sysarg_t arg3;
+	_sysarg_t arg4;
+	_sysarg_t arg5;
 };
 
-
-
 class Syscall {
-	template<class T>
-	static bool verify_read(T*);
-
-	template<class T>
-	static bool verify_write(T*);
 public:
+	static void init();
 	static uint32_t dispatch(uint32_t, const _SyscallParamPack&);
-	[[noreturn]] static void exit(int retval);
-
-	static void* mmap(void* addr, size_t len, int prot, int flags, int fd, off_t offset);
-	static size_t write(int fildes, const void* buf, size_t nbyte);
-	static unsigned sleep(unsigned seconds);
-
 };
 
 

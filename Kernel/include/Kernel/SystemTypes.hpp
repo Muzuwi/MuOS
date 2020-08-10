@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <asm/errno.h>
 #include <sys/mman.h>
+#include <sys/types.h>
 
 struct mem_range_t {
 	uint64_t m_start, m_end;
@@ -24,7 +25,6 @@ typedef uint16_t allocation_t;
 
 
 //  FIXME:  Placeholders
-typedef int pid_t;
 typedef int FSResult;
 typedef uint64_t lba_t;
 typedef char* path_t;

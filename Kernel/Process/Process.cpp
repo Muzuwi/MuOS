@@ -348,19 +348,6 @@ void Process::set_state(ProcessState v) {
 	m_state = v;
 }
 
-void Process::exit(int rc) {
-	IRQDisabler disabler;
-	auto* process = Process::m_current;
-	process->set_state(ProcessState::Leaving);
-	process->m_exit_code = rc;
-	Scheduler::switch_task();
-}
-
-unsigned Process::sleep(unsigned int seconds) {
-	IRQDisabler disabler;
-	return Timer::sleep_for(seconds * 1000);
-}
-
 void Process::wake_up() {
 	assert(m_state == ProcessState::Sleeping);
 	m_state = ProcessState::Ready;

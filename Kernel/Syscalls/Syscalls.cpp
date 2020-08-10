@@ -1,103 +1,62 @@
-#include <Arch/i386/IRQDisabler.hpp>
 #include <Kernel/Process/Process.hpp>
-#include <Kernel/Syscalls/SyscallList.hpp>
 #include <Kernel/Process/Scheduler.hpp>
+#include <Kernel/Syscalls/SyscallList.hpp>
 #include <LibGeneric/Vector.hpp>
-#include <include/Kernel/Debug/kpanic.hpp>
+
+struct _SyscallDefinition {
+	uint8_t _argcount;
+	void* _entry;
+};
+
+static _SyscallDefinition syscall_lookup[256] {};
+
+
+void Syscall::init() {
+#define _ENUMERATE_SYSCALL(name, argc) \
+    syscall_lookup[__SYS_##name]._entry = reinterpret_cast<void*>(&Process::name); \
+    syscall_lookup[__SYS_##name]._argcount = argc;
+
+	ENUM_SYSCALLS
+
+#undef _ENUMERATE_SYSCALL
+}
 
 uint32_t Syscall::dispatch(uint32_t function_id, const _SyscallParamPack& args) {
 	ASSERT_IRQ_DISABLED();
 
-	const auto syscall_number = static_cast<SyscallNumber>(function_id);
-	switch (syscall_number) {
-		case SyscallNumber::Exit: Syscall::exit(args.arg1);
-		case SyscallNumber::Write:
-			return Syscall::write(args.arg1, args.get<2, const void*>(), args.arg3);
-		case SyscallNumber::Sleep:
-			return Syscall::sleep(args.arg1);
-		default:
-			kerrorf("Process(%i): Invalid syscall function number\n", Process::current()->pid());
+	kdebugf("[Syscall] New syscall %i\n", function_id);
+
+	if(function_id > 256) {
+		kerrorf("[Syscall] Invalid syscall ID called (%i)\n", function_id);
+		return -1;
 	}
 
-	return 0x0;
-}
+	auto func = syscall_lookup[function_id]._entry;
+	auto argc = syscall_lookup[function_id]._argcount;
 
-void Syscall::exit(int retval) {
-	ASSERT_IRQ_DISABLED();
-	kdebugf("[Syscall] Process %i wants to close! Exit: %i\n", Process::current()->pid(), retval);
-	Process::kill(Process::current()->pid());
-	Scheduler::switch_task();
-	kpanic();
-}
-
-unsigned Syscall::sleep(unsigned int seconds) {
-	kdebugf("[Syscall] Process(%i): sleep\n", Process::current()->pid());
-	return Process::sleep(seconds);
-}
-
-size_t Syscall::write(int fildes, const void* buf, size_t nbyte) {
-	ASSERT_IRQ_DISABLED();
-	if(fildes != 0)
-		return -EBADF;
-	if(!verify_read(reinterpret_cast<const uint8_t*>(buf)))
-		return -EPERM;
-	if(nbyte > 1024)
-		return -EFBIG;
-
-	gen::vector<uint8_t> bytes;
-	bytes.resize(nbyte+1);
-
-	//  FIXME:  Dangerous as hell, but right now i want to get something working
-	for(unsigned i = 0; i < nbyte; ++i){
-		bytes[i] = *((uint8_t*)(buf) + i);
+	if(!func) {
+		kerrorf("[Syscall] Null sycall called (%i) [%x]\n", function_id, func);
+		return -1;
 	}
-	bytes[nbyte] = '\0';
 
-	kdebugf("Process(%i): %s\n", Process::current()->pid(), &bytes[0]);
-	return nbyte;
-}
-
-template<class T>
-bool Syscall::verify_read(T* addr) {
-	ASSERT_IRQ_DISABLED();
-	auto* cur = Process::current();
-	for(const auto& map : cur->m_maps) {
-		if((uintptr_t)addr >= (uintptr_t)map->addr() &&
-		   (uintptr_t)addr + sizeof(T) < (uintptr_t)map->addr() + map->size()) {
-			return (map->flags() & PROT_READ);
-		}
+	//  exit() should not return, thus handle it independently from other syscalls
+	if(function_id == __SYS_exit) {
+		Process::exit(args.arg1);
 	}
-	return false;
-}
 
-template<class T>
-bool Syscall::verify_write(T* addr) {
-	ASSERT_IRQ_DISABLED();
-	auto* cur = Process::current();
-	for(const auto& map : cur->m_maps) {
-		if((uintptr_t)addr >= (uintptr_t)map->addr() &&
-		   (uintptr_t)addr + sizeof(T) < (uintptr_t)map->addr() + map->size()) {
-			return (map->flags() & PROT_WRITE);
-		}
-	}
-	return false;
-}
+	if(argc == 0)
+		return reinterpret_cast<_Syscall_Arg0>(func)();
+	else if(argc == 1)
+		return reinterpret_cast<_Syscall_Arg1>(func)(args.arg1);
+	else if(argc == 2)
+		return reinterpret_cast<_Syscall_Arg2>(func)(args.arg1, args.arg2);
+	else if(argc == 3)
+		return reinterpret_cast<_Syscall_Arg3>(func)(args.arg1, args.arg2, args.arg3);
+	else if(argc == 4)
+		return reinterpret_cast<_Syscall_Arg4>(func)(args.arg1, args.arg2, args.arg3, args.arg4);
+	else if(argc == 5)
+		return reinterpret_cast<_Syscall_Arg5>(func)(args.arg1, args.arg2, args.arg3, args.arg4, args.arg5);
 
-void* Syscall::mmap(void* addr, size_t len, int prot, int flags, int, off_t) {
-	if((uint64_t)addr >= (uint64_t)&_ukernel_virtual_offset)
-		return reinterpret_cast<void*>(-EINVAL);
-
-	if(!((flags & MAP_SHARED) || (flags & MAP_FIXED) || (flags & MAP_PRIVATE)))
-		return reinterpret_cast<void*>(-EINVAL);
-
-	if(len == 0)
-		return reinterpret_cast<void*>(-EINVAL);
-
-	return nullptr;
-
-//	auto* process = Process::current();
-//	auto* mapping = new VMapping(addr, len, prot, flags);
-//	process->m_maps.push_back(mapping);
-
-//	return ;
+	kerrorf("[Syscall] Invalid argument count in lookup table (%i)!\n", argc);
+	return -1;
 }

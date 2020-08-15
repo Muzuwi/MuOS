@@ -63,6 +63,7 @@ _ukernel_higher_entrypoint:
     ;  Reset stack address
     mov eax, stack_top
     mov esp, eax
+    mov ebp, 0  ; Null function frame for stack tracing
 
 	;   Call fancy init
 	extern _init

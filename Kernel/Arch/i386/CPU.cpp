@@ -53,7 +53,7 @@ void CPU::jump_to_trap_ring3(TrapFrame trap) {
 		"iret\n"
 	:
 	:""(GDT::get_user_DS() | 3), ""(GDT::get_user_CS() | 3),
-	""(trap.user_esp),
+	""(trap._user_esp),
 	""(trap.eax), ""(trap.ebx), ""(trap.ecx),
 	""(trap.edx), ""(trap.edi), ""(trap.esi),
 	""(trap.EFLAGS),""(trap.eip), ""(trap.ebp)
@@ -89,7 +89,7 @@ void CPU::jump_to_trap_ring0(TrapFrame trap) {
 	: ""(trap.eax), ""(trap.ebx), ""(trap.ecx),
 	  ""(trap.edx), ""(trap.edi), ""(trap.esi),
 	  ""(trap.eip), ""(trap.CS), ""(trap.EFLAGS),
-	  ""(trap.user_esp), ""(trap.ebp)
+	  ""(trap._user_esp), ""(trap.ebp)
 	: "eax", "ebx", "ecx", "edx", "edi", "esi"
 	);
 	kpanic();

@@ -10,19 +10,46 @@
 
 void dump_reg_from_trap(const TrapFrame& regs) {
 	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, (!Process::current() || (Process::current()->ring() == Ring::CPL0)) ? regs.handler_esp : regs.user_esp, regs.esi, regs.edi);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, (!Process::current() || (Process::current()->ring() == Ring::CPL0)) ? regs.handler_esp : regs._user_esp, regs.esi, regs.edi);
 	kerrorf("eip: %x\n", regs.eip);
-	kerrorf("Current IRQ trap frame: %x\n", Process::current()->irq_trap_frame());
+	if(Process::current())
+		kerrorf("Current IRQ trap frame: %x\n", Process::current()->irq_trap_frame());
 }
 
 void dump_reg_from_trap(const ErrorCodeTrapFrame& regs) {
 	kerrorf("eax: %x, ebx: %x, ecx: %x, edx: %x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, (!Process::current() || (Process::current()->ring() == Ring::CPL0)) ? regs.handler_esp : regs.user_esp, regs.esi, regs.edi);
+	kerrorf("ebp: %x, esp: %x, esi: %x, edi: %x\n", regs.ebp, (!Process::current() || (Process::current()->ring() == Ring::CPL0)) ? regs.handler_esp : regs._user_esp, regs.esi, regs.edi);
 	kerrorf("eip: %x\n", regs.eip);
-	kerrorf("Current IRQ trap frame: %x\n", Process::current()->irq_trap_frame());
+	if(Process::current())
+		kerrorf("Current IRQ trap frame: %x\n", Process::current()->irq_trap_frame());
 }
 
-extern "C" void _kernel_exception_divbyzero(const TrapFrame& regs){
+void dump_stack_trace(uint32_t* base_frame) {
+	kerrorf("Stack trace:\n");
+	auto* frame = (uint32_t*)base_frame;
+	while(frame) {
+		//  FIXME:  Will crash when the kernel pf's before scheduler initialization
+		if(Process::verify_read<uint32_t>(frame+1) && Process::verify_read<uint32_t>(frame)){
+			kerrorf("    at %x <next frame at %x>\n", *(frame + 1), frame);
+			frame = (uint32_t*)*frame;
+		} else {
+			kerrorf("    <next frame invalid>\n");
+			break;
+		}
+	}
+}
+
+uint32_t cr2() {
+	uint32_t tmp;
+	asm volatile(
+	"mov %0, cr2\n"
+	:"=a"(tmp)
+	);
+	return tmp;
+
+}
+
+extern "C" void _kernel_exception_divbyzero(TrapFrame regs){
 	kerrorf("Divide by zero exception at %x, KERNEL ABORT\n", regs.eip);
 
 	kerrorf("System halted\n");
@@ -33,32 +60,32 @@ extern "C" void _kernel_exception_divbyzero(const TrapFrame& regs){
 }
 
 
-extern "C" void _kernel_exception_dbg(const TrapFrame&){
+extern "C" void _kernel_exception_dbg(TrapFrame){
 		
 }
 
 
-extern "C" void _kernel_exception_nmi(const TrapFrame&){
+extern "C" void _kernel_exception_nmi(TrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_break(const TrapFrame&){
+extern "C" void _kernel_exception_break(TrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_overflow(const TrapFrame&){
+extern "C" void _kernel_exception_overflow(TrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_bound(const TrapFrame&){
+extern "C" void _kernel_exception_bound(TrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_invalidop(const TrapFrame& regs){
+extern "C" void _kernel_exception_invalidop(TrapFrame regs){
 	bool is_kernel_crash = regs.eip >= (uint32_t)&_ukernel_virtual_offset;
 
 	kerrorf("%s(%i): Illegal opcode exception at %x\n",
@@ -77,12 +104,12 @@ extern "C" void _kernel_exception_invalidop(const TrapFrame& regs){
 }
 
 
-extern "C" void _kernel_exception_nodevice(const TrapFrame&){
+extern "C" void _kernel_exception_nodevice(TrapFrame){
 
 }
 
 
-extern "C" void _kernel_exception_doublefault(const ErrorCodeTrapFrame& regs){
+extern "C" void _kernel_exception_doublefault(ErrorCodeTrapFrame regs){
 	kerrorf("Double Fault exception, ABORT\n");
 	dump_reg_from_trap(regs);
 	asm volatile(
@@ -92,12 +119,12 @@ extern "C" void _kernel_exception_doublefault(const ErrorCodeTrapFrame& regs){
 }
 
 
-extern "C" void _kernel_exception_invalidtss(const ErrorCodeTrapFrame&){
+extern "C" void _kernel_exception_invalidtss(ErrorCodeTrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_invalidseg(const ErrorCodeTrapFrame& regs){
+extern "C" void _kernel_exception_invalidseg(ErrorCodeTrapFrame regs){
 	asm volatile("cli\n");
 	kerrorf("Segment not present fault at %x\n", regs.eip);
 	dump_reg_from_trap(regs);
@@ -108,7 +135,7 @@ extern "C" void _kernel_exception_invalidseg(const ErrorCodeTrapFrame& regs){
 }
 
 
-extern "C" void _kernel_exception_segstackfault(const ErrorCodeTrapFrame& regs){
+extern "C" void _kernel_exception_segstackfault(ErrorCodeTrapFrame regs){
 	kerrorf("Stack segment fault at %x, KERNEL ABORT\n", regs.eip);
 	dump_reg_from_trap(regs);
 	kerrorf("Error code: %x\n", regs.error_code);
@@ -120,7 +147,7 @@ extern "C" void _kernel_exception_segstackfault(const ErrorCodeTrapFrame& regs){
 }
 
 
-extern "C" void _kernel_exception_gpf(const ErrorCodeTrapFrame& regs){
+extern "C" void _kernel_exception_gpf(ErrorCodeTrapFrame regs){
 	bool is_kernel_crash = regs.eip >= (uint32_t)&_ukernel_virtual_offset;
 	kerrorf("%s(%i): General Protection Fault exception at %x\n",
 	        is_kernel_crash ? "Kernel" : "Process",
@@ -138,14 +165,8 @@ extern "C" void _kernel_exception_gpf(const ErrorCodeTrapFrame& regs){
 }
 
 
-extern "C" void _kernel_exception_pagefault(const ErrorCodeTrapFrame& regs){
+extern "C" void _kernel_exception_pagefault(ErrorCodeTrapFrame regs){
 	asm volatile("cli\n");
-
-	uint32_t cr2;
-	asm volatile(
-			"mov %0, cr2\n"
-			:"=a"(cr2)
-			);
 
 	bool is_kernel_crash = !(regs.error_code & 4);
 
@@ -158,11 +179,13 @@ extern "C" void _kernel_exception_pagefault(const ErrorCodeTrapFrame& regs){
 	        regs.error_code & 1 ? "Page-Protection violation" : "Non-present page",
 	        regs.error_code & 2 ? "write" : "read",
 	        regs.error_code & 4 ? 3 : 0);
-	if(cr2 == 0) {
+	if(cr2() == 0) {
 		kerrorf("Notice: Possible null pointer dereference - tried accessing address 0\n");
-	} else if(cr2 == 0x99) {
+	} else if(cr2() == 0x99) {
 		kerrorf("Notice: Possible uninitialized memory - tried accessing address 0x99 (KM sanitizer byte)\n");
 	}
+
+	dump_stack_trace(reinterpret_cast<uint32_t*>(regs.ebp));
 
 	//  Ring 0 violation
 	if(is_kernel_crash) {
@@ -175,31 +198,31 @@ extern "C" void _kernel_exception_pagefault(const ErrorCodeTrapFrame& regs){
 }
 
 
-extern "C" void _kernel_exception_x87fpfault(const TrapFrame&){
+extern "C" void _kernel_exception_x87fpfault(TrapFrame){
 	kpanic();
 }
 
 
-extern "C" void _kernel_exception_aligncheck(const ErrorCodeTrapFrame&){
+extern "C" void _kernel_exception_aligncheck(ErrorCodeTrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_machinecheck(const TrapFrame&){
+extern "C" void _kernel_exception_machinecheck(TrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_simdfp(const TrapFrame&){
+extern "C" void _kernel_exception_simdfp(TrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_virtfault(const TrapFrame&){
+extern "C" void _kernel_exception_virtfault(TrapFrame){
 	
 }
 
 
-extern "C" void _kernel_exception_security(const ErrorCodeTrapFrame&){
+extern "C" void _kernel_exception_security(ErrorCodeTrapFrame){
 	
 }

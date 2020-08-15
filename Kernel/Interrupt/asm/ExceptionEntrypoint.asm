@@ -5,8 +5,8 @@ global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
     pusha
 
-    mov eax, esp
-    push eax
+;    mov eax, esp
+;    push eax
 
     extern _kernel_exception_%{1:1}
     call _kernel_exception_%{1:1}
@@ -22,8 +22,8 @@ global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
     pusha
 
-    mov eax, esp
-    push eax
+;    mov eax, esp
+;    push eax
 
     extern _kernel_exception_%{1:1}
     call _kernel_exception_%{1:1}

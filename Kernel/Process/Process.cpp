@@ -135,12 +135,12 @@ void Process::_finalize_for_user() {
 	frame.ecx = 0xcccccccc;
 	frame.edx = 0xdddddddd;
 	frame.ebx = 0xbbbbbbbb;
-	frame.user_esp = task_personal_stack;
+	frame._user_esp = task_personal_stack;
 	frame.ebp = 0xbdbdbdbd;
 	frame.esi = 0x0d0d0d0d;
 	frame.edi = 0xd0d0d0d0;
 	frame.CS = GDT::get_user_CS() | 3u;
-	frame.user_SS = GDT::get_user_DS() | 3u;
+	frame._user_SS = GDT::get_user_DS() | 3u;
 	frame.EFLAGS = 0x202;
 
 	assert(this->load_process_executable(frame));
@@ -161,12 +161,12 @@ void Process::_finalize_for_kernel() {
 	frame.ecx = 0xcccccccc;
 	frame.edx = 0xdddddddd;
 	frame.ebx = 0xbbbbbbbb;
-	frame.user_esp = task_personal_stack;
+	frame._user_esp = task_personal_stack;
 	frame.ebp = 0xbdbdbdbd;
 	frame.esi = 0x0d0d0d0d;
 	frame.edi = 0xd0d0d0d0;
 	frame.CS = GDT::get_kernel_CS();
-	frame.user_SS = GDT::get_kernel_DS();
+	frame._user_SS = GDT::get_kernel_DS();
 	frame.EFLAGS = 0x202;
 
 	assert(this->load_process_executable(frame));

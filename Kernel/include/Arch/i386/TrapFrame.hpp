@@ -13,8 +13,8 @@ struct TrapFrame {
 	uint32_t eip;
 	uint32_t CS;
 	uint32_t EFLAGS;
-	uint32_t user_esp;
-	uint32_t user_SS;
+	uint32_t _user_esp;
+	uint32_t _user_SS;
 }__attribute__((packed));
 
 struct ErrorCodeTrapFrame {
@@ -30,6 +30,6 @@ struct ErrorCodeTrapFrame {
 	uint32_t eip;
 	uint32_t CS;
 	uint32_t EFLAGS;
-	uint32_t user_esp;
-	uint32_t user_SS;
+	uint32_t _user_esp;
+	uint32_t _user_SS;
 };

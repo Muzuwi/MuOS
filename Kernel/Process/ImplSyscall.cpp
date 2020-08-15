@@ -5,6 +5,10 @@
 #include <Kernel/Process/Scheduler.hpp>
 #include <LibGeneric/Vector.hpp>
 
+template bool Process::verify_read(bool*);
+template bool Process::verify_read(uint32_t *);
+template bool Process::verify_read(uint16_t *);
+
 void Process::exit(int rc) {
 	IRQDisabler disabler;
 	auto* process = Process::m_current;

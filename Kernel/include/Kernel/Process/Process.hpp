@@ -86,13 +86,12 @@ class Process {
 	void* ensure_kernel_stack();
 
 	FPUState& fpu_state() { return *m_fpu_state; }
-
+public:
 	template<class T>
 	static bool verify_read(T*);
-
 	template<class T>
 	static bool verify_write(T*);
-public:
+
 	Ring ring() const { return m_ring; }
 	pid_t pid() const { return m_pid; }
 	void* irq_trap_frame() { return m_current_irq_trap_frame; }

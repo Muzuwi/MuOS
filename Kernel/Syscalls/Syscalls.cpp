@@ -24,8 +24,6 @@ void Syscall::init() {
 uint32_t Syscall::dispatch(uint32_t function_id, const _SyscallParamPack& args) {
 	ASSERT_IRQ_DISABLED();
 
-	kdebugf("[Syscall] New syscall %i\n", function_id);
-
 	if(function_id > 256) {
 		kerrorf("[Syscall] Invalid syscall ID called (%i)\n", function_id);
 		return -1;

@@ -4,6 +4,7 @@
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
+#include <Arch/i386/IRQDisabler.hpp>
 #include <Kernel/Symbols.hpp>
 #include <string.h>
 

@@ -32,10 +32,9 @@ struct _SyscallParamPack {
 	_sysarg_t arg5;
 };
 
-class Syscall {
-public:
-	static void init();
-	static uint32_t dispatch(uint32_t, const _SyscallParamPack&);
-};
+namespace Syscall {
+	void init();
+	uint32_t dispatch(uint32_t, const _SyscallParamPack&);
+}
 
 

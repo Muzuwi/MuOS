@@ -46,6 +46,8 @@ namespace gen {
 
         Basic_StringView<CharType> substr(size_t start, size_t n);
 
+        CharType* chars();
+
         void clear();
     };
 
@@ -275,6 +277,10 @@ namespace gen {
         return Traits::find(this->m_string, this->m_size, str.m_string, str.m_size);
     }
 
+    template<class CharType>
+    CharType* Basic_String<CharType>::chars() {
+        return m_string;
+    }
 
     typedef Basic_String<char> String;
 }

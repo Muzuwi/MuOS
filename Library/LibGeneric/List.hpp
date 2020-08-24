@@ -48,7 +48,7 @@ namespace gen {
 				return m_data;
 			}
 
-			T& value() const {
+			const T& value() const {
 				return m_data;
 			}
 		};
@@ -75,9 +75,9 @@ namespace gen {
 	private:
 		Node m_head;
 	public:
-		List() {}
+		List() noexcept {}
 
-		List(const List& rhs) {
+		List(const List& rhs) noexcept {
 			if (rhs.empty()) return;
 
 			Node* cur = rhs.m_head.m_next;

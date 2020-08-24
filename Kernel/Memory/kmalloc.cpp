@@ -111,7 +111,9 @@ void KMalloc::mark_range(size_t start_chunk, size_t end_chunk, bool clear=false)
  *  Allocates a memory region
  */
 void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
-	//  We're using a structure at the beginning of the 
+	IRQDisabler disabler;
+
+	//  We're using a structure at the beginning of the
 	//  allocated memory to make freeing memory easier
 	size_t proper_size = size + sizeof(allocation_t);
 	size_t chunks = proper_size / KMALLOC_CHUNK;
@@ -191,6 +193,8 @@ void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
  *  Frees a kmalloc-allocated memory region
  */
 void KMalloc::kmalloc_free(void* pointer) {
+	IRQDisabler disabler;
+
 	if(!is_kmalloc_memory(pointer)) return;
 
 	uintptr_t address = (uintptr_t)pointer - sizeof(allocation_t);

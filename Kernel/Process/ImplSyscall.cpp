@@ -71,6 +71,8 @@ size_t Process::write(int fildes, const void* buf, size_t nbyte) {
 }
 
 pid_t Process::getpid() {
+	ASSERT_IRQ_DISABLED();
+
 	auto* process = Process::current();
 	return process->pid();
 }

@@ -13,5 +13,6 @@ __skip_cr3_load:
     invlpg [eax]
 
     popad
+    popfd
 
     ret

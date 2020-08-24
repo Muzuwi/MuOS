@@ -1,6 +1,7 @@
 section .text
 global _ZN9Scheduler11switch_taskEv
 _ZN9Scheduler11switch_taskEv:
+    pushfd
     pushad      ;  Store register state
 
     push esp    ;  Do yield

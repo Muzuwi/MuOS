@@ -31,26 +31,40 @@ extern "C" int irq12();
 extern "C" int irq13();
 extern "C" int irq14();
 extern "C" int irq15();
-extern "C" int _exception_entry_divbyzero();
-extern "C" int _exception_entry_dbg();
-extern "C" int _exception_entry_nmi();
-extern "C" int _exception_entry_break();
-extern "C" int _exception_entry_overflow();
-extern "C" int _exception_entry_bound();
-extern "C" int _exception_entry_invalidop();
-extern "C" int _exception_entry_nodevice();
-extern "C" int _exception_entry_doublefault();
-extern "C" int _exception_entry_invalidtss();
-extern "C" int _exception_entry_invalidseg();
-extern "C" int _exception_entry_segstackfault();
-extern "C" int _exception_entry_gpf();
-extern "C" int _exception_entry_pagefault();
-extern "C" int _exception_entry_x87fpfault();
-extern "C" int _exception_entry_aligncheck();
-extern "C" int _exception_entry_machinecheck();
-extern "C" int _exception_entry_simdfp();
-extern "C" int _exception_entry_virtfault();
-extern "C" int _exception_entry_security();
+
+extern "C" void _exception_entry_0();
+extern "C" void _exception_entry_1();
+extern "C" void _exception_entry_2();
+extern "C" void _exception_entry_3();
+extern "C" void _exception_entry_4();
+extern "C" void _exception_entry_5();
+extern "C" void _exception_entry_6();
+extern "C" void _exception_entry_7();
+extern "C" void _exception_entry_8();
+extern "C" void _exception_entry_9();
+extern "C" void _exception_entry_10();
+extern "C" void _exception_entry_11();
+extern "C" void _exception_entry_12();
+extern "C" void _exception_entry_13();
+extern "C" void _exception_entry_14();
+extern "C" void _exception_entry_15();
+extern "C" void _exception_entry_16();
+extern "C" void _exception_entry_17();
+extern "C" void _exception_entry_18();
+extern "C" void _exception_entry_19();
+extern "C" void _exception_entry_20();
+extern "C" void _exception_entry_21();
+extern "C" void _exception_entry_22();
+extern "C" void _exception_entry_23();
+extern "C" void _exception_entry_24();
+extern "C" void _exception_entry_25();
+extern "C" void _exception_entry_26();
+extern "C" void _exception_entry_27();
+extern "C" void _exception_entry_28();
+extern "C" void _exception_entry_29();
+extern "C" void _exception_entry_30();
+extern "C" void _exception_entry_31();
+
 extern "C" void _kernel_syscall_entry();
 
 inline void lidt(uint64_t *idtr) {
@@ -97,31 +111,39 @@ void IDT::init_IDT(){
 		interrupts_table[number].selector = 0x08;	\
 		interrupts_table[number].type_attr = 0x8f;
 
-	SETEXCEPTION(_exception_entry_divbyzero, 0)
-	SETEXCEPTION(_exception_entry_dbg, 1)
-	SETEXCEPTION(_exception_entry_nmi, 2)
-	SETEXCEPTION(_exception_entry_break, 3)
-	SETEXCEPTION(_exception_entry_overflow, 4)
-	SETEXCEPTION(_exception_entry_bound, 5)
-	SETEXCEPTION(_exception_entry_invalidop, 6)
-	SETEXCEPTION(_exception_entry_nodevice, 7)
-	SETEXCEPTION(_exception_entry_doublefault, 8)
-	//  9 legacy
-	SETEXCEPTION(_exception_entry_invalidtss, 10)
-	SETEXCEPTION(_exception_entry_invalidseg, 11)
-	SETEXCEPTION(_exception_entry_segstackfault, 12)
-	SETEXCEPTION(_exception_entry_gpf, 13)
-	SETEXCEPTION(_exception_entry_pagefault, 14)
-	//  15 reserved
-	SETEXCEPTION(_exception_entry_x87fpfault, 16)
-	SETEXCEPTION(_exception_entry_aligncheck, 17)
-	SETEXCEPTION(_exception_entry_machinecheck, 18)
-	SETEXCEPTION(_exception_entry_simdfp, 19)
-	SETEXCEPTION(_exception_entry_virtfault, 20)
-	//  21-29 reserved
-	SETEXCEPTION(_exception_entry_security, 30)
-	//  31 reserved
-
+	//  FIXME:  Rework IDT, this is horrendous
+	SETEXCEPTION(_exception_entry_0, 0)
+	SETEXCEPTION(_exception_entry_1, 1)
+	SETEXCEPTION(_exception_entry_2, 2)
+	SETEXCEPTION(_exception_entry_3, 3)
+	SETEXCEPTION(_exception_entry_4, 4)
+	SETEXCEPTION(_exception_entry_5, 5)
+	SETEXCEPTION(_exception_entry_6, 6)
+	SETEXCEPTION(_exception_entry_7, 7)
+	SETEXCEPTION(_exception_entry_8, 8)
+	SETEXCEPTION(_exception_entry_9, 9)
+	SETEXCEPTION(_exception_entry_10, 10)
+	SETEXCEPTION(_exception_entry_11, 11)
+	SETEXCEPTION(_exception_entry_12, 12)
+	SETEXCEPTION(_exception_entry_13, 13)
+	SETEXCEPTION(_exception_entry_14, 14)
+	SETEXCEPTION(_exception_entry_15, 15)
+	SETEXCEPTION(_exception_entry_16, 16)
+	SETEXCEPTION(_exception_entry_17, 17)
+	SETEXCEPTION(_exception_entry_18, 18)
+	SETEXCEPTION(_exception_entry_19, 19)
+	SETEXCEPTION(_exception_entry_20, 20)
+	SETEXCEPTION(_exception_entry_21, 21)
+	SETEXCEPTION(_exception_entry_22, 22)
+	SETEXCEPTION(_exception_entry_23, 23)
+	SETEXCEPTION(_exception_entry_24, 24)
+	SETEXCEPTION(_exception_entry_25, 25)
+	SETEXCEPTION(_exception_entry_26, 26)
+	SETEXCEPTION(_exception_entry_27, 27)
+	SETEXCEPTION(_exception_entry_28, 28)
+	SETEXCEPTION(_exception_entry_29, 29)
+	SETEXCEPTION(_exception_entry_30, 30)
+	SETEXCEPTION(_exception_entry_31, 31)
 
 
 	SETIRQ(irq0, 32)

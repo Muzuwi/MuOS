@@ -1,57 +1,68 @@
 section .text
 
-%macro define_entrypoint_for_exception 1
+%macro def_entry_exception 1
 global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
+    cli
     pusha
+    push dword %{1:1}
 
-;    mov eax, esp
-;    push eax
+    extern _kernel_exception_entrypoint
+    call _kernel_exception_entrypoint
 
-    extern _kernel_exception_%{1:1}
-    call _kernel_exception_%{1:1}
-
-    pop eax
-
+    add esp, 4
     popa
+
     iret
 %endmacro
 
-%macro define_entrypoint_for_exception_pop_error 1
+%macro def_entry_exception_errorcode 1
 global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
+    cli
     pusha
+    push dword %{1:1}
 
-;    mov eax, esp
-;    push eax
+    extern _kernel_exception_errorcode_entrypoint
+    call _kernel_exception_errorcode_entrypoint
 
-    extern _kernel_exception_%{1:1}
-    call _kernel_exception_%{1:1}
-
-    pop eax
-
+    add esp, 4
     popa
     add esp, 4
+
     iret
 %endmacro
 
-define_entrypoint_for_exception divbyzero
-define_entrypoint_for_exception dbg
-define_entrypoint_for_exception nmi
-define_entrypoint_for_exception break
-define_entrypoint_for_exception overflow
-define_entrypoint_for_exception bound
-define_entrypoint_for_exception invalidop
-define_entrypoint_for_exception nodevice
-define_entrypoint_for_exception doublefault
-define_entrypoint_for_exception invalidtss
-define_entrypoint_for_exception invalidseg
-define_entrypoint_for_exception segstackfault
-define_entrypoint_for_exception gpf
-define_entrypoint_for_exception pagefault
-define_entrypoint_for_exception x87fpfault
-define_entrypoint_for_exception aligncheck
-define_entrypoint_for_exception machinecheck
-define_entrypoint_for_exception simdfp
-define_entrypoint_for_exception virtfault
-define_entrypoint_for_exception security
+
+def_entry_exception 0
+def_entry_exception 1
+def_entry_exception 2
+def_entry_exception 3
+def_entry_exception 4
+def_entry_exception 5
+def_entry_exception 6
+def_entry_exception 7
+def_entry_exception_errorcode 8
+def_entry_exception 9
+def_entry_exception_errorcode 10
+def_entry_exception_errorcode 11
+def_entry_exception_errorcode 12
+def_entry_exception_errorcode 13
+def_entry_exception_errorcode 14
+def_entry_exception 15
+def_entry_exception 16
+def_entry_exception_errorcode 17
+def_entry_exception 18
+def_entry_exception 19
+def_entry_exception 20
+def_entry_exception 21
+def_entry_exception 22
+def_entry_exception 23
+def_entry_exception 24
+def_entry_exception 25
+def_entry_exception 26
+def_entry_exception 27
+def_entry_exception 28
+def_entry_exception 29
+def_entry_exception_errorcode 30
+def_entry_exception 31

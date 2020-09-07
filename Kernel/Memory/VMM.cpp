@@ -63,11 +63,12 @@ void* VMM::allocate_user_stack(size_t stack_size) {
 	return (void*)((uint32_t)&_ukernel_virtual_offset);
 }
 
-void VMM::notify_create_VMapping(VMapping& mapping, MappingPrivilege access) {
+void VMM::notify_create_VMapping(gen::SharedPtr<VMapping> mapping, MappingPrivilege access) {
 	ASSERT_IRQ_DISABLED();
 #ifdef VMM_LOG_VMAPPING
 	kdebugf("[VMM] Created VMapping(%x)\n", &mapping);
 #endif
+	assert((bool)mapping);
 
 	auto* process = Process::m_current;
 	auto* dir = process->m_directory;
@@ -77,9 +78,9 @@ void VMM::notify_create_VMapping(VMapping& mapping, MappingPrivilege access) {
 		dir = reinterpret_cast<PageDirectory*>(mapper.address());
 	}
 
-	auto current_virt_addr = mapping.addr();
+	auto current_virt_addr = mapping->addr();
 
-	for(auto& map : mapping.pages()) {
+	for(auto& map : mapping->pages()) {
 #ifdef VMM_LOG_VMAPPING
 		kdebugf("Virt: %x -> Phys %x\n", current_virt_addr, map->address());
 #endif
@@ -90,17 +91,17 @@ void VMM::notify_create_VMapping(VMapping& mapping, MappingPrivilege access) {
 
 		pde.set_flag(DirectoryFlag::Present, true);
 		pde.set_flag(DirectoryFlag::User, access == MappingPrivilege::UserMode);
-		pde.set_flag(DirectoryFlag::RW, (mapping.flags() & PROT_WRITE));
+		pde.set_flag(DirectoryFlag::RW, (mapping->flags() & PROT_WRITE));
 
 		page.set_physical((uintptr_t*)(map->address()));
 		page.set_flag(PageFlag::Present, true);
 		page.set_flag(PageFlag::User, access == MappingPrivilege::UserMode);
-		page.set_flag(PageFlag::RW, (mapping.flags() & PROT_WRITE));
+		page.set_flag(PageFlag::RW, (mapping->flags() & PROT_WRITE));
 
 		current_virt_addr = (void*)((uint64_t)current_virt_addr + 4096);
 	}
 
-	process->m_maps.push_back(reinterpret_cast<VMapping*>(&mapping));
+	process->m_maps.push_back(mapping);
 }
 
 void VMM::notify_free_VMapping(VMapping& mapping) {
@@ -109,8 +110,7 @@ void VMM::notify_free_VMapping(VMapping& mapping) {
 	kdebugf("[VMM] Freeing VMapping(%x)\n", &mapping);
 #endif
 
-	for(auto& page : mapping.pages())
-		delete page;
+	//  FIXME: Actually delete the mapping
 }
 
 PageTable& VMM::ensure_page_table(PageDirectoryEntry& pde) {

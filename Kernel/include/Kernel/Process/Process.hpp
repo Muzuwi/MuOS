@@ -63,7 +63,8 @@ class Process {
 	FPUState* m_fpu_state;
 	PageDirectory* m_directory;
 	ExecutableImage m_executable;
-	gen::List<VMapping*> m_maps;
+	gen::List<gen::SharedPtr<VMapping>> m_maps;
+	gen::List<gen::SharedPtr<PageToken>> m_process_pages;
 
 	int m_exit_code;
 	TrapFrame* m_current_irq_trap_frame;
@@ -97,6 +98,8 @@ public:
 	void* irq_trap_frame() { return m_current_irq_trap_frame; }
 	bool is_finalized() const { return m_is_finalized; }
 	PageDirectory* directory() { return m_directory; }
+	const gen::List<gen::SharedPtr<VMapping>>& mappings() const { return m_maps; }
+	void make_page_owned(gen::SharedPtr<PageToken> sharedPtr);
 
 	void set_state(ProcessState v);
 

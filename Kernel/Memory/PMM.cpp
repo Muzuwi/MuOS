@@ -6,6 +6,8 @@
 #include <Kernel/Memory/PRegion.hpp>
 #include <LibGeneric/List.hpp>
 #include <Kernel/Memory/PageToken.hpp>
+#include <LibGeneric/SharedPtr.hpp>
+#include <Kernel/Process/Process.hpp>
 
 //  Amount of physical memory to reserve for kernel data
 static const unsigned kernel_reserved = 16 * MiB;
@@ -113,26 +115,32 @@ void PMM::handle_multiboot_memmap(void* multiboot_mmap) {
 }
 
 
-PageToken* PMM::allocate_page_user() {
+gen::SharedPtr<PageToken> PMM::allocate_page_user() {
 	ASSERT_IRQ_DISABLED();
 
 	for(auto& range : s_user_area) {
 		void* allocation = range->alloc_page();
-		if(allocation)
-			return new PageToken(allocation);
+		if(allocation) {
+			auto ptr = gen::SharedPtr(new PageToken(allocation));
+			Process::current()->make_page_owned(ptr);
+			return ptr;
+		}
 	}
 
 	kerrorf("[PMM] Could not find suitable region for allocating user page!");
 	kpanic();
 }
 
-PageToken* PMM::allocate_page_kernel() {
+gen::SharedPtr<PageToken> PMM::allocate_page_kernel() {
 	ASSERT_IRQ_DISABLED();
 
 	for(auto& range : s_kernel_area) {
 		void* allocation = range->alloc_page();
-		if(allocation)
-			return new PageToken(allocation);
+		if(allocation) {
+			auto ptr = gen::SharedPtr(new PageToken(allocation));
+			Process::current()->make_page_owned(ptr);
+			return ptr;
+ 		}
 	}
 
 	kerrorf("[PMM] Could not find suitable region for allocating kernel page!");

@@ -24,7 +24,7 @@ static pid_t nextPID = 1;
 static pid_t nextUserPID = 1000;
 
 Process::Process(pid_t pid, Ring ring, ExecutableImage image)
-: m_executable(image), m_maps() {
+: m_executable(image), m_maps(), m_process_pages() {
 	this->m_state = ProcessState::New;
 	this->m_ring = ring;
 	this->m_pid = pid;
@@ -42,13 +42,6 @@ Process::~Process() {
 
 	if (m_fpu_state)
 		delete m_fpu_state;
-
-	if (m_directory) {
-		kerrorf("[Process] FIXME: Leaked page for process page directory!\n");
-	}
-
-	for(auto map : m_maps)
-		delete map;
 }
 
 /*
@@ -351,4 +344,8 @@ void Process::set_state(ProcessState v) {
 void Process::wake_up() {
 	assert(m_state == ProcessState::Sleeping);
 	m_state = ProcessState::Ready;
+}
+
+void Process::make_page_owned(gen::SharedPtr<PageToken> ptr) {
+	m_process_pages.push_back(ptr);
 }

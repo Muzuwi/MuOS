@@ -5,6 +5,7 @@
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/QuickMap.hpp>
 #include <Kernel/Memory/PageToken.hpp>
+#include <Kernel/Process/Process.hpp>
 #include <string.h>
 
 PageDirectoryEntry::PageDirectoryEntry() {
@@ -119,8 +120,10 @@ void PageDirectory::create_table(uint32_t *address) {
  *  Allocates space for a page directory for the current process, and copies over kernel mappings to it
  */
 PageDirectory* PageDirectory::create_for_user() {
-	//  FIXME: Leaking the PD page here
-	auto* page =  PMM::allocate_page_user();
+	auto token = PMM::allocate_page_user();
+	assert((bool)token);
+
+	auto* page = token.get();
 	auto* mem = page->address();
 
 #ifdef LOG_PAGEDIR_CREATION
@@ -145,8 +148,10 @@ PageDirectory* PageDirectory::create_for_user() {
 }
 
 PageDirectory* PageDirectory::create_for_kernel() {
-	//  FIXME: Leaking the PD page here
-	auto* page =  PMM::allocate_page_kernel();
+	auto token = PMM::allocate_page_kernel();
+	assert((bool)token);
+
+	auto* page =  token.get();
 	auto* mem = page->address();
 
 #ifdef LOG_PAGEDIR_CREATION

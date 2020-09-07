@@ -13,7 +13,7 @@ class VMapping {
 private:
 	friend class VMM;
 
-	gen::List<PageToken*> m_pages;
+	gen::List<gen::SharedPtr<PageToken>> m_pages;
 
 	void* m_addr;
 	size_t m_size;
@@ -37,7 +37,7 @@ public:
 		for(unsigned i = 0; i < size / 4096; ++i)
 			mapping->m_pages.push_back(PMM::allocate_page_user());
 
-		VMM::notify_create_VMapping(*mapping, MappingPrivilege::UserMode);
+		VMM::notify_create_VMapping(gen::SharedPtr<VMapping>(mapping), MappingPrivilege::UserMode);
 
 		return *mapping;
 	}
@@ -48,7 +48,7 @@ public:
 		for(unsigned i = 0; i < size / 4096; ++i)
 			mapping->m_pages.push_back(PMM::allocate_page_kernel());
 
-		VMM::notify_create_VMapping(*mapping, MappingPrivilege::KernelMode);
+		VMM::notify_create_VMapping(gen::SharedPtr<VMapping>(mapping), MappingPrivilege::KernelMode);
 
 		return *mapping;
 	}
@@ -69,11 +69,11 @@ public:
 		return m_size;
 	}
 
-	gen::List<PageToken*>& pages() {
+	gen::List<gen::SharedPtr<PageToken>>& pages() {
 		return m_pages;
 	}
 
-	const gen::List<PageToken*>& pages() const {
+	const gen::List<gen::SharedPtr<PageToken>>& pages() const {
 		return m_pages;
 	}
 

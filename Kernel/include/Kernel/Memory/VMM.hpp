@@ -2,6 +2,7 @@
 #include <Kernel/SystemTypes.hpp>
 #include <Arch/i386/PageDirectory.hpp>
 #include <Kernel/Symbols.hpp>
+#include <LibGeneric/SharedPtr.hpp>
 
 class VMapping;
 enum class MappingPrivilege;
@@ -11,7 +12,7 @@ class VMM final {
 
 	VMM() {}
 	static PageDirectory* s_kernel_directory;
-	static void notify_create_VMapping(VMapping&, MappingPrivilege);
+	static void notify_create_VMapping(gen::SharedPtr<VMapping>, MappingPrivilege);
 	static void notify_free_VMapping(VMapping&);
 	static PageTable& ensure_page_table(PageDirectoryEntry&);
 public:

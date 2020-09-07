@@ -2,7 +2,8 @@
 #include <Kernel/Memory/PMM.hpp>
 
 class PageToken {
-	friend class PMM;
+	//  Note: Implemented in the PMM
+	friend gen::SharedPtr<PageToken> _allocate_page_internal(gen::List<PRegion*>&);
 
 	void* m_page;
 

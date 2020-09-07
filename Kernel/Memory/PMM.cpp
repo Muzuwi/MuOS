@@ -115,10 +115,8 @@ void PMM::handle_multiboot_memmap(void* multiboot_mmap) {
 }
 
 
-gen::SharedPtr<PageToken> PMM::allocate_page_user() {
-	ASSERT_IRQ_DISABLED();
-
-	for(auto& range : s_user_area) {
+gen::SharedPtr<PageToken> _allocate_page_internal(gen::List<PRegion*>& area) {
+	for(auto& range : area) {
 		void* allocation = range->alloc_page();
 		if(allocation) {
 			auto ptr = gen::SharedPtr(new PageToken(allocation));
@@ -126,25 +124,31 @@ gen::SharedPtr<PageToken> PMM::allocate_page_user() {
 			return ptr;
 		}
 	}
+	return gen::SharedPtr<PageToken>{nullptr};
+}
 
-	kerrorf("[PMM] Could not find suitable region for allocating user page!");
-	kpanic();
+gen::SharedPtr<PageToken> PMM::allocate_page_user() {
+	ASSERT_IRQ_DISABLED();
+
+	auto token = _allocate_page_internal(s_user_area);
+	if(!token) {
+		kerrorf("[PMM] Could not find suitable region for allocating user page!");
+		kpanic();
+	}
+
+	return token;
 }
 
 gen::SharedPtr<PageToken> PMM::allocate_page_kernel() {
 	ASSERT_IRQ_DISABLED();
 
-	for(auto& range : s_kernel_area) {
-		void* allocation = range->alloc_page();
-		if(allocation) {
-			auto ptr = gen::SharedPtr(new PageToken(allocation));
-			Process::current()->make_page_owned(ptr);
-			return ptr;
- 		}
+	auto token = _allocate_page_internal(s_kernel_area);
+	if(!token) {
+		kerrorf("[PMM] Could not find suitable region for allocating kernel page!");
+		kpanic();
 	}
 
-	kerrorf("[PMM] Could not find suitable region for allocating kernel page!");
-	kpanic();
+	return token;
 }
 
 void PMM::free_page_from_token(PageToken* token) {

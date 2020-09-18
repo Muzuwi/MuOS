@@ -16,7 +16,8 @@ typedef _sysret_t (*_Syscall_Arg5)(_sysarg_t, _sysarg_t, _sysarg_t, _sysarg_t, _
 	_ENUMERATE_SYSCALL(exit, 1)       \
 	_ENUMERATE_SYSCALL(write, 3)      \
 	_ENUMERATE_SYSCALL(sleep, 1)      \
-	_ENUMERATE_SYSCALL(getpid, 0)
+	_ENUMERATE_SYSCALL(getpid, 0)     \
+	_ENUMERATE_SYSCALL(getuid, 0)
 
 enum class SyscallNumber {
 #define _ENUMERATE_SYSCALL(name,argc) name = __SYS_##name,

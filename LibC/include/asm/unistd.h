@@ -5,5 +5,6 @@
 #define __SYS_write 2
 #define __SYS_sleep 3
 #define __SYS_getpid 4
+#define __SYS_getuid 5
 
 #endif

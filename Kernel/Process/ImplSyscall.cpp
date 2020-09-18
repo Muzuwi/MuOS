@@ -76,3 +76,9 @@ pid_t Process::getpid() {
 	auto* process = Process::current();
 	return process->pid();
 }
+
+uid_t Process::getuid() {
+	ASSERT_IRQ_DISABLED();
+	auto* process = Process::current();
+	return process->uid();
+}

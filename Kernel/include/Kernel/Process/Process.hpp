@@ -71,6 +71,8 @@ class Process {
 	void* m_kernel_stack_bottom;
 	bool m_is_finalized;
 
+	uint8_t m_uid {0};
+
 	Process(pid_t, Ring, ExecutableImage);
 	~Process();
 
@@ -95,6 +97,7 @@ public:
 
 	Ring ring() const { return m_ring; }
 	pid_t pid() const { return m_pid; }
+	uid_t uid() const { return m_uid; }
 	void* irq_trap_frame() { return m_current_irq_trap_frame; }
 	bool is_finalized() const { return m_is_finalized; }
 	PageDirectory* directory() { return m_directory; }
@@ -118,4 +121,5 @@ public:
 	static unsigned sleep(unsigned seconds);
 	static size_t write(int fildes, const void* buf, size_t nbyte);
 	static pid_t getpid();
+	static uid_t getuid();
 };

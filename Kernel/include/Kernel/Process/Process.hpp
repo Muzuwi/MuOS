@@ -59,17 +59,17 @@ class Process {
 
 	Ring m_ring;
 	pid_t m_pid;
-	ProcessState m_state;
-	FPUState* m_fpu_state;
-	PageDirectory* m_directory;
+	ProcessState m_state {ProcessState::New};
+	FPUState* m_fpu_state {nullptr};
+	PageDirectory* m_directory {nullptr};
 	ExecutableImage m_executable;
 	gen::List<gen::SharedPtr<VMapping>> m_maps;
 	gen::List<gen::SharedPtr<PageToken>> m_process_pages;
 
-	int m_exit_code;
-	TrapFrame* m_current_irq_trap_frame;
-	void* m_kernel_stack_bottom;
-	bool m_is_finalized;
+	int m_exit_code {0};
+	TrapFrame* m_current_irq_trap_frame {nullptr};
+	void* m_kernel_stack_bottom {nullptr};
+	bool m_is_finalized {false};
 
 	uint8_t m_uid {0};
 

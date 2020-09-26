@@ -126,7 +126,7 @@ PageDirectory* PageDirectory::create_for_user() {
 		return nullptr;
 	}
 
-	_copy_from_kernel(token);
+	_copy_from_kernel(PhysPtr<PageDirectory>(*token));
 
 	return reinterpret_cast<PageDirectory*>(token->address());
 }
@@ -138,7 +138,7 @@ PageDirectory* PageDirectory::create_for_kernel() {
 		return nullptr;
 	}
 
-	_copy_from_kernel(token);
+	_copy_from_kernel(PhysPtr<PageDirectory>(*token));
 
 	return reinterpret_cast<PageDirectory*>(token->address());
 }
@@ -146,11 +146,11 @@ PageDirectory* PageDirectory::create_for_kernel() {
 /*
  *  Copies over kernel mappings to the page specified by a page token
  */
-void PageDirectory::_copy_from_kernel(gen::SharedPtr<PageToken> token) {
-	if(!token) return;
+void PageDirectory::_copy_from_kernel(PhysPtr<PageDirectory> ptr) {
+	if(!ptr) return;
 
 	auto* kernel_dir = VMM::get_directory();
-	QuickMap mapper {token->address()};
+	QuickMap mapper {ptr};
 	memset(mapper.address(), 0, 4096);
 
 	auto* kernel_as_arr = reinterpret_cast<uint32_t*>(kernel_dir);

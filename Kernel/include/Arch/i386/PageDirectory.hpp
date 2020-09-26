@@ -4,6 +4,7 @@
 #include <Arch/i386/Page.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Memory/PageToken.hpp>
+#include <Kernel/Memory/Ptr.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 
 #define GET_DIR(a) ((uint32_t)a >> 22)
@@ -38,7 +39,7 @@ public:
 class PageDirectory {
 	PageDirectoryEntry m_entries[1024];
 
-	static void _copy_from_kernel(gen::SharedPtr<PageToken> pd_page);
+	static void _copy_from_kernel(PhysPtr<PageDirectory> ptr);
 public:
 	static PageDirectory* create_for_user();
 	static PageDirectory* create_for_kernel();

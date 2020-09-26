@@ -7,42 +7,48 @@
 PageTable* s_table_for_quick_map;
 gen::BitMap s_free_pages {1024};
 
-QuickMap::QuickMap(void* addr) {
+static void _init_quickmap_for_current_dir() {
+	s_table_for_quick_map = reinterpret_cast<PageTable*>(KMalloc::get().kmalloc_alloc(0x1000, 0x1000));
+
+	uint32_t cr3 = 0;
+	asm volatile(
+	"mov %0, %%cr3\n"
+	:"=a"(cr3));
+
+	auto* currentDir = reinterpret_cast<PageDirectory*>(TO_VIRT(cr3));
+
+	auto& entry = currentDir->get_entry((uint32_t*)(QUICKMAP_VIRT_START));
+	entry.set_table(reinterpret_cast<PageTable*>(TO_PHYS(s_table_for_quick_map)));
+	entry.set_flag(DirectoryFlag::Present, true);
+	entry.set_flag(DirectoryFlag::RW, true);
+	entry.set_flag(DirectoryFlag::User, false);
+}
+
+QuickMap::QuickMap(void* phys_address) {
 	IRQDisabler disabler;
 
-	if((uint64_t)addr % 4096 != 0) {
+	auto address = reinterpret_cast<uint64_t>(phys_address);
+
+	if(address % 4096 != 0) {
 		kerrorf("QuickMapper called with unaligned address! Correcting it\n");
-		addr = (void*)((uint64_t)addr & ~0xfff);
+		address = (address & ~0xfff);
 	}
 
 	if(!s_table_for_quick_map) {
 		kdebugf("QuickMapper not initialized, initializing.\n");
-		s_table_for_quick_map = reinterpret_cast<PageTable*>(KMalloc::get().kmalloc_alloc(0x1000, 0x1000));
-
-		uint32_t cr3 = 0;
-		asm volatile(
-				"mov %0, %%cr3\n"
-				:"=a"(cr3));
-
-		auto* currentDir = reinterpret_cast<PageDirectory*>(TO_VIRT(cr3));
-
-		auto& entry = currentDir->get_entry((uint32_t*)(QUICKMAP_VIRT_START));
-		entry.set_table(reinterpret_cast<PageTable*>(TO_PHYS(s_table_for_quick_map)));
-		entry.set_flag(DirectoryFlag::Present, true);
-		entry.set_flag(DirectoryFlag::RW, true);
-		entry.set_flag(DirectoryFlag::User, false);
+		_init_quickmap_for_current_dir();
 	}
 
 	m_index = s_free_pages.find_seq_clear(1);
 	assert(m_index != s_free_pages.count());
 
-	auto& page = s_table_for_quick_map->get_page(reinterpret_cast<uint32_t*>(address()));
+	auto& page = s_table_for_quick_map->get_page(reinterpret_cast<uint32_t*>(this->address()));
 	page.set_flag(PageFlag::Present, true);
 	page.set_flag(PageFlag::RW, true);
 	page.set_flag(PageFlag::User, false);
 	page.set_flag(PageFlag::Global, true);
-	page.set_physical((uintptr_t *)addr);
-	invlpg((uintptr_t*)address());
+	page.set_physical((uintptr_t *)address);
+	invlpg((uintptr_t*)this->address());
 
 #ifdef QUICKMAP_LOG_MAPS
 	kdebugf("QuickMap(%x): mapped %x to %x\n", this, addr, address());

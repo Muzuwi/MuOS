@@ -2,6 +2,7 @@
 #include <Kernel/SystemTypes.hpp>
 #include <Arch/i386/Registers.hpp>
 #include <Arch/i386/PageDirectory.hpp>
+#include <include/Kernel/Memory/Ptr.hpp>
 #include <LibGeneric/List.hpp>
 #include <include/Arch/i386/TrapFrame.hpp>
 #include <Kernel/Memory/VMapping.hpp>
@@ -61,7 +62,7 @@ class Process {
 	pid_t m_pid;
 	ProcessState m_state {ProcessState::New};
 	FPUState* m_fpu_state {nullptr};
-	PageDirectory* m_directory {nullptr};
+	PhysPtr<PageDirectory> m_directory {nullptr};
 	ExecutableImage m_executable;
 	gen::List<gen::SharedPtr<VMapping>> m_maps;
 	gen::List<gen::SharedPtr<PageToken>> m_process_pages;
@@ -100,7 +101,7 @@ public:
 	uid_t uid() const { return m_uid; }
 	void* irq_trap_frame() { return m_current_irq_trap_frame; }
 	bool is_finalized() const { return m_is_finalized; }
-	PageDirectory* directory() { return m_directory; }
+	PageDirectory* directory() { return m_directory.get(); }
 	const gen::List<gen::SharedPtr<VMapping>>& mappings() const { return m_maps; }
 	void make_page_owned(gen::SharedPtr<PageToken> sharedPtr);
 
@@ -109,8 +110,6 @@ public:
 	void wake_up();
 
 	static Process* current() { return Process::m_current; }
-	static pid_t create(void (*call));
-	static pid_t create(void (*call)());
 	static pid_t create_from_ELF(void* base, size_t size);
 	static void kill(pid_t);
 

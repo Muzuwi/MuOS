@@ -1,4 +1,5 @@
 #pragma once
+#include <Kernel/Memory/Ptr.hpp>
 #include <Kernel/Memory/VMM.hpp>
 #include <LibGeneric/BitMap.hpp>
 
@@ -7,7 +8,12 @@
 class QuickMap {
 	unsigned m_index;
 public:
-	QuickMap(void* addr);
+	QuickMap(void* physical_address);
+
+	template<class T>
+	QuickMap(PhysPtr<T> addr)
+	: QuickMap(static_cast<void*>(addr.get())) {}
+
 	~QuickMap();
 	void* address();
 };

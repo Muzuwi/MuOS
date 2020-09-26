@@ -36,29 +36,6 @@ Process::~Process() {
 		delete m_fpu_state;
 }
 
-/*
- *  Creates a kernel task process and returns its' PID
- */
-pid_t Process::create(void* call) {
-	IRQDisabler disabler;
-	kdebugf("[Process] New kernel task, entry %x, pid %i\n", call, nextPID);
-
-	auto process = new Process(nextPID, Ring::CPL0, {call, 0, ExecutableType::Flat});
-
-	m_all_processes.push_back(process);
-	Scheduler::notify_new_process(process);
-
-	return nextPID++;
-}
-
-/*
- *  Wrapper for C++ lambdas
- */
-pid_t Process::create(void (* call)()) {
-	return Process::create((void*) call);
-}
-
-
 pid_t Process::create_from_ELF(void* base, size_t size) {
 	if(!base) return -1;
 	IRQDisabler disabler;
@@ -128,7 +105,12 @@ void Process::_finalize_for_user() {
 	frame._user_SS = GDT::get_user_DS() | 3u;
 	frame.EFLAGS = 0x202;
 
-	assert(this->load_process_executable(frame));
+	if(!this->load_process_executable(frame)) {
+		kerrorf("Process(%i): Malformed executable, abort\n", pid());
+		kill(pid());
+		Scheduler::switch_task();
+	}
+
 	CPU::load_segment_registers_for(Ring::CPL3);
 	m_is_finalized = true;
 	m_state = ProcessState::Running;
@@ -154,7 +136,12 @@ void Process::_finalize_for_kernel() {
 	frame._user_SS = GDT::get_kernel_DS();
 	frame.EFLAGS = 0x202;
 
-	assert(this->load_process_executable(frame));
+	if(!this->load_process_executable(frame)) {
+		kerrorf("Process(%i): Malformed executable, abort\n", pid());
+		kill(pid());
+		Scheduler::switch_task();
+	}
+
 	CPU::load_segment_registers_for(Ring::CPL0);
 	m_is_finalized = true;
 	m_state = ProcessState::Running;
@@ -222,9 +209,8 @@ bool Process::load_ELF_binary(TrapFrame& frame) {
 				return false;
 
 			unsigned copy_size = header.p_filesz;
-			for(auto& pages : mapping.pages()) {
-				void* phys_addr = pages->address();
-				QuickMap mapper {phys_addr};
+			for(auto& page : mapping.pages()) {
+				QuickMap mapper {page->address()};
 
 				void* destination = (void*)((uintptr_t)mapper.address() + (header.p_vaddr & 0xFFF));
 				const void* source = (void*)((uintptr_t)file_position + (header.p_filesz - copy_size));
@@ -295,7 +281,7 @@ PageDirectory* Process::ensure_directory() {
 
 	kdebugf("Process(%i) received directory at physical %x\n", m_pid, m_directory);
 
-	return m_directory;
+	return m_directory.get();
 }
 
 /*

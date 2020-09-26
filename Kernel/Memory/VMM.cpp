@@ -71,12 +71,8 @@ void VMM::notify_create_VMapping(gen::SharedPtr<VMapping> mapping, MappingPrivil
 	assert((bool)mapping);
 
 	auto* process = Process::m_current;
-	auto* dir = process->m_directory;
-	QuickMap mapper{dir};
-
-	if((uint64_t)dir < (uint64_t)&_ukernel_virtual_offset) {
-		dir = reinterpret_cast<PageDirectory*>(mapper.address());
-	}
+	QuickMap mapper {process->m_directory};
+	auto* dir = reinterpret_cast<PageDirectory*>(mapper.address());
 
 	auto current_virt_addr = mapping->addr();
 

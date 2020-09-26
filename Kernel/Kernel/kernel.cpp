@@ -15,6 +15,16 @@
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Process/Scheduler.hpp>
 
+#include <Arch/i386/CPU.hpp>
+#include <Kernel/Interrupt/IRQSubscriber.hpp>
+#include <Arch/i386/PortIO.hpp>
+#include <Kernel/Memory/QuickMap.hpp>
+#include <Kernel/Module.hpp>
+#include <Kernel/ksleep.hpp>
+#include <Kernel/Debug/kpanic.hpp>
+#include <Kernel/Interrupt/Exception.hpp>
+#include <Kernel/Device/PS2Keyboard.hpp>
+
 #include <Kernel/Syscalls/SyscallList.hpp>
 namespace uKernel {
 	extern "C" void kernel_entrypoint(uintptr_t*);
@@ -24,6 +34,14 @@ namespace uKernel {
 	Main kernel entrypoint
 */
 extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
+#define PORT 0x3f8   /* COM1 */
+	out(PORT + 1, 0x00);    // Disable all interrupts
+	out(PORT + 3, 0x80);    // Enable DLAB (set baud rate divisor)
+	out(PORT + 0, 0x01);    // Set divisor to 3 (lo byte) 38400 baud
+	out(PORT + 1, 0x00);    //                  (hi byte)
+	out(PORT + 3, 0x03);    // 8 bits, no parity, one stop bit
+	out(PORT + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
+
 	tty_init();
 	Timer::getTimer();
 
@@ -52,9 +70,25 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 	Scheduler::initialize();
 	Syscall::init();
 
+	PS2Keyboard::init();
+
 	KMalloc::get().logAllocationStats();
 
 	kdebugf("[uKernel] Initialization took %ims\n", (int)Timer::getTimer().getTimeSinceStart());
+
+	extern unsigned char testing[];
+	extern unsigned testing_len;
+
+	Process::create_from_ELF(
+			&testing[0],
+			testing_len
+	);
+
+	new IRQSubscriber(12, []{
+		ASSERT_IRQ_DISABLED();
+		uint8_t data = in(0x60);
+		kdebugf("Mouse data: %x\n", data);
+	});
 
 	Scheduler::enter_scheduler_loop();
 }

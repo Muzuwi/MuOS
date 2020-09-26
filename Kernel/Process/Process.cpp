@@ -32,8 +32,7 @@ Process::Process(pid_t pid, Ring ring, ExecutableImage image)
 Process::~Process() {
 	ASSERT_IRQ_DISABLED();
 
-	if (m_fpu_state)
-		delete m_fpu_state;
+	delete m_fpu_state;
 }
 
 pid_t Process::create_from_ELF(void* base, size_t size) {
@@ -175,54 +174,56 @@ bool Process::load_ELF_binary(TrapFrame& frame) {
 
 	for(unsigned i = 0; i < prog_headers.size(); ++i) {
 		const auto& header = prog_headers[i];
-		if(header.p_type == SegType::Load) {
+
+		if(header.p_type != SegType::Load)
+			continue;
+
 #ifdef PROCESS_LOG_ELF_CREATION
-			kdebugf("[Process] Segment offset: %x, size: %i (rounded to %i), virt: %x\n",
+		kdebugf("[Process] Segment offset: %x, size: %i (rounded to %i), virt: %x\n",
 			        header.p_offset,
 			        header.p_memsz,
 			        round_to_page_size(header.p_memsz),
 			        header.p_vaddr);
 #endif
 
-			if(header.p_align != 0x1000) {
-				kerrorf("[Process] Unsupported segment alignment!\n");
-				continue;
-			}
+		if(header.p_align != 0x1000) {
+			kerrorf("[Process] Unsupported segment alignment!\n");
+			continue;
+		}
 
-			const bool readable = (header.p_flags & PermFlags::Read);
-			const bool writable = (header.p_flags & PermFlags::Write);
-			const bool executable = (header.p_flags & PermFlags::Execute);
+		const bool readable = (header.p_flags & PermFlags::Read);
+		const bool writable = (header.p_flags & PermFlags::Write);
+		const bool executable = (header.p_flags & PermFlags::Execute);
 
-			const int flags = (readable ? PROT_READ : 0)  |
-							  (writable ? PROT_WRITE : 0) |
-						      (executable ? PROT_EXEC : 0);
+		const int flags = (readable ? PROT_READ : 0)  |
+		                  (writable ? PROT_WRITE : 0) |
+		                  (executable ? PROT_EXEC : 0);
 
-			auto& mapping = VMapping::create_for_user(
-										(void*)(header.p_vaddr & ~0xFFF), round_to_page_size(header.p_memsz),
-			                            flags,
-			                            MAP_SHARED);
+		auto& mapping = VMapping::create_for_user(
+				(void*)(header.p_vaddr & ~0xFFF), round_to_page_size(header.p_memsz),
+				flags,
+				MAP_SHARED);
 
-			void* file_position = (void*)((uintptr_t)file_base + header.p_offset);
-			if(!within_executable(file_position))
-				return false;
-			if(!within_executable((void*)((uintptr_t)file_position + header.p_filesz)))
-				return false;
+		void* file_position = (void*)((uintptr_t)file_base + header.p_offset);
+		if(!within_executable(file_position))
+			return false;
+		if(!within_executable((void*)((uintptr_t)file_position + header.p_filesz)))
+			return false;
 
-			unsigned copy_size = header.p_filesz;
-			for(auto& page : mapping.pages()) {
-				QuickMap mapper {page->address()};
+		unsigned copy_size = header.p_filesz;
+		for(auto& page : mapping.pages()) {
+			QuickMap mapper {page->address()};
 
-				void* destination = (void*)((uintptr_t)mapper.address() + (header.p_vaddr & 0xFFF));
-				const void* source = (void*)((uintptr_t)file_position + (header.p_filesz - copy_size));
+			void* destination = (void*)((uintptr_t)mapper.address() + (header.p_vaddr & 0xFFF));
+			const void* source = (void*)((uintptr_t)file_position + (header.p_filesz - copy_size));
 #ifdef PROCESS_LOG_ELF_CREATION
-				kdebugf("[Process] Copying %x <- %x, size: %i\n", destination, source, copy_size);
+			kdebugf("[Process] Copying %x <- %x, size: %i\n", destination, source, copy_size);
 #endif
-				memcpy(destination, source, copy_size);
+			memcpy(destination, source, copy_size);
 
-				if(copy_size < 0x1000)
-					break;
-				copy_size -= 0x1000;
-			}
+			if(copy_size < 0x1000)
+				break;
+			copy_size -= 0x1000;
 		}
 	}
 

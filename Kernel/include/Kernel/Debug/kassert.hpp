@@ -16,6 +16,8 @@ void __kassert_internal(const char*, int, const char*, bool);
 							false); \
 	}
 
+#define ASSERT_NOT_REACHED() \
+	__kassert_internal(__FILE__, __LINE__, "Reached ASSERT_NOT_REACHED();", false)
 
 #ifdef NDEBUG
 #define assert(a)

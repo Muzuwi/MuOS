@@ -19,11 +19,9 @@
 #include <Kernel/Interrupt/IRQSubscriber.hpp>
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Memory/QuickMap.hpp>
-#include <Kernel/Module.hpp>
 #include <Kernel/ksleep.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/Interrupt/Exception.hpp>
-#include <Kernel/Device/PS2Keyboard.hpp>
 
 #include <Kernel/Syscalls/SyscallList.hpp>
 namespace uKernel {
@@ -69,8 +67,6 @@ extern "C" void uKernel::kernel_entrypoint(uintptr_t* multiboot_info){
 
 	Scheduler::initialize();
 	Syscall::init();
-
-	PS2Keyboard::init();
 
 	KMalloc::get().logAllocationStats();
 

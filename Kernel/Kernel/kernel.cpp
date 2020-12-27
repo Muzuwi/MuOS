@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <Kernel/Debug/TTY.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
+#include <Arch/i386/GDT.hpp>
+#include <Arch/i386/IDT.hpp>
 
 /*
 	Main kernel entrypoint
@@ -9,6 +11,9 @@ extern "C" void _ukernel_entrypoint(void* multiboot_info){ //  FIXME:  Nasty nak
 	TTY::init();
 	kdebugf("[uKernel64] Hello, world!\n");
 	kdebugf("Multiboot ptr %x%x\n", ((uint64_t)multiboot_info>>32u), (uint64_t)multiboot_info&0xffffffffu);
+
+	IDT::init();
+	GDT::init();
 
 //	kdebugf("[uKernel] uKernel booting\n");
 //

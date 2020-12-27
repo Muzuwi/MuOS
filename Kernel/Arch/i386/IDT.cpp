@@ -3,14 +3,12 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/i386/GDT.hpp>
 
-/*
-	Actual Interrupt descriptor table in memory
-*/
-IDT_Entry IDT::interrupts_table[IDT_INTS_COUNT] = {};
+static IDT_Entry interrupt_descr_table[IDT_INTS_COUNT] = {};
 
-//  FIXME:  Temp, will be moved
-uint64_t IDTR = 0;
-
+static struct {
+	uint16_t limit;
+	uint64_t base;
+} __attribute__((packed)) IDTR;
 
 /*
 	IRQ handler wrappers
@@ -67,126 +65,21 @@ extern "C" void _exception_entry_31();
 
 extern "C" void _kernel_syscall_entry();
 
-inline void lidt(uint64_t *idtr) {
+inline void lidt(void* idtr) {
 	asm volatile(
-	            "cli\n"
-	            "mov %%eax, %0\n"
-	            "lidt [%%eax]\n"
-	            "sti\t\n"
+	            "mov %%rax, %0\n"
+	            "lidt [%%rax]\n"
 	            :
 	            : ""((uintptr_t)idtr)
-	            :
+	            : "rax"
 	            );
 }
 
-
-
-/*
-	This function sets up the Interrupt Descriptor Table
-	with entries for basic 15 interrupts and loads it
-	into IDTR
-*/
-void IDT::init_IDT(){
-	//  Interrupt handler entrypoint address
-	uint32_t irq_addr;
-
-	//  Exception handler entrypoint adress
-	uint32_t except_addr; 
-
-	#define TOSTRING(a) #a
-	#define CAT(a, b) a##b
-	#define SETIRQ(irqname, number) \
-		irq_addr = (uint32_t)(irqname); \
-		interrupts_table[number].zero = 0; \
-		interrupts_table[number].offset_lower = irq_addr & 0xFFFF; \
-		interrupts_table[number].offset_higher = (irq_addr & 0xFFFF0000) >> 16; \
-		interrupts_table[number].selector = 0x08;	\
-		interrupts_table[number].type_attr = 0x8e;
-
-	#define SETEXCEPTION(excname, number) \
-		except_addr = (uint32_t)(excname); \
-		interrupts_table[number].zero = 0; \
-		interrupts_table[number].offset_lower = except_addr & 0xFFFF; \
-		interrupts_table[number].offset_higher = (except_addr & 0xFFFF0000) >> 16; \
-		interrupts_table[number].selector = 0x08;	\
-		interrupts_table[number].type_attr = 0x8f;
-
-	//  FIXME:  Rework IDT, this is horrendous
-	SETEXCEPTION(_exception_entry_0, 0)
-	SETEXCEPTION(_exception_entry_1, 1)
-	SETEXCEPTION(_exception_entry_2, 2)
-	SETEXCEPTION(_exception_entry_3, 3)
-	SETEXCEPTION(_exception_entry_4, 4)
-	SETEXCEPTION(_exception_entry_5, 5)
-	SETEXCEPTION(_exception_entry_6, 6)
-	SETEXCEPTION(_exception_entry_7, 7)
-	SETEXCEPTION(_exception_entry_8, 8)
-	SETEXCEPTION(_exception_entry_9, 9)
-	SETEXCEPTION(_exception_entry_10, 10)
-	SETEXCEPTION(_exception_entry_11, 11)
-	SETEXCEPTION(_exception_entry_12, 12)
-	SETEXCEPTION(_exception_entry_13, 13)
-	SETEXCEPTION(_exception_entry_14, 14)
-	SETEXCEPTION(_exception_entry_15, 15)
-	SETEXCEPTION(_exception_entry_16, 16)
-	SETEXCEPTION(_exception_entry_17, 17)
-	SETEXCEPTION(_exception_entry_18, 18)
-	SETEXCEPTION(_exception_entry_19, 19)
-	SETEXCEPTION(_exception_entry_20, 20)
-	SETEXCEPTION(_exception_entry_21, 21)
-	SETEXCEPTION(_exception_entry_22, 22)
-	SETEXCEPTION(_exception_entry_23, 23)
-	SETEXCEPTION(_exception_entry_24, 24)
-	SETEXCEPTION(_exception_entry_25, 25)
-	SETEXCEPTION(_exception_entry_26, 26)
-	SETEXCEPTION(_exception_entry_27, 27)
-	SETEXCEPTION(_exception_entry_28, 28)
-	SETEXCEPTION(_exception_entry_29, 29)
-	SETEXCEPTION(_exception_entry_30, 30)
-	SETEXCEPTION(_exception_entry_31, 31)
-
-
-	SETIRQ(irq0, 32)
-	SETIRQ(irq1, 33)
-	SETIRQ(irq2, 34)
-	SETIRQ(irq3, 35)
-	SETIRQ(irq4, 36)
-	SETIRQ(irq5, 37)
-	SETIRQ(irq6, 38)
-	SETIRQ(irq7, 39)
-	SETIRQ(irq8, 40)
-	SETIRQ(irq9, 41)
-	SETIRQ(irq10, 42)
-	SETIRQ(irq11, 43)
-	SETIRQ(irq12, 44)
-	SETIRQ(irq13, 45)
-	SETIRQ(irq14, 46)
-	SETIRQ(irq15, 47)
-
-	//  Setup syscall handler
-	interrupts_table[0x80].zero = 0;
-	interrupts_table[0x80].offset_lower = (uint32_t)(_kernel_syscall_entry) & 0xFFFF;
-	interrupts_table[0x80].offset_higher = ((uint32_t)(_kernel_syscall_entry) & 0xFFFF0000) >> 16;
-	interrupts_table[0x80].selector = GDT::get_kernel_CS();
-	interrupts_table[0x80].type_attr = 0xF | (0b11 << 5) | (1 << 7);
-
-
-	uint16_t idt_size = sizeof(interrupts_table)*sizeof(IDT_Entry);
-	IDTR |= idt_size;
-	IDTR |= ((uint64_t)interrupts_table) << 16;
-
-	lidt(&IDTR);
-	kdebugf(IDT_LOG "IDT loaded\n");
-}
-
-
 /*
 	Remaps the PIC to offset interrupts
-	by 0x20 to avoid overlapping standard arch interrupts (?)
+	by 0x20 to avoid overlapping standard arch interrupts
 */
-extern "C" void remapPIC();
-void IDT::init_PIC(){
-
+static void remap_pic(){
 	out(PIC_MASTER_CMD, 0x11);
 	out(PIC_SLAVE_CMD, 0x11);
 
@@ -201,6 +94,94 @@ void IDT::init_PIC(){
 
 	out(PIC_MASTER_DATA, 0);
 	out(PIC_SLAVE_DATA, 0);
+}
 
-	kdebugf(PIC_LOG "PIC initialization complete\n");
+template<typename T>
+static void register_interrupt_gate(uint8_t irq_num, T gate, uint8_t type, uint16_t selector) {
+	auto& entry = interrupt_descr_table[irq_num];
+	auto gate_address = reinterpret_cast<uint64_t>(gate);
+	entry.selector = selector;
+	entry.type_attr = type;
+	entry._zero1 = 0;
+	entry._zero2 = 0;
+
+	entry.offset_0 = gate_address & 0xFFFFu;
+	entry.offset_16 = (gate_address & 0xFFFF0000u) >> 16u;
+	entry.offset_32 = (gate_address >> 32u);
+}
+
+/*
+	This function sets up the Interrupt Descriptor Table
+	with entries for basic 15 interrupts and loads it
+	into IDTR
+*/
+void IDT::init(){
+	remap_pic();
+
+	const uint8_t type_irq {0x8e};
+	const uint8_t type_trap {0x8f};
+	const auto cs = GDT::get_kernel_CS();
+
+	//  Exceptions
+	register_interrupt_gate(0, _exception_entry_0, type_trap, cs);
+	register_interrupt_gate(1, _exception_entry_1, type_trap, cs);
+	register_interrupt_gate(2, _exception_entry_2, type_trap, cs);
+	register_interrupt_gate(3, _exception_entry_3, type_trap, cs);
+	register_interrupt_gate(4, _exception_entry_4, type_trap, cs);
+	register_interrupt_gate(5, _exception_entry_5, type_trap, cs);
+	register_interrupt_gate(6, _exception_entry_6, type_trap, cs);
+	register_interrupt_gate(7, _exception_entry_7, type_trap, cs);
+	register_interrupt_gate(8, _exception_entry_8, type_trap, cs);
+	register_interrupt_gate(9, _exception_entry_9, type_trap, cs);
+	register_interrupt_gate(10, _exception_entry_10, type_trap, cs);
+	register_interrupt_gate(11, _exception_entry_11, type_trap, cs);
+	register_interrupt_gate(12, _exception_entry_12, type_trap, cs);
+	register_interrupt_gate(13, _exception_entry_13, type_trap, cs);
+	register_interrupt_gate(14, _exception_entry_14, type_trap, cs);
+	register_interrupt_gate(15, _exception_entry_15, type_trap, cs);
+	register_interrupt_gate(16, _exception_entry_16, type_trap, cs);
+	register_interrupt_gate(17, _exception_entry_17, type_trap, cs);
+	register_interrupt_gate(18, _exception_entry_18, type_trap, cs);
+	register_interrupt_gate(19, _exception_entry_19, type_trap, cs);
+	register_interrupt_gate(20, _exception_entry_20, type_trap, cs);
+	register_interrupt_gate(21, _exception_entry_21, type_trap, cs);
+	register_interrupt_gate(22, _exception_entry_22, type_trap, cs);
+	register_interrupt_gate(23, _exception_entry_23, type_trap, cs);
+	register_interrupt_gate(24, _exception_entry_24, type_trap, cs);
+	register_interrupt_gate(25, _exception_entry_25, type_trap, cs);
+	register_interrupt_gate(26, _exception_entry_26, type_trap, cs);
+	register_interrupt_gate(27, _exception_entry_27, type_trap, cs);
+	register_interrupt_gate(28, _exception_entry_28, type_trap, cs);
+	register_interrupt_gate(29, _exception_entry_29, type_trap, cs);
+	register_interrupt_gate(30, _exception_entry_30, type_trap, cs);
+	register_interrupt_gate(31, _exception_entry_31, type_trap, cs);
+
+	//  Interrupts
+	register_interrupt_gate(32, irq0, type_irq, cs);
+	register_interrupt_gate(33, irq1, type_irq, cs);
+	register_interrupt_gate(34, irq2, type_irq, cs);
+	register_interrupt_gate(35, irq3, type_irq, cs);
+	register_interrupt_gate(36, irq4, type_irq, cs);
+	register_interrupt_gate(37, irq5, type_irq, cs);
+	register_interrupt_gate(38, irq6, type_irq, cs);
+	register_interrupt_gate(39, irq7, type_irq, cs);
+	register_interrupt_gate(40, irq8, type_irq, cs);
+	register_interrupt_gate(41, irq9, type_irq, cs);
+	register_interrupt_gate(42, irq10, type_irq, cs);
+	register_interrupt_gate(43, irq11, type_irq, cs);
+	register_interrupt_gate(44, irq12, type_irq, cs);
+	register_interrupt_gate(45, irq13, type_irq, cs);
+	register_interrupt_gate(46, irq14, type_irq, cs);
+
+	register_interrupt_gate(47, irq15, type_irq, cs);
+
+	//  Legacy syscall gate
+	const uint8_t type_syscall {0xF | (0b11 << 5) | (1 << 7)};
+	register_interrupt_gate(0x80, _kernel_syscall_entry, type_syscall, GDT::get_kernel_CS());
+
+	IDTR.limit = sizeof(interrupt_descr_table);
+	IDTR.base = reinterpret_cast<uint64_t>(interrupt_descr_table);
+	lidt(&IDTR);
+
+	kdebugf("[IDT] registered interrupt handlers\n");
 }

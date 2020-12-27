@@ -2,27 +2,14 @@ section .text
 
 global _kernel_syscall_entry
 _kernel_syscall_entry:
-    cli
-    pusha
-    extern _ukernel_syscall_handler
-    call _ukernel_syscall_handler
-    mov [esp+28], eax   ;  Set syscall return value by modifying process eax
-    popa
-    sti
-    iret
+._stub:
+    jmp ._stub
 
 %macro define_entrypoint_for_irq 1
 global irq%{1:1}
 irq%{1:1}:
-    cli
-    pusha
-    push dword %{1:1}   ;  Push IRQ number
-    extern _kernel_irq_dispatch
-    call _kernel_irq_dispatch
-    add esp, 4          ;  Pop IRQ number
-    popa
-    sti
-    iret
+._stub:
+    jmp ._stub
 %endmacro
 
 define_entrypoint_for_irq 0

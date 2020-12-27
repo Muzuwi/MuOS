@@ -3,34 +3,15 @@ section .text
 %macro def_entry_exception 1
 global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
-    cli
-    pusha
-    push dword %{1:1}
-
-    extern _kernel_exception_entrypoint
-    call _kernel_exception_entrypoint
-
-    add esp, 4
-    popa
-
-    iret
+._stub:
+    jmp ._stub
 %endmacro
 
 %macro def_entry_exception_errorcode 1
 global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
-    cli
-    pusha
-    push dword %{1:1}
-
-    extern _kernel_exception_errorcode_entrypoint
-    call _kernel_exception_errorcode_entrypoint
-
-    add esp, 4
-    popa
-    add esp, 4
-
-    iret
+._stub:
+    jmp ._stub
 %endmacro
 
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 #include <LibGeneric/BidirectionalIterator.hpp>
 
 namespace gen {

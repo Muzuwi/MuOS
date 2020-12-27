@@ -63,6 +63,14 @@ add_library(Kernel
     Debug/TTY.cpp
     Arch/i386/PortIO.cpp
     Arch/i386/VGA.cpp
+
+    Arch/i386/GDT.cpp
+    Arch/i386/asm/LGDT.asm
+
+    Arch/i386/IDT.cpp
+    Interrupt/asm/ExceptionEntrypoint.asm
+    Interrupt/asm/IRQEntrypoint.asm
+
 )
 
 add_dependencies(Kernel

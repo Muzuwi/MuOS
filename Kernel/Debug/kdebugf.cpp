@@ -1,10 +1,10 @@
 #include <Kernel/Debug/kdebugf.hpp>
+#include <Kernel/Debug/TTY.hpp>
 #include <Arch/i386/PortIO.hpp>
-#include <Kernel/Debug/tty.h>
+#include <Arch/i386/IRQDisabler.hpp>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <Arch/i386/IRQDisabler.hpp>
 
 #define KDEBUGF_BUFFER_SIZE 512
 
@@ -35,8 +35,7 @@ int kdebugf(const char* format, ...){
 	out(0x3f8, '0');
 	out(0x3f8, 'm');
 
-	tty_prints(buffer);
-
+	TTY::prints(buffer);
 
 	return c;
 }
@@ -71,7 +70,7 @@ int kerrorf(const char* format, ...){
 	out(0x3f8, '0');
 	out(0x3f8, 'm');
 
-	tty_prints(buffer);
+	TTY::prints(buffer);
 
 
 	return c;

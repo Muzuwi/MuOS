@@ -56,6 +56,13 @@ target_compile_options(Entrypoint
 #
 add_library(Kernel
     Kernel/kernel.cpp
+    Kernel/stackchk.cpp
+    Debug/kdebugf.cpp
+    Debug/kpanic.cpp
+    Debug/kassert.cpp
+    Debug/TTY.cpp
+    Arch/i386/PortIO.cpp
+    Arch/i386/VGA.cpp
 )
 
 add_dependencies(Kernel
@@ -88,7 +95,6 @@ target_compile_definitions(Kernel
 #        Arch/i386/Page.cpp
 #        Arch/i386/PageDirectory.cpp
 #        Arch/i386/PagingBootstrap.cpp
-#        Arch/i386/PortIO.cpp
 #        Arch/i386/tty.c
 #        Arch/i386/vga.c
 #        Bootstage/boot.asm

@@ -16,8 +16,6 @@ uint8_t in(uint16_t);
 uint16_t inw(uint16_t);
 uint32_t ind(uint16_t);
 
-void lgdt(uint32_t);
-
 #ifdef __cplusplus
 }
 #endif

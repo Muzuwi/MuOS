@@ -82,10 +82,3 @@ extern "C" uint16_t inw(uint16_t port) {
 				);
 	return data;
 }
-
-/*
-	Calls lgdt with given address
-*/
-extern "C" void lgdt(uint32_t addr){
-	loadGDT(addr);
-}

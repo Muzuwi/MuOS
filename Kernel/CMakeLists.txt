@@ -71,6 +71,8 @@ add_library(Kernel
     Interrupt/asm/ExceptionEntrypoint.asm
     Interrupt/asm/IRQEntrypoint.asm
 
+    Memory/kmalloc.cpp
+
 )
 
 add_dependencies(Kernel

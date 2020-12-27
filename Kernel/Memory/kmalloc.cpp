@@ -1,11 +1,9 @@
 #include <LibGeneric/StdRequired.hpp>
 #include <LibGeneric/BitMap.hpp>
+#include <Arch/i386/IRQDisabler.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
-#include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
-#include <Arch/i386/IRQDisabler.hpp>
-#include <Kernel/Symbols.hpp>
 #include <string.h>
 
 //#define KMALLOC_DEBUG
@@ -13,6 +11,9 @@
 
 #define KMALLOC_SANITIZER
 #define KMALLOC_SANITIZER_BYTE 0x99
+
+//  Until the VMM is initialized, use a bootstrap region
+uint8_t s_bootstrap[1024] __attribute__((aligned(1024)));
 
 chunk_t m_mem_allocations[KMALLOC_ARR_COUNT] {
 
@@ -34,8 +35,8 @@ KMalloc& KMalloc::get() {
 void KMalloc::init() {
 	memset((void*)m_mem_allocations, 0, KMALLOC_ARR_COUNT*sizeof(chunk_t));
 
-	m_kmalloc_mem_range = mem_range_t((uintptr_t)&_ukernel_kmalloc_start,
-	                                  (uintptr_t)&_ukernel_kmalloc_end);
+	m_kmalloc_mem_range = mem_range_t((uint64_t)s_bootstrap,
+	                                  (uint64_t)(s_bootstrap+1024));
 }
 
 /*
@@ -135,8 +136,8 @@ void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
 		bool isAligned = true;
 		if(align != 1) {
 			uint32_t mem_offset = chunk*KMALLOC_CHUNK;
-			uint32_t* memory_begin = (uint32_t*)(m_kmalloc_mem_range.m_start + mem_offset);
-			uint32_t allocated_begin = (uint32_t)memory_begin+sizeof(allocation_t);
+			auto* memory_begin = (uint32_t*)(m_kmalloc_mem_range.m_start + mem_offset);
+			uint32_t allocated_begin = (uint64_t)memory_begin+sizeof(allocation_t);
 
 			isAligned = (uint32_t)allocated_begin % align == 0;
 		}
@@ -166,7 +167,7 @@ void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
 
 			*(allocation_t*)memory_begin = (allocation_t)size;
 
-			void* allocated_begin = (void*)((uint32_t)memory_begin+sizeof(allocation_t));
+			void* allocated_begin = (void*)((uint64_t)memory_begin+sizeof(allocation_t));
 
 #ifdef KMALLOC_DEBUG
 			kdebugf("[KMalloc] allocated %i bytes to %x\n", size, (uint32_t)allocated_begin);
@@ -260,13 +261,30 @@ uint64_t KMalloc::getTotalFrees() {
  *  A variety of allocator functions
  */
 
-
-void* operator new(size_t size) {
-	return KMalloc::get().kmalloc_alloc(size);
+static inline size_t wrap_common_alignments(size_t size) {
+	switch (size) {
+		case 8: return 8;
+		case 4: return 4;
+		case 2: return 2;
+		case 1: return 1;
+		default: return 1;
+	}
 }
 
-void* operator new[](size_t size) {
-	return KMalloc::get().kmalloc_alloc(size);
+[[nodiscard]] void* operator new(size_t size) {
+	return KMalloc::get().kmalloc_alloc(size, wrap_common_alignments(size));
+}
+
+[[nodiscard]] void* operator new[](size_t size) {
+	return KMalloc::get().kmalloc_alloc(size, wrap_common_alignments(size));
+}
+
+[[nodiscard]] void* operator new(size_t count, std::align_val_t al) {
+	return KMalloc::get().kmalloc_alloc(count, (size_t)al);
+}
+
+[[nodiscard]] void* operator new[](size_t count, std::align_val_t al) {
+	return KMalloc::get().kmalloc_alloc(count, (size_t)al);
 }
 
 void operator delete(void* pointer, size_t) {

@@ -12,8 +12,10 @@
 
 typedef uint32_t chunk_t; 
 
-void* operator new(size_t);
-void* operator new[](size_t);
+[[nodiscard]] void* operator new(size_t);
+[[nodiscard]] void* operator new[](size_t);
+[[nodiscard]] void* operator new (size_t count, std::align_val_t);
+[[nodiscard]] void* operator new[](size_t count, std::align_val_t);
 void operator delete(void*);
 void operator delete(void*, size_t);
 void operator delete[](void*, size_t);

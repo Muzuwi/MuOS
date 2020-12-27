@@ -6,8 +6,8 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 #  Default C/C++ flags
 set(MU_CFLAGS_DEFAULT "-g -Wall -Wextra -masm=intel")
-set(MU_CXXFLAGS_DEFAULT "${MU_CFLAGS_DEFAULT} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
-set(MU_LINKER_FLAGS -nostdlib -T ${CMAKE_SOURCE_DIR}/Kernel/Arch/i386/kernel_link.ld)
+set(MU_CXXFLAGS_DEFAULT "${MU_CFLAGS_DEFAULT} -fno-rtti -fno-exceptions -fno-threadsafe-statics -mno-red-zone")
+set(MU_LINKER_FLAGS -nostdlib -T ${CMAKE_SOURCE_DIR}/Kernel/Arch/i386/Linkscript_x64.ld -z max-page-size=0x1000 )
 
 #  Include dirs
 include_directories(.)
@@ -27,7 +27,7 @@ set(CMAKE_CXX_COMPILE_OBJECT
         )
 
 #  Use NASM for .asm and .nasm files
-set(CMAKE_ASM_NASM_OBJECT_FORMAT elf32)
+set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
 set(CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS "asm;nasm")
 enable_language(ASM_NASM)
 

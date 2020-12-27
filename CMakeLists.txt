@@ -15,11 +15,11 @@ include (Toolchain/CMakeLists.txt)
 #  TODO: Move this elsewhere?
 set(KERNEL_OBJECTS "$<TARGET_OBJECTS:CRTi>;Kernel/crtbegin.o;$<TARGET_FILE:Kernel>;$<TARGET_FILE:LibC>;$<TARGET_FILE:LibGeneric>;Kernel/crtend.o;$<TARGET_OBJECTS:CRTn>")
 add_custom_target( KernelExecutable
-    DEPENDS Kernel LibC
-    COMMAND ${CMAKE_C_COMPILER} -o uKernel.bin ${KERNEL_OBJECTS} ${MU_LINKER_FLAGS}
+    DEPENDS Entrypoint Kernel LibC
+    COMMAND ${CMAKE_C_COMPILER} -u _entrypoint_x64 -o uKernel.bin -Wl,--whole-archive $<TARGET_FILE:Entrypoint> -Wl,--no-whole-archive ${KERNEL_OBJECTS} ${MU_LINKER_FLAGS}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
     COMMAND ${CMAKE_COMMAND} -E copy uKernel.bin ${CMAKE_SOURCE_DIR}/Root/
-    )
+)
 
 #  Creating a bootable ISO
 find_program(GRUB_MKRESCUE grub-mkrescue)

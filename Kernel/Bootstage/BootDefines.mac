@@ -1,0 +1,51 @@
+%ifndef BOOT_MAC
+%define BOOT_MAC
+
+;  Region of what minimal size to search for in the multiboot mmap?
+;  = Stack + size of work buffer
+;  NOTE:  Later also adds the amount of pages needed for fully mapping the kernel ELF
+REQUIRED_PAGES equ 1 + 7
+REQUIRED_MEM equ REQUIRED_PAGES * 4096
+
+;  Offsets in the work buffer
+BUF_PML4 equ 0x0
+BUF_PDPT equ 0x1000
+BUF_PD   equ 0x2000
+BUF_PT1  equ 0x3000
+BUF_IDT  equ 0x4000
+BUF_GDT  equ 0x4100
+BUF_IDNT_PDPT equ 0x5000 ;  For identity mapping first 1GiB of physical
+BUF_IDNT_PD equ 0x6000 ;  For identity mapping first 1GiB of physical
+BUF_ELF  equ 0x7000 ;  Base address for pages necessary for mapping the ELF executable in memory
+                    ;  Order is PDPT, PD, PT, (optional) additional PTs for larger kernel ELFs
+
+BUF_ELF_PDPT equ 0x0
+BUF_ELF_PD   equ 0x1000
+BUF_ELF_PT_BASE equ 0x2000
+
+;  Offsets for multiboot boot info
+MMAP_SIZE equ 0
+MMAP_BASE equ 4
+MMAP_LEN  equ 12
+MMAP_TYPE equ 20
+
+;  Flags for paging entries
+PAGE_PRESENT equ (1<<0)
+PAGE_WRITE equ (1<<1)
+PAGE_BIG  equ (1<<7)
+
+;  CR4 flags
+CR4_PAE equ (1<<5)
+CR4_PGE equ (1<<7)
+CR4_PSE equ (1<<4)
+
+;  EFER
+EFER_LM equ (1<<8)
+EFER_NXE equ (1<<11)
+
+;  CR0
+CR0_PE equ (1<<0)
+CR0_PG equ (1<<31)
+
+%endif
+

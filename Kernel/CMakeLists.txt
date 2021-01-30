@@ -3,33 +3,18 @@ include(../Toolchain/CMakeLists.txt)
 #
 #  CRT objects, required by the compiler
 #
-
-add_library(CRTi OBJECT
-    Arch/i386/crti.S
-)
-
-add_library(CRTn OBJECT
-    Arch/i386/crtn.S
-)
-
-add_custom_command(
-    OUTPUT crtbegin.o
-    COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtbegin.o` crtbegin.o
-)
-
-add_custom_command(
-    OUTPUT crtend.o
-    COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtend.o` crtend.o
-)
-
-add_library(CRTbegin OBJECT
-    crtbegin.o
-)
-
-add_library(CRTend OBJECT
-    crtend.o
-)
-
+add_custom_target(CRTi
+                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/i386/crti.S
+                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o)
+add_custom_target(CRTn
+                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/i386/crtn.S
+                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o)
+add_custom_target(CRTbegin
+                  COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtbegin.o` ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o
+                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o)
+add_custom_target(CRTend
+                  COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtend.o` ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o
+                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o)
 
 #
 #   Kernel entrypoint
@@ -38,64 +23,71 @@ add_library(CRTend OBJECT
 #   After setting up long mode, it jumps to _entrypoint_x64, while passing along the multiboot
 #   info header. The callee is then responsible for setting up its' own stack and G/IDT
 #
-add_library(Entrypoint
+add_library(Entrypoint OBJECT
     Bootstage/Entrypoint64.asm
-    Bootstage/Boot32.asm
-)
+    Bootstage/Boot32.asm)
 
 target_compile_options(Entrypoint
     PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large>
     PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>
-    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64 -I ${CMAKE_SOURCE_DIRECTORY}\\>
-)
+    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64 -I ${CMAKE_SOURCE_DIRECTORY}\\>)
 
 
 #
-#   Kernel data
+#   Kernel ELF
 #
-add_library(Kernel
-    Kernel/kernel.cpp
-    Kernel/stackchk.cpp
-    Debug/kdebugf.cpp
-    Debug/kpanic.cpp
-    Debug/kassert.cpp
-    Debug/TTY.cpp
-    Arch/i386/PortIO.cpp
-    Arch/i386/VGA.cpp
+set(CMAKE_CXX_LINK_EXECUTABLE
+    "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> ${MU_LINKER_FLAGS} <LINK_FLAGS> ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o <OBJECTS> <LINK_LIBRARIES> ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o -o <TARGET>")
 
-    Arch/i386/GDT.cpp
-    Arch/i386/asm/LGDT.asm
+add_executable(KernelELF
+               Kernel/kernel.cpp
+               Kernel/stackchk.cpp
+               Debug/kdebugf.cpp
+               Debug/kpanic.cpp
+               Debug/kassert.cpp
+               Debug/TTY.cpp
+               Arch/i386/PortIO.cpp
+               Arch/i386/VGA.cpp
 
-    Arch/i386/IDT.cpp
-    Interrupt/asm/ExceptionEntrypoint.asm
-    Interrupt/asm/IRQEntrypoint.asm
+               Arch/i386/GDT.cpp
+               Arch/i386/asm/LGDT.asm
 
-    Memory/kmalloc.cpp
+               Arch/i386/IDT.cpp
+               Interrupt/asm/ExceptionEntrypoint.asm
+               Interrupt/asm/IRQEntrypoint.asm
 
-)
+               Memory/kmalloc.cpp
 
-add_dependencies(Kernel
-    Entrypoint
-    CRTi
-    CRTn
-    CRTbegin
-    CRTend
-    LibC
-    LibGeneric
-)
+               Memory/PMM.cpp
 
-target_compile_options(Kernel
-    PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large>
-    PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
-    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>
-    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>
-)
+               Memory/KHeap.cpp)
 
-target_compile_definitions(Kernel
-    PRIVATE __is_kernel_build__
-)
+target_compile_options(KernelELF
+                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large>
+                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
+                       PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>
+                       PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>)
 
+target_compile_definitions(KernelELF
+                           PRIVATE __is_kernel_build__)
+
+add_dependencies(KernelELF
+                 CRTi
+                 CRTn
+                 CRTbegin
+                 CRTend)
+
+target_link_libraries(KernelELF
+                      Entrypoint
+                      LibGeneric
+                      LibC)
+
+add_custom_command(TARGET KernelELF
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:KernelELF> ${CMAKE_SOURCE_DIR}/Root/uKernel.bin
+                   COMMENT "Copying kernel executable to Root directory ${CMAKE_SOURCE_DIR}/Root ")
 
 #add_library(Kernel
 #        Arch/i386/asm/LGDT.asm

@@ -11,16 +11,6 @@ add_subdirectory(Library/LibGeneric/)
 #  Toolchain configuration
 include (Toolchain/CMakeLists.txt)
 
-#  Linking the kernel executable
-#  TODO: Move this elsewhere?
-set(KERNEL_OBJECTS "$<TARGET_OBJECTS:CRTi>;Kernel/crtbegin.o;$<TARGET_FILE:Kernel>;$<TARGET_FILE:LibC>;$<TARGET_FILE:LibGeneric>;Kernel/crtend.o;$<TARGET_OBJECTS:CRTn>")
-add_custom_target( KernelExecutable
-    DEPENDS Entrypoint Kernel LibC
-    COMMAND ${CMAKE_C_COMPILER} -u _entrypoint_x64 -o uKernel.bin -Wl,--whole-archive $<TARGET_FILE:Entrypoint> -Wl,--no-whole-archive ${KERNEL_OBJECTS} ${MU_LINKER_FLAGS}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
-    COMMAND ${CMAKE_COMMAND} -E copy uKernel.bin ${CMAKE_SOURCE_DIR}/Root/
-)
-
 #  Creating a bootable ISO
 find_program(GRUB_MKRESCUE grub-mkrescue)
 if(NOT GRUB_MKRESCUE)
@@ -31,7 +21,7 @@ endif()
 
 if(GRUB_MKRESCUE)
     add_custom_target( BootableISO
-        DEPENDS KernelExecutable
+        DEPENDS KernelELF
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/Root
         COMMAND ${CMAKE_COMMAND} -E make_directory isodir/boot/
         COMMAND ${CMAKE_COMMAND} -E copy uKernel.bin isodir/boot/

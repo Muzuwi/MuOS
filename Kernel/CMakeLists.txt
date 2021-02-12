@@ -60,6 +60,11 @@ add_executable(KernelELF
                Memory/kmalloc.cpp
 
                Memory/PMM.cpp
+               Memory/VMM.cpp
+               Arch/i386/Paging/PTE.cpp
+               Arch/i386/Paging/PDE.cpp
+               Arch/i386/Paging/PDPTE.cpp
+               Arch/i386/Paging/PML4E.cpp
 
                Memory/KHeap.cpp)
 

@@ -10,7 +10,8 @@
 using gen::StaticVector;
 using Units::MiB;
 
-static StaticVector<PRegion*, 32> s_available_regions;
+static StaticVector<PRegion*, 32> s_available_regions {};
+static StaticVector<PRegion*, 32> s_defered_regions {};
 
 static void pmm_handle_new_region(PhysAddr base_address, size_t region_size) {
 //	kdebugf("Creating region for %x%x - size %i\n", (uintptr_t)base_address.get() >> 32u, (uintptr_t)base_address.get() & 0xFFFFFFFFu, region_size);
@@ -18,7 +19,11 @@ static void pmm_handle_new_region(PhysAddr base_address, size_t region_size) {
 	//  FIXME?: Evil C-style alloc because heap is not initialized yet
 	auto* address = KMalloc::get().kmalloc_alloc(sizeof(PRegion));
 	auto* region = new (address) PRegion (base_address, region_size);
-	s_available_regions.push_back(region);
+
+	if(region->allocator().deferred_initialization())
+		s_defered_regions.push_back(region);
+	else
+		s_available_regions.push_back(region);
 }
 
 void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
@@ -94,15 +99,6 @@ void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 	kdebugf("[PMM] Kernel-used memory: %i KiB\n", (kernel_end - kernel_start) / 0x1000);
 	kdebugf("[PMM] Total usable memory: %i MiB\n", mem_mib);
 	kdebugf("[PMM] Reserved memory: %i bytes\n", reserved_amount);
-
-	kdebugf("[PMM] Regions initialized:\n");
-	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
-		auto reg = s_available_regions[i];
-		auto ptr = (uint64_t) reg;
-		auto start = (uint64_t)reg->base().get();
-		kdebugf("  - PRegion(%x%x): start %x%x, size %i\n", ptr >> 32u, ptr & 0xffffffffu, start >> 32u,
-		        start & 0xffffffffu, reg->size());
-	}
 }
 
 [[nodiscard]] KOptional<PAllocation> PMM::allocate(size_t count_order) {
@@ -138,4 +134,21 @@ void PMM::free_allocation(const PAllocation& allocation) {
 	}
 
 	kerrorf("[PMM] Deallocation failure\n");
+}
+
+void PMM::initialize_deferred_regions() {
+	while (!s_defered_regions.empty()) {
+		auto* region = s_defered_regions.pop_back();
+		region->allocator().initialize();
+		s_available_regions.push_back(region);
+	}
+
+	kdebugf("[PMM] Regions initialized:\n");
+	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
+		auto reg = s_available_regions[i];
+		auto ptr = (uint64_t) reg;
+		auto start = (uint64_t)reg->base().get();
+		kdebugf("  - PRegion(%x%x): start %x%x, size %i\n", ptr >> 32u, ptr & 0xffffffffu, start >> 32u,
+		        start & 0xffffffffu, reg->size());
+	}
 }

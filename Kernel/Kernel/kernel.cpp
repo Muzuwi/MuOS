@@ -1,7 +1,7 @@
-#include <stdint.h>
 #include <Kernel/Debug/TTY.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Memory/PMM.hpp>
+#include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Multiboot/MultibootInfo.hpp>
 #include <Arch/i386/GDT.hpp>
 #include <Arch/i386/IDT.hpp>
@@ -16,7 +16,11 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 	IDT::init();
 	GDT::init();
 	PMM::handle_multiboot_memmap(multiboot_info);
+	VMM::init();
+	PMM::initialize_deferred_regions();
 
+	while (true)
+		asm volatile("cli\nhlt\n");
 //
 //	VMM::init();
 //	CPU::initialize_features();

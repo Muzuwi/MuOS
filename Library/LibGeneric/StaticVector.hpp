@@ -27,7 +27,7 @@ namespace gen {
 
 		T _remove_back() {
 			assert(!empty());
-			return _get(m_pointer--);
+			return _get(--m_pointer);
 		}
 	public:
 		StaticVector() noexcept

@@ -1,5 +1,7 @@
 #ifndef KERNEL_SYMBOLS_H
 #define KERNEL_SYMBOLS_H
+#include <stdint.h>
+#include <stddef.h>
 
 /*
  *  This file contains extern definitions for linkage symbols of the kernel executable
@@ -22,5 +24,6 @@ extern uint64_t _ukernel_kmalloc_start;
 extern uint64_t _ukernel_kmalloc_end;
 
 extern uint64_t _ukernel_preloader_physical;
+extern uint64_t _ukernel_physical_start;
 
 #endif

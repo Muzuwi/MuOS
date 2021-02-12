@@ -66,6 +66,8 @@ add_executable(KernelELF
                Arch/i386/Paging/PDPTE.cpp
                Arch/i386/Paging/PML4E.cpp
 
+               Arch/i386/CPUID.cpp
+
                Memory/KHeap.cpp)
 
 target_compile_options(KernelELF

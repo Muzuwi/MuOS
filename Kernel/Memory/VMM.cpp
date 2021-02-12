@@ -1,4 +1,5 @@
 ﻿#include <string.h>
+#include <Arch/i386/CPUID.hpp>
 #include <Arch/i386/Paging.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
@@ -8,6 +9,7 @@
 #include <Kernel/Symbols.hpp>
 
 using Units::MiB;
+using Units::GiB;
 
 static PhysPtr<PML4> s_kernel_pml4 {nullptr};
 
@@ -28,7 +30,6 @@ void VMM::init() {
 	kdebugf("[VMM] Creating physical identity map\n");
 	map_physical_identity();
 
-	kdebugf("[VMM] Reloading cr3\n");
 	asm volatile(
 	"mov %%rax, %0\n"
 	"mov cr3, %%rax\n"
@@ -36,7 +37,6 @@ void VMM::init() {
 	:""(s_kernel_pml4.get())
 	:"rax"
 	);
-	kdebugf("[VMM] Init complete\n");
 }
 
 #define SPLITPTR(a) (uintptr_t)a>>32u, (uintptr_t)a&0xffffffffu
@@ -70,23 +70,38 @@ void VMM::map_physical_identity() {
 	auto identity_start = reinterpret_cast<uint8_t*>(&_ukernel_identity_start);
 	auto physical = PhysAddr{nullptr};
 
-	//  FIXME: Assuming support for 2MiB pages
-	//  FIXME: Use hugepages when available
-	for(auto addr = identity_start; addr < identity_start + 0x8000000000; addr += 2 * MiB) {
-		auto& pml4e = (*s_kernel_pml4)[addr];
-		auto& pdpte = ensure_pdpte(addr);
-		auto& pde = ensure_pde(addr);
+	if(CPUID::has_huge_pages()) {
+		for(auto addr = identity_start; addr < identity_start + 512*GiB; addr += 1*GiB) {
+			auto& pml4e = (*s_kernel_pml4)[addr];
+			auto& pdpte = ensure_pdpte(addr);
 
-		pml4e.set(FlagPML4E::Present, true);
-		pml4e.set(FlagPML4E::User, false);
-		pdpte.set(FlagPDPTE::Present, true);
-		pdpte.set(FlagPDPTE::User, false);
-		pde.set(FlagPDE::Present, true);
-		pde.set(FlagPDE::User, false);
-		pde.set(FlagPDE::LargePage, true);
-		pde.set_table(physical.as<PT>());
+			pml4e.set(FlagPML4E::Present, true);
+			pml4e.set(FlagPML4E::User, false);
+			pdpte.set(FlagPDPTE::Present, true);
+			pdpte.set(FlagPDPTE::User, false);
+			pdpte.set(FlagPDPTE::HugePage, true);
+			pdpte.set_directory(physical.as<PD>());
 
-		physical += 2*MiB;
+			physical += 1*GiB;
+		}
+	} else {
+		//  FIXME: Assuming support for 2MiB pages
+		for(auto addr = identity_start; addr < identity_start + 0x8000000000; addr += 2 * MiB) {
+			auto& pml4e = (*s_kernel_pml4)[addr];
+			auto& pdpte = ensure_pdpte(addr);
+			auto& pde = ensure_pde(addr);
+
+			pml4e.set(FlagPML4E::Present, true);
+			pml4e.set(FlagPML4E::User, false);
+			pdpte.set(FlagPDPTE::Present, true);
+			pdpte.set(FlagPDPTE::User, false);
+			pde.set(FlagPDE::Present, true);
+			pde.set(FlagPDE::User, false);
+			pde.set(FlagPDE::LargePage, true);
+			pde.set_table(physical.as<PT>());
+
+			physical += 2*MiB;
+		}
 	}
 }
 

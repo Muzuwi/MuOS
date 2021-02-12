@@ -1,15 +1,16 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include <LibGeneric/List.hpp>
-#include <LibGeneric/SharedPtr.hpp>
+#include <Kernel/KOptional.hpp>
+#include <Kernel/Memory/PAllocation.hpp>
+#include <Kernel/Memory/Ptr.hpp>
 
 class PageToken;
 class PRegion;
+class MultibootInfo;
 
 namespace PMM {
-	gen::SharedPtr<PageToken> allocate_page_user();
-	gen::SharedPtr<PageToken> allocate_page_kernel();
-	void handle_multiboot_memmap(void* mmap);
-	void free_page_from_token(PageToken*);
+	[[nodiscard]] KOptional<PAllocation> allocate(size_t count_order = 0);
+	void free_allocation(const PAllocation& allocation);
+	void handle_multiboot_memmap(PhysPtr<MultibootInfo>);
 };

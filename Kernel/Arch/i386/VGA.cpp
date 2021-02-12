@@ -23,9 +23,9 @@ inline static void vga_move_buffer(size_t lines){
 	for(size_t i = 0; i < VGA::VGA_HEIGHT; i++){
 		for(size_t j = 0; j < VGA::VGA_WIDTH; j++){
 			if(i <  VGA::VGA_HEIGHT - lines){
-				(*vga_buffer_base_address)[i*VGA::VGA_WIDTH + j] = (*vga_buffer_base_address)[(i+lines)*VGA::VGA_WIDTH + j];
+				vga_buffer_base_address[i*VGA::VGA_WIDTH + j] = vga_buffer_base_address[(i+lines)*VGA::VGA_WIDTH + j];
 			} else {
-				(*vga_buffer_base_address)[i*VGA::VGA_WIDTH + j] = 0;
+				vga_buffer_base_address[i*VGA::VGA_WIDTH + j] = 0;
 			}
 		}
 	}
@@ -47,7 +47,7 @@ void VGA::putch(char ch){
 		newline();
 		return;
 	}
-	(*vga_buffer_base_address)[vga_console_position_y*VGA::VGA_WIDTH + vga_console_position_x] = (vga_color << 8) | (ch & 0xFF);
+	vga_buffer_base_address[vga_console_position_y*VGA::VGA_WIDTH + vga_console_position_x] = (vga_color << 8) | (ch & 0xFF);
 	if(++vga_console_position_x == VGA::VGA_WIDTH) {
 		newline();
 	}
@@ -56,7 +56,7 @@ void VGA::putch(char ch){
 //  Clears the VGA Buffer (all black)
 void VGA::clear(){
 	for(size_t y = 0; y < VGA_WIDTH*VGA_HEIGHT; y++){
-		(*vga_buffer_base_address)[y] = 0;
+		vga_buffer_base_address[y] = 0;
 	}
 }
 

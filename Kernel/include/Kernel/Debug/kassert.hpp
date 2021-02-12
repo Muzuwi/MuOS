@@ -8,13 +8,15 @@ void __kassert_internal(const char*, int, const char*, bool);
 
 #define ASSERT_IRQ_DISABLED() \
 	{ \
-        uint32_t flags;                         \
+        uint64_t flags;                         \
 		asm volatile("pushf\n" "pop %0\n"       \
 		: "=rm"(flags) :: "memory");            \
 		if(flags & 0x0200u) __kassert_internal(__FILE__, __LINE__, \
 							"Interrupts enabled, but expected them to be disabled!\n", \
 							false); \
 	}
+
+#define ASSERT_NONCONCURRENT() ASSERT_IRQ_DISABLED()
 
 #define ASSERT_NOT_REACHED() \
 	__kassert_internal(__FILE__, __LINE__, "Reached ASSERT_NOT_REACHED();", false)

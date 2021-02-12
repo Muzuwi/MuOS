@@ -1,27 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <Kernel/SystemTypes.hpp>
-
-#define MiB 0x100000
-
-//  This MUST match the size of the kmalloc section provided in the kernel
-//  linker script, else weirdness will occur
-#define KMALLOC_POOL_SIZE  (4 * MiB)
-#define KMALLOC_CHUNK 	2
-#define KMALLOC_ARR_COUNT ((KMALLOC_POOL_SIZE / KMALLOC_CHUNK) / (sizeof(chunk_t)*8))
-
-typedef uint32_t chunk_t; 
-
-[[nodiscard]] void* operator new(size_t);
-[[nodiscard]] void* operator new[](size_t);
-[[nodiscard]] void* operator new (size_t count, std::align_val_t);
-[[nodiscard]] void* operator new[](size_t count, std::align_val_t);
-void operator delete(void*);
-void operator delete(void*, size_t);
-void operator delete[](void*, size_t);
-void operator delete[](void*);
-void operator delete(void* pointer, size_t, std::align_val_t);
-void operator delete[](void* pointer, size_t, std::align_val_t);
+#include <Kernel/Memory/Units.hpp>
 
 class KMalloc {
 	KMalloc();
@@ -37,11 +17,24 @@ public:
 	static KMalloc& get();
 	
 	void init();
-	uint64_t getPoolSize();
 	void* kmalloc_alloc(size_t,size_t=1);
 	void kmalloc_free(void*);
-	uint64_t getCurrentAllocations();
-	uint64_t getTotalAllocations();
-	uint64_t getTotalFrees();
-	void logAllocationStats();
+
+	using Chunk = uint32_t;
+
+	/*
+	 *  This must match the size of the boostrap buffer KMalloc is initialized with
+	 */
+	static constexpr uint64_t pool_size() {
+		return (1 * Units::MiB);
+	}
+
+	static constexpr uint64_t chunk_size() {
+		return 2;
+	}
+
+	static constexpr uint64_t array_count() {
+		return ((pool_size() / chunk_size()) / (sizeof(Chunk)*8));
+	}
+
 };

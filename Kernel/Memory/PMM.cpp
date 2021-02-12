@@ -1,86 +1,79 @@
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
-#include <Arch/i386/Multiboot.hpp>
-#include <Kernel/Symbols.hpp>
+#include <Kernel/Memory/KHeap.hpp>
+#include <Kernel/Memory/kmalloc.hpp>
+#include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/PRegion.hpp>
-#include <LibGeneric/List.hpp>
-#include <Kernel/Memory/PageToken.hpp>
-#include <LibGeneric/SharedPtr.hpp>
-#include <Kernel/Process/Process.hpp>
+#include <Kernel/Multiboot/MultibootInfo.hpp>
+#include <Kernel/Symbols.hpp>
+#include <LibGeneric/StaticVector.hpp>
 
-//  Amount of physical memory to reserve for kernel data
-static const unsigned kernel_reserved = 16 * MiB;
+using gen::StaticVector;
+using Units::MiB;
 
-//  Memory regions dedicated to the kernel (1MiB - 16MiB physical)
-static gen::List<PRegion*> s_kernel_area;
+static StaticVector<PRegion*, 32> s_available_regions;
 
-//  Memory region dedicated to userland (16MiB+)
-static gen::List<PRegion*> s_user_area;
+static void pmm_handle_new_region(PhysAddr base_address, size_t region_size) {
+//	kdebugf("Creating region for %x%x - size %i\n", (uintptr_t)base_address.get() >> 32u, (uintptr_t)base_address.get() & 0xFFFFFFFFu, region_size);
 
-void PMM::handle_multiboot_memmap(void* multiboot_mmap) {
-	auto mmap_len = ((uintptr_t*)multiboot_mmap)[0];
-	auto mmap_addr = (uint32_t)TO_VIRT(((uintptr_t*)multiboot_mmap)[1]);
+	//  FIXME?: Evil C-style alloc because heap is not initialized yet
+	auto* address = KMalloc::get().kmalloc_alloc(sizeof(PRegion));
+	auto* region = new (address) PRegion (base_address, region_size);
+	s_available_regions.push_back(region);
+}
 
-#ifdef LEAKY_LOG
-	kdebugf("[PMM] mmap size: %x\n", mmap_len);
-	kdebugf("[PMM] mmap addr: %x\n", mmap_addr);
-#endif
-
+void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 	kdebugf("[PMM] Multiboot memory map:\n");
+
+	auto mmap_addr = multiboot_info->mmap();
+	auto mmap_end = multiboot_info->mmap_end();
 
 	//  Total system memory
 	uint64_t memory_amount = 0, reserved_amount = 0;
 
-	uint32_t pointer = mmap_addr;
-	while(pointer < mmap_addr + mmap_len){
-		uint32_t size  = *((uint32_t*)pointer);
-		uint64_t start = *((uint64_t*)(pointer + 4));
-		uint64_t range = *((uint64_t*)(pointer + 12));
-		uint64_t end   = start + range;
-		auto type = *((uint32_t*)(pointer + 20));
-		kdebugf("[PMM] %x%x", (uint32_t)((start >> 32) & (0xFFFFFFFF)),(uint32_t)(start & 0xFFFFFFFF));
-		kdebugf(" - %x%x: ", (uint32_t)((end >> 32) & (0xFFFFFFFF)),(uint32_t)(end & 0xFFFFFFFF));
+	auto pointer = mmap_addr.get_mapped();
+	while (pointer < mmap_end.get_mapped()) {
+		auto start = pointer->start();
+		auto range = pointer->range();
+		auto end = start + range;
 
-		switch((mmap_memory_type_t)type){
-			case USABLE:
-				kdebugf("usable\n");
+		kdebugf("[PMM] %x%x - %x%x: ", start >> 32u, start & 0xFFFFFFFFu, end >> 32u, end & 0xFFFFFFFFu);
+
+		switch (pointer->type()) {
+			case MultibootMMap::RegionType::USABLE: {
+				auto pages = range / 0x1000;
+				auto required_bitmap_pages = (pages / (0x1000 * 8));
+				kdebugf("usable, pages: %i, buf: %i\n", pages, required_bitmap_pages);
 				memory_amount += range;
 
-				//  FIXME:
-				if(end < 1 * MiB)
+				//  Avoid low RAM, to not trample over the bootstrap memory
+				if (end < 1 * MiB)
 					break;
-				if(end > 0xffffffff) {
-					kdebugf("unaddressable, ignoring\n");
-					break;
-				}
 
-				if(start < kernel_reserved) {
-					//  Split the region, if on the boundary
-					if(end > kernel_reserved) {
-						size_t size_kernel = kernel_reserved - start;
-						size_t size_user   = end - kernel_reserved;
+				auto kernel_phys_start = (uint64_t)&_ukernel_preloader_physical;
+				auto kernel_phys_end   = (uint64_t)&_ukernel_elf_end-(uint64_t)&_ukernel_virtual_offset;
 
-						s_kernel_area.push_back(new PRegion(start, size_kernel));
-						s_user_area.push_back(new PRegion(kernel_reserved, size_user));
-					} else {
-						s_kernel_area.push_back(new PRegion(start, range));
-					}
+				//  Split regions overlapping with the kernel executable
+				if(start < kernel_phys_end) {
+			        if(end > kernel_phys_end) {
+			        	if(start < kernel_phys_start)
+					        pmm_handle_new_region(PhysAddr{(void*)start}, kernel_phys_start - start);
+				        pmm_handle_new_region(PhysAddr{(void*)kernel_phys_end}, end - kernel_phys_end);
+			        }
 				} else {
-					s_user_area.push_back(new PRegion(start, range));
+					pmm_handle_new_region(PhysAddr{(void*)start}, range);
 				}
 
 				break;
-
-			case HIBERN:
+			}
+			case MultibootMMap::RegionType::HIBERN:
 				kdebugf("to be preserved\n");
 				break;
 
-			case ACPI:
+			case MultibootMMap::RegionType::ACPI:
 				kdebugf("acpi\n");
 				break;
 
-			case BAD:
+			case MultibootMMap::RegionType::BAD:
 				kdebugf("defective\n");
 				break;
 
@@ -90,89 +83,59 @@ void PMM::handle_multiboot_memmap(void* multiboot_mmap) {
 				break;
 		}
 
-		pointer += size + 4;
+		pointer = pointer->next_entry();
 	}
 
-    uint32_t kernel_start = (uint32_t)(&_ukernel_start),
-             kernel_end   = (uint32_t)(&_ukernel_end);
+	auto kernel_start = (uint64_t) (&_ukernel_elf_start),
+			kernel_end = (uint64_t) (&_ukernel_elf_end);
 
 	uint32_t mem_mib = memory_amount / 0x100000;
 
-	kdebugf("[PMM] Kernel-used memory: %i MiB\n", (kernel_end - kernel_start) / 0x100000);
+	kdebugf("[PMM] Kernel-used memory: %i KiB\n", (kernel_end - kernel_start) / 0x1000);
 	kdebugf("[PMM] Total usable memory: %i MiB\n", mem_mib);
 	kdebugf("[PMM] Reserved memory: %i bytes\n", reserved_amount);
-	kdebugf("[PMM] Kernel-reserved regions: %i\n", s_kernel_area.size());
-#ifndef LEAKY_LOG
-	for(auto& reg : s_kernel_area) {
-		kdebugf("  - PRegion(%x): start %x, size %i\n", reg, reg->addr(), reg->size());
-	}
 
-	kdebugf("[PMM] User-reserved regions: %i\n", s_user_area.size());
-	for(auto& reg : s_user_area) {
-		kdebugf("  - PRegion(%x): start %x, size %i\n", reg, reg->addr(), reg->size());
+	kdebugf("[PMM] Regions initialized:\n");
+	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
+		auto reg = s_available_regions[i];
+		auto ptr = (uint64_t) reg;
+		auto start = (uint64_t)reg->base().get();
+		kdebugf("  - PRegion(%x%x): start %x%x, size %i\n", ptr >> 32u, ptr & 0xffffffffu, start >> 32u,
+		        start & 0xffffffffu, reg->size());
 	}
-#endif
 }
 
+[[nodiscard]] KOptional<PAllocation> PMM::allocate(size_t count_order) {
+	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
+		auto& region = s_available_regions[i];
+		assert(region);
 
-gen::SharedPtr<PageToken> _allocate_page_internal(gen::List<PRegion*>& area) {
-	for(auto& range : area) {
-		void* allocation = range->alloc_page();
-		if(allocation) {
-			auto ptr = gen::SharedPtr(new PageToken(allocation));
-			Process::current()->make_page_owned(ptr);
-			return ptr;
+		KOptional<PhysAddr> alloc;
+		auto ret = region->allocator().allocate(count_order);
+		if(ret.has_value()) {
+			auto page = ret.unwrap();
+			auto allocation = PAllocation(page, count_order);
+
+			return KOptional<PAllocation>{allocation};
 		}
 	}
-	return gen::SharedPtr<PageToken>{nullptr};
+
+	kerrorf("[PMM] Allocation failure for order of page_count=%i\n", (1u<<count_order));
+	return KOptional<PAllocation>{};
 }
 
-gen::SharedPtr<PageToken> PMM::allocate_page_user() {
-	ASSERT_IRQ_DISABLED();
+void PMM::free_allocation(const PAllocation& allocation) {
+	kdebugf("[PMM] Deallocate PAlloc base=%x%x, order=%i\n", (uint64_t)allocation.base().get() >> 32u, (uint64_t)allocation.base().get() & 0xffffffffu, allocation.order());
 
-	auto token = _allocate_page_internal(s_user_area);
-	if(!token) {
-		kerrorf("[PMM] Could not find suitable region for allocating user page!");
-		kpanic();
-	}
+	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
+		auto& region = s_available_regions[i];
+		assert(region);
 
-	return token;
-}
-
-gen::SharedPtr<PageToken> PMM::allocate_page_kernel() {
-	ASSERT_IRQ_DISABLED();
-
-	auto token = _allocate_page_internal(s_kernel_area);
-	if(!token) {
-		kerrorf("[PMM] Could not find suitable region for allocating kernel page!");
-		kpanic();
-	}
-
-	return token;
-}
-
-void PMM::free_page_from_token(PageToken* token) {
-	ASSERT_IRQ_DISABLED();
-
-	for(auto& range : s_user_area) {
-		if(range->has_address(token->address())) {
-			range->free_page(token->address());
-#ifdef PMM_LOG_TOKEN_FREES
-			kdebugf("[PMM] Freed %x from token! [user]\n", token->address());
-#endif
+		if(region->contains(allocation.base()) && region->contains(allocation.end())) {
+			region->allocator().free(allocation.base(), allocation.order());
 			return;
 		}
 	}
 
-	for(auto& range : s_kernel_area) {
-		if(range->has_address(token->address())) {
-			range->free_page(token->address());
-#ifdef PMM_LOG_TOKEN_FREES
-			kdebugf("[PMM] Freed %x from token! [kernel]\n", token->address());
-#endif
-			return;
-		}
-	}
-
-	kpanic();
+	kerrorf("[PMM] Deallocation failure\n");
 }

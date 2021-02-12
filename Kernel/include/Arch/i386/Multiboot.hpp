@@ -20,8 +20,4 @@ enum multiboot_flag_t {
 };
 
 enum mmap_memory_type_t {
-	USABLE = 1,
-	ACPI   = 3,
-	HIBERN = 4,
-	BAD    = 5, 
 };

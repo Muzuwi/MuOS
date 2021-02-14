@@ -1,5 +1,6 @@
 #include <Kernel/Debug/TTY.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
+#include <Kernel/Memory/KHeap.hpp>
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Multiboot/MultibootInfo.hpp>
@@ -18,6 +19,8 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 	PMM::handle_multiboot_memmap(multiboot_info);
 	VMM::init();
 	PMM::initialize_deferred_regions();
+
+	KHeap::init();
 
 	while (true)
 		asm volatile("cli\nhlt\n");

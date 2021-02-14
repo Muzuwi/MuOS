@@ -16,7 +16,7 @@ public:
 	}
 
 	PhysAddr end() const {
-		return m_allocation_base + m_allocation_order;
+		return m_allocation_base + (1u<<m_allocation_order)*0x1000;
 	}
 
 	PhysAddr last() const {

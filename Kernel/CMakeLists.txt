@@ -68,7 +68,8 @@ add_executable(KernelELF
 
                Arch/i386/CPUID.cpp
 
-               Memory/KHeap.cpp)
+               Memory/KHeap.cpp
+               Memory/Allocators/SlabAllocator.cpp)
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large>

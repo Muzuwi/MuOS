@@ -6,6 +6,7 @@
 #include <Kernel/Multiboot/MultibootInfo.hpp>
 #include <Kernel/Symbols.hpp>
 #include <LibGeneric/StaticVector.hpp>
+#include <LibGeneric/Allocator.hpp>
 
 using gen::StaticVector;
 using Units::MiB;

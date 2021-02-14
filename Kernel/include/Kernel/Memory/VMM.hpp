@@ -21,6 +21,7 @@ class VMM final {
 	static void map_kernel_executable();
 	static void map_physical_identity();
 public:
+	static void map_pallocation(PAllocation, void*);
 //	static PageDirectory* get_directory();
 //	static VMM& get();
 //	static void init();

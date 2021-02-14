@@ -37,4 +37,24 @@ public:
 		return ((pool_size() / chunk_size()) / (sizeof(Chunk)*8));
 	}
 
+	template<class T>
+	struct BootstrapAllocator {
+		using pointer = T*;
+		using size_type = size_t;
+		using const_pointer = const T*;
+
+		static pointer allocate(size_type n) {
+			auto* ptr = KMalloc::get().kmalloc_alloc(sizeof(T) * n);
+			return reinterpret_cast<pointer>(ptr);
+		}
+
+		static void deallocate(pointer p, size_type) {
+			KMalloc::get().kmalloc_free(p);
+		}
+
+		template<class Type>
+		struct rebind {
+			using other = BootstrapAllocator<Type>;
+		};
+	};
 };

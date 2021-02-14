@@ -150,6 +150,27 @@ PTE& VMM::ensure_pte(void* addr) {
 	return (*pde.table())[addr];
 }
 
+/*
+ *  Maps the given PAllocation starting at virtual address vaddr
+ */
+void VMM::map_pallocation(PAllocation allocation, void* vaddr) {
+	auto physical = allocation.base();
+	while(physical < allocation.end()) {
+		auto& pml4e = (*s_kernel_pml4)[vaddr];
+		auto& pdpte = ensure_pdpte(vaddr);
+		auto& pde = ensure_pde(vaddr);
+		auto& pte = ensure_pte(vaddr);
+
+		pml4e.set(FlagPML4E::Present, true);
+		pdpte.set(FlagPDPTE::Present, true);
+		pde.set(FlagPDE::Present, true);
+		pte.set(FlagPTE::Present, true);
+		pte.set_page(physical);
+
+		physical += 0x1000;
+	}
+}
+
 
 //
 //uint32_t s_kernel_directory_table[1024] __attribute__((aligned(4096)));

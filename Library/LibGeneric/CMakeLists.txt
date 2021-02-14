@@ -1,9 +1,9 @@
 include(../../Toolchain/CMakeLists.txt)
 
 add_library(
-        LibGeneric
-        ELFParser.cpp
-)
+    LibGeneric
+    ELFParser.cpp
+    Allocator.hpp)
 
 target_compile_options(LibGeneric
         PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -fpermissive -D__is_kernel_build__ -mcmodel=large>)

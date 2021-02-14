@@ -167,8 +167,8 @@ private:
 
 	uint64_t m_entry;
 	ObjectType m_type;
-	gen::vector<SectHeaderType> m_sections;
-	gen::vector<ProgHeaderType> m_prog_headers;
+//	gen::vector<SectHeaderType> m_sections;
+//	gen::vector<ProgHeaderType> m_prog_headers;
 
 	void parse_sect_headers();
 	void parse_prog_headers();
@@ -181,8 +181,8 @@ public:
 	static ELFParser* from_image(void* elf, size_t);
 
 	gen::String string_lookup(size_t index) const;
-	gen::vector<SectHeaderType> sections() const;
-	gen::vector<ProgHeaderType> program_headers() const;
+//	gen::vector<SectHeaderType> sections() const;
+//	gen::vector<ProgHeaderType> program_headers() const;
 	void* entrypoint() const { return reinterpret_cast<void*>(m_entry); }
 	ObjectType object_type() const { return m_type; }
 };

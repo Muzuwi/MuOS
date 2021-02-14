@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #define bits(a) (sizeof(a)*8)
-#define bitmask(a) (size_t(1) << a)
+#define bitmask(a) (size_t(1) << (a))
 
 namespace gen {
 

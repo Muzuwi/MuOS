@@ -1,27 +1,28 @@
 #pragma once
 #include <stddef.h>
 #include <LibGeneric/BidirectionalIterator.hpp>
+#include <LibGeneric/Allocator.hpp>
 
 namespace gen {
 
-	template<class T> class _BidirectionalIterator_List;
-	template<class T> class _BidirectionalIterator_List_Const;
+	template<class T, template<class> class Alloc> class _BidirectionalIterator_List;
+	template<class T, template<class> class Alloc> class _BidirectionalIterator_List_Const;
 
 	/*
 	 *  Class implementing a doubly-linked list
 	 */
-	template<class T>
+	template<class T, template<class> class Alloc = gen::Allocator>
 	class List {
 	protected:
-		friend class _BidirectionalIterator_List<T>;
-		friend class _BidirectionalIterator_List_Const<T>;
+		friend class _BidirectionalIterator_List<T, Alloc>;
+		friend class _BidirectionalIterator_List_Const<T, Alloc>;
 
 		class Node {
 		protected:
 			friend class List;
 
-			friend class _BidirectionalIterator_List<T>;
-			friend class _BidirectionalIterator_List_Const<T>;
+			friend class _BidirectionalIterator_List<T, Alloc>;
+			friend class _BidirectionalIterator_List_Const<T, Alloc>;
 
 			Node* m_next;
 			Node* m_prev;
@@ -70,13 +71,27 @@ namespace gen {
 			a->m_next->m_prev = a->m_prev;
 		}
 
-		typedef _BidirectionalIterator_List<T> iterator;
-		typedef _BidirectionalIterator_List_Const<T> const_iterator;
+		typedef _BidirectionalIterator_List<T, Alloc> iterator;
+		typedef _BidirectionalIterator_List_Const<T, Alloc> const_iterator;
+
+		typedef typename Alloc<T>::template rebind<DataNode>::other NodeAllocType;
+		typename AllocatorTraits<NodeAllocType>::allocator_type _allocator;
+
+		DataNode* _create_datanode(const T& data) {
+			auto* node = AllocatorTraits<NodeAllocType>::allocate(1);
+			AllocatorTraits<NodeAllocType>::construct(_allocator, node, data);
+			return node;
+		}
+
+		void _destroy_node(Node* node) {
+			AllocatorTraits<NodeAllocType>::destroy(_allocator, node);
+			AllocatorTraits<NodeAllocType>::deallocate(reinterpret_cast<DataNode*>(node),1);
+		}
 
 	private:
 		Node m_head;
 	public:
-		List() noexcept {}
+		List() noexcept = default;
 
 		List(const List& rhs) noexcept {
 			if (rhs.empty()) return;
@@ -96,7 +111,7 @@ namespace gen {
 		 *  Inserts a copy of the given value at the beginning of the list
 		 */
 		void push_front(const T& data) {
-			auto* node = new DataNode(data);
+			auto* node = _create_datanode(data);
 			_hook(&m_head, node);
 		}
 
@@ -104,7 +119,7 @@ namespace gen {
 		 *  Inserts a copy of the given value at the end of the list
 		 */
 		void push_back(const T& data) {
-			auto* node = new DataNode(data);
+			auto* node = _create_datanode(data);
 			_hook(m_head.m_prev, node);
 		}
 
@@ -116,7 +131,7 @@ namespace gen {
 
 			auto* node = m_head.m_next;
 			_unhook(node);
-			delete reinterpret_cast<DataNode*>(node);
+			_destroy_node(node);
 		}
 
 		/*
@@ -127,7 +142,7 @@ namespace gen {
 
 			auto* node = m_head.m_prev;
 			_unhook(node);
-			delete reinterpret_cast<DataNode*>(node);
+			_destroy_node(node);
 		}
 
 		/*
@@ -186,7 +201,7 @@ namespace gen {
 			Node* cur = m_head.m_next;
 			while (cur != &m_head && cur) {
 				auto* temp = cur->m_next;
-				delete reinterpret_cast<DataNode*>(cur);
+				_destroy_node(cur);
 				cur = temp;
 			}
 
@@ -198,7 +213,7 @@ namespace gen {
 		 *  Checks whether the list is empty
 		 */
 		bool empty() const {
-			return m_head.m_next == m_head.m_prev;
+			return m_head.m_next == &m_head && m_head.m_prev == &m_head;
 		}
 
 		/*
@@ -208,7 +223,8 @@ namespace gen {
 			//  Safeguard
 			if (it.m_it == &m_head) return;
 			_unhook(it.m_it);
-			delete reinterpret_cast<DataNode*>(it.m_it);
+
+			_destroy_node(it.m_it);
 		}
 
 		/*
@@ -231,23 +247,23 @@ namespace gen {
 		 *  Inserts a value before position specified by an iterator
 		 */
 		iterator insert(iterator pos, const T& v) {
-			auto* node = new DataNode(v);
+			auto* node = _create_datanode(v);
 			_hook(pos.m_it->m_prev, node);
 			return iterator {node};
 		}
 
 	};
 
-	template<class T>
+	template<class T, template<class> class Alloc>
 	class _BidirectionalIterator_List : Iterator<T> {
-		friend class gen::List<T>;
+		friend class gen::List<T, Alloc>;
 
-		typedef gen::List<T> list_type;
-		typedef typename gen::List<T>::Node         node_type;
-		typedef typename gen::List<T>::DataNode     datanode_type;
+		typedef gen::List<T, Alloc> list_type;
+		typedef typename gen::List<T, Alloc>::Node         node_type;
+		typedef typename gen::List<T, Alloc>::DataNode     datanode_type;
 		typedef T value_type;
 
-		typedef _BidirectionalIterator_List<T> iter_type;
+		typedef _BidirectionalIterator_List<T, Alloc> iter_type;
 
 		node_type* m_it;
 	public:
@@ -299,16 +315,16 @@ namespace gen {
 		}
 	};
 
-	template<class T>
+	template<class T, template<class> class Alloc>
 	class _BidirectionalIterator_List_Const : Iterator<T> {
-		friend class gen::List<T>;
+		friend class gen::List<T, Alloc>;
 
-		typedef gen::List<T> list_type;
-		typedef typename gen::List<T>::Node         node_type;
-		typedef typename gen::List<T>::DataNode     datanode_type;
+		typedef gen::List<T, Alloc> list_type;
+		typedef typename gen::List<T, Alloc>::Node         node_type;
+		typedef typename gen::List<T, Alloc>::DataNode     datanode_type;
 		typedef T value_type;
 
-		typedef _BidirectionalIterator_List_Const<T> iter_type;
+		typedef _BidirectionalIterator_List_Const<T, Alloc> iter_type;
 
 		node_type const* m_it;
 	public:

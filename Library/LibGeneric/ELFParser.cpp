@@ -47,14 +47,14 @@ void ELFParser<Architecture>::parse_prog_headers() {
 	auto entrySize = elfHeader->e_phentsize;
 	auto entries   = elfHeader->e_phnum;
 
-	m_prog_headers.resize(entries);
+//	m_prog_headers.resize(entries);
 
 	for(uint16_t i = 0; i < entries; ++i) {
 		auto* header = reinterpret_cast<ProgHeaderType*>((uint64_t)m_elf_phys + offset + i * entrySize);
 		if(!ensure_within<ProgHeaderType>(m_elf_phys, m_elf_size, header))
 			continue;
 
-		m_prog_headers[i] = *header;
+//		m_prog_headers[i] = *header;
 	}
 }
 
@@ -66,7 +66,7 @@ void ELFParser<Architecture>::parse_sect_headers() {
 	auto entries   = elfHeader->e_shnum;
 	auto symEntry  = elfHeader->e_shstrndx;
 
-	m_sections.resize(entries);
+//	m_sections.resize(entries);
 
 	for(uint16_t i = 0; i < entries; ++i) {
 		auto* header = reinterpret_cast<SectHeaderType*>((uint64_t)m_elf_phys + offset + i * entrySize);
@@ -77,7 +77,7 @@ void ELFParser<Architecture>::parse_sect_headers() {
 			symEntry = header->sh_link;
 		}
 
-		m_sections[i] = *header;
+//		m_sections[i] = *header;
 
 	}
 }
@@ -107,16 +107,16 @@ ELFParser<Architecture>::ELFParser(void* base, size_t size) {
 	this->parse_header();
 }
 
-template<typename Architecture>
-gen::vector<typename ELFParser<Architecture>::SectHeaderType> ELFParser<Architecture>::sections() const {
-	//  FIXME:  Fix Vector in LibGeneric to take const reference in copy constructor instead of non-const
-	return gen::vector<SectHeaderType>(const_cast<gen::vector<SectHeaderType>&>(m_sections));
-}
-
-template<typename Architecture>
-gen::vector<typename ELFParser<Architecture>::ProgHeaderType> ELFParser<Architecture>::program_headers() const {
-	return gen::vector<ProgHeaderType>(const_cast<gen::vector<ProgHeaderType>&>(m_prog_headers));
-}
+//template<typename Architecture>
+//gen::vector<typename ELFParser<Architecture>::SectHeaderType> ELFParser<Architecture>::sections() const {
+//	//  FIXME:  Fix Vector in LibGeneric to take const reference in copy constructor instead of non-const
+//	return gen::vector<SectHeaderType>(const_cast<gen::vector<SectHeaderType>&>(m_sections));
+//}
+//
+//template<typename Architecture>
+//gen::vector<typename ELFParser<Architecture>::ProgHeaderType> ELFParser<Architecture>::program_headers() const {
+//	return gen::vector<ProgHeaderType>(const_cast<gen::vector<ProgHeaderType>&>(m_prog_headers));
+//}
 
 template<typename Architecture>
 ELFParser<Architecture>* ELFParser<Architecture>::from_image(void* elf, size_t size) {

@@ -1,19 +1,28 @@
+%include "Interrupt/asm/SaveRegs.asm"
+
 section .text
 
 %macro def_entry_exception 1
-global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
-._stub:
-    jmp ._stub
+    SAVE_REGS
+    mov rdi, %{1:1}
+extern _kernel_exception_entrypoint
+    call _kernel_exception_entrypoint
+    RESTORE_REGS
+    iretq
 %endmacro
 
 %macro def_entry_exception_errorcode 1
-global _exception_entry_%{1:1}
 _exception_entry_%{1:1}:
-._stub:
-    jmp ._stub
+    SAVE_REGS
+    mov rdi, %{1:1}
+    mov rsi, [rsp+9*8]
+extern _kernel_exception_errorcode_entrypoint
+    call _kernel_exception_errorcode_entrypoint
+    RESTORE_REGS
+    add rsp, 4
+    iretq
 %endmacro
-
 
 def_entry_exception 0
 def_entry_exception 1
@@ -47,3 +56,13 @@ def_entry_exception 28
 def_entry_exception 29
 def_entry_exception_errorcode 30
 def_entry_exception 31
+
+section .data
+align 8
+global exception_entrypoint_table
+exception_entrypoint_table:
+%assign i 0
+%rep 32
+    dq _exception_entry_%[i]
+%assign i i+1
+%endrep

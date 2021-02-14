@@ -38,7 +38,7 @@ target_compile_options(Entrypoint
 #   Kernel ELF
 #
 set(CMAKE_CXX_LINK_EXECUTABLE
-    "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> ${MU_LINKER_FLAGS} <LINK_FLAGS> ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o <OBJECTS> <LINK_LIBRARIES> ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o -o <TARGET>")
+    "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> ${MU_LINKER_FLAGS} <LINK_FLAGS> -Xlinker -x ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o <OBJECTS> <LINK_LIBRARIES> ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o -o <TARGET>")
 
 add_executable(KernelELF
                Kernel/kernel.cpp
@@ -69,7 +69,10 @@ add_executable(KernelELF
                Arch/i386/CPUID.cpp
 
                Memory/KHeap.cpp
-               Memory/Allocators/SlabAllocator.cpp)
+               Memory/Allocators/SlabAllocator.cpp
+
+               Interrupt/ExceptionHandler.cpp
+               )
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large>

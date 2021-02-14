@@ -44,6 +44,6 @@ enum class ExceptionResponse {
 };
 
 namespace Exception {
-	typedef ExceptionResponse(*HandlerFunction)(x86::IRQFrame);
-	bool register_except_handler(ExceptionType, HandlerFunction);
+//	typedef ExceptionResponse(*HandlerFunction)(x86::IRQFrame);
+//	bool register_except_handler(ExceptionType, HandlerFunction);
 }

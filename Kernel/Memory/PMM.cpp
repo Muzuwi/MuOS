@@ -5,23 +5,19 @@
 #include <Kernel/Memory/PRegion.hpp>
 #include <Kernel/Multiboot/MultibootInfo.hpp>
 #include <Kernel/Symbols.hpp>
-#include <LibGeneric/StaticVector.hpp>
-#include <LibGeneric/Allocator.hpp>
+#include <LibGeneric/Vector.hpp>
 
-using gen::StaticVector;
+using gen::Vector;
 using Units::MiB;
 
-static StaticVector<PRegion*, 32> s_available_regions {};
-static StaticVector<PRegion*, 32> s_defered_regions {};
+static Vector<PRegion, KMalloc::BootstrapAllocator> s_available_regions {};
+static Vector<PRegion, KMalloc::BootstrapAllocator> s_defered_regions {};
 
 static void pmm_handle_new_region(PhysAddr base_address, size_t region_size) {
 //	kdebugf("Creating region for %x%x - size %i\n", (uintptr_t)base_address.get() >> 32u, (uintptr_t)base_address.get() & 0xFFFFFFFFu, region_size);
+	auto region = PRegion{base_address, region_size};
 
-	//  FIXME?: Evil C-style alloc because heap is not initialized yet
-	auto* address = KMalloc::get().kmalloc_alloc(sizeof(PRegion));
-	auto* region = new (address) PRegion (base_address, region_size);
-
-	if(region->allocator().deferred_initialization())
+	if(region.allocator().deferred_initialization())
 		s_defered_regions.push_back(region);
 	else
 		s_available_regions.push_back(region);
@@ -103,12 +99,8 @@ void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 }
 
 [[nodiscard]] KOptional<PAllocation> PMM::allocate(size_t count_order) {
-	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
-		auto& region = s_available_regions[i];
-		assert(region);
-
-		KOptional<PhysAddr> alloc;
-		auto ret = region->allocator().allocate(count_order);
+	for(auto& region : s_available_regions) {
+		auto ret = region.allocator().allocate(count_order);
 		if(ret.has_value()) {
 			auto page = ret.unwrap();
 			auto allocation = PAllocation(page, count_order);
@@ -124,12 +116,9 @@ void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 void PMM::free_allocation(const PAllocation& allocation) {
 	kdebugf("[PMM] Deallocate PAlloc base=%x%x, order=%i\n", (uint64_t)allocation.base().get() >> 32u, (uint64_t)allocation.base().get() & 0xffffffffu, allocation.order());
 
-	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
-		auto& region = s_available_regions[i];
-		assert(region);
-
-		if(region->contains(allocation.base()) && region->contains(allocation.end())) {
-			region->allocator().free(allocation.base(), allocation.order());
+	for(auto& region : s_available_regions) {
+		if(region.contains(allocation.base()) && region.contains(allocation.end())) {
+			region.allocator().free(allocation.base(), allocation.order());
 			return;
 		}
 	}
@@ -139,17 +128,14 @@ void PMM::free_allocation(const PAllocation& allocation) {
 
 void PMM::initialize_deferred_regions() {
 	while (!s_defered_regions.empty()) {
-		auto* region = s_defered_regions.pop_back();
-		region->allocator().initialize();
+		auto region = s_defered_regions.pop_back();
+		region.allocator().initialize();
 		s_available_regions.push_back(region);
 	}
 
 	kdebugf("[PMM] Regions initialized:\n");
-	for(unsigned i = 0; i < s_available_regions.size(); ++i) {
-		auto reg = s_available_regions[i];
-		auto ptr = (uint64_t) reg;
-		auto start = (uint64_t)reg->base().get();
-		kdebugf("  - PRegion(%x%x): start %x%x, size %i\n", ptr >> 32u, ptr & 0xffffffffu, start >> 32u,
-		        start & 0xffffffffu, reg->size());
+	for(auto& reg : s_available_regions) {
+		auto start = (uint64_t)reg.base().get();
+		kdebugf("  - PRegion: start %x%x, size %i\n", start >> 32u, start & 0xffffffffu, reg.size());
 	}
 }

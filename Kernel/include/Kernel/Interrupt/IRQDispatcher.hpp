@@ -1,12 +1,12 @@
 #pragma once
-#include <Kernel/Interrupt/IRQSubscriber.hpp>
 
-extern "C" void  _kernel_irq_dispatch(unsigned);
+extern "C" void  _kernel_irq_dispatch(unsigned, void*);
+
 class IRQDispatcher {
-	friend class IRQSubscriber;
-	friend void _kernel_irq_dispatch(unsigned irq);
-protected:
-	static void dispatch_irq(uint8_t irq);
-	static void register_subscriber(IRQSubscriber* subscriber, SubscriberPriority);
-	static void remove_subscriber(IRQSubscriber* subscriber);
+	friend void  _kernel_irq_dispatch(unsigned, void*);
+	static void dispatch_irq(uint8_t irq, void*);
+public:
+	typedef void (*HandlerFunc)(void*);
+	static bool register_handler(uint8_t irq_num, HandlerFunc);
+	static void remove_handler(uint8_t irq_num, HandlerFunc);
 };

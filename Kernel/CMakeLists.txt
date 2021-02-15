@@ -72,6 +72,8 @@ add_executable(KernelELF
                Memory/Allocators/SlabAllocator.cpp
 
                Exception/ExceptionEntrypoint.cpp
+
+               Interrupt/IRQDispatcher.cpp
                )
 
 target_compile_options(KernelELF

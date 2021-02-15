@@ -1,67 +1,35 @@
-#include <Kernel/SystemTypes.hpp>
-#include <LibGeneric/List.hpp>
-#include <include/Arch/i386/TrapFrame.hpp>
-#include <Arch/i386/PortIO.hpp>
-#include <Kernel/Interrupt/IRQSubscriber.hpp>
-#include <Kernel/Interrupt/IRQDispatcher.hpp>
-#include <Arch/i386/IRQDisabler.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
-#include <LibGeneric/Algorithm.hpp>
+#include <Arch/i386/PortIO.hpp>
+#include <Kernel/Interrupt/IRQDispatcher.hpp>
 
-static gen::List<IRQSubscriber*> s_irq_handlers[16] {};
+static IRQDispatcher::HandlerFunc s_interrupt_handlers[256] {};
 
 extern "C"
-void _kernel_irq_dispatch(unsigned irq) {
-	if(irq > 7)
+void _kernel_irq_dispatch(unsigned irq, void* interrupt_trap_frame) {
+	if(irq > 32 + 7)
 		out(0xa0, 0x20);
 	out(0x20, 0x20);
 
-	IRQDispatcher::dispatch_irq(irq);
+	IRQDispatcher::dispatch_irq(irq, interrupt_trap_frame);
 }
 
-/*
- *  Calls all subscribers for the specific IRQ
- */
-void IRQDispatcher::dispatch_irq(uint8_t irq) {
-	if(irq > 15) return;
-
-	auto& list = s_irq_handlers[irq];
-	for(auto& subscriber : list) {
-		subscriber->handler()();
-	}
+void IRQDispatcher::dispatch_irq(uint8_t irq, void* interrupt_trap_frame) {
+	auto handler = s_interrupt_handlers[irq];
+	if(handler)
+		handler(interrupt_trap_frame);
 }
 
-/*
- *  Registers a new subscriber for an IRQ
- */
-void IRQDispatcher::register_subscriber(IRQSubscriber* subscriber, SubscriberPriority priority) {
-	IRQDisabler disabler;
-	if(!subscriber) return;
-	if(subscriber->irq() > 15) return;
+bool IRQDispatcher::register_handler(uint8_t irq_num, IRQDispatcher::HandlerFunc handler) {
+	//  FIXME: Currently only one handler per irq supported
+	if(s_interrupt_handlers[irq_num])
+		return false;
 
-
-	if(priority == SubscriberPriority::Normal) {
-		auto& handlers = s_irq_handlers[subscriber->irq()];
-
-		if(!handlers.empty())
-			handlers.insert(handlers.end()--, subscriber);
-		else
-			handlers.push_back(subscriber);
-	} else {
-		s_irq_handlers[subscriber->irq()].push_back(subscriber);
-	}
+	s_interrupt_handlers[irq_num] = handler;
+	return true;
 }
 
-/*
- *  Removes an already existing subscriber for an IRQ
- */
-void IRQDispatcher::remove_subscriber(IRQSubscriber* subscriber) {
-	IRQDisabler disabler;
-	if(!subscriber) return;
-	if(subscriber->irq() > 15) return;
-
-	auto& subscriber_list = s_irq_handlers[subscriber->irq()];
-	auto it = gen::find(subscriber_list, subscriber);
-	if(it != subscriber_list.end())
-		subscriber_list.erase(it);
+void IRQDispatcher::remove_handler(uint8_t irq_num, IRQDispatcher::HandlerFunc) {
+	s_interrupt_handlers[irq_num] = nullptr;
 }
+
+

@@ -54,7 +54,7 @@ add_executable(KernelELF
                Arch/i386/asm/LGDT.asm
 
                Arch/i386/IDT.cpp
-               Interrupt/asm/ExceptionEntrypoint.asm
+               Exception/asm/ExceptionEntrypoint.asm
                Interrupt/asm/IRQEntrypoint.asm
 
                Memory/kmalloc.cpp
@@ -71,7 +71,7 @@ add_executable(KernelELF
                Memory/KHeap.cpp
                Memory/Allocators/SlabAllocator.cpp
 
-               Interrupt/ExceptionHandler.cpp
+               Exception/ExceptionEntrypoint.cpp
                )
 
 target_compile_options(KernelELF

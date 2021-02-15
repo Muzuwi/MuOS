@@ -1,25 +1,26 @@
-%include "Interrupt/asm/SaveRegs.asm"
+%include "Arch/i386/asm/SaveRegs.asm"
 
 section .text
 
 %macro def_entry_exception 1
 _exception_entry_%{1:1}:
-    SAVE_REGS
+    SAVE_REGS_CALLER
     mov rdi, %{1:1}
+    mov rsi, rsp
 extern _kernel_exception_entrypoint
     call _kernel_exception_entrypoint
-    RESTORE_REGS
+    RESTORE_REGS_CALLER
     iretq
 %endmacro
 
 %macro def_entry_exception_errorcode 1
 _exception_entry_%{1:1}:
-    SAVE_REGS
+    SAVE_REGS_CALLER
     mov rdi, %{1:1}
-    mov rsi, [rsp+9*8]
-extern _kernel_exception_errorcode_entrypoint
-    call _kernel_exception_errorcode_entrypoint
-    RESTORE_REGS
+    mov rsi, rsp
+extern _kernel_exception_entrypoint
+    call _kernel_exception_entrypoint
+    RESTORE_REGS_CALLER
     add rsp, 4
     iretq
 %endmacro

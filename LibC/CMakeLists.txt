@@ -25,7 +25,7 @@ add_library(crt0 OBJECT
 set_target_properties(crt0 PROPERTIES PREFIX "")
 
 target_compile_options(LibC
-        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large>
+        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large -mno-red-zone>
 )
 add_dependencies(LibC
     crt0

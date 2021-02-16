@@ -42,8 +42,10 @@ void VMM::init() {
 #define SPLITPTR(a) (uintptr_t)a>>32u, (uintptr_t)a&0xffffffffu
 
 void VMM::map_kernel_executable() {
-	auto kernel_elf_start = reinterpret_cast<uint8_t*>(&_ukernel_elf_start);
-	auto kernel_elf_end = reinterpret_cast<uint8_t*>(&_ukernel_elf_end);
+	const auto kernel_elf_start = reinterpret_cast<uint8_t*>(&_ukernel_elf_start);
+	const auto kernel_elf_end = reinterpret_cast<uint8_t*>(&_ukernel_elf_end);
+	const auto kernel_text_start = reinterpret_cast<uint8_t*>(&_ukernel_text_start);
+	const auto kernel_text_end = reinterpret_cast<uint8_t*>(&_ukernel_text_end);
 
 	auto kernel_physical = PhysAddr{&_ukernel_physical_start};
 	for(auto addr = kernel_elf_start; addr < kernel_elf_end; addr += 0x1000) {
@@ -62,6 +64,13 @@ void VMM::map_kernel_executable() {
 		pte.set(FlagPTE::Global, true);
 		pte.set(FlagPTE::User, false);
 		pte.set_page(kernel_physical);
+
+		if(CPUID::has_NXE()) {
+			//  Execute only in text sections
+			bool xd = !(addr >= kernel_text_start && addr < kernel_text_end);
+			pte.set(FlagPTE::ExecuteDisable, xd);
+		}
+
 		kernel_physical += 4096;
 	}
 }

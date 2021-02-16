@@ -26,4 +26,7 @@ extern uint64_t _ukernel_kmalloc_end;
 extern uint64_t _ukernel_preloader_physical;
 extern uint64_t _ukernel_physical_start;
 
+extern uint64_t _ukernel_text_start;
+extern uint64_t _ukernel_text_end;
+
 #endif

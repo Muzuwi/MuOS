@@ -1,12 +1,8 @@
-#include <Arch/i386/Timer.hpp>
+#include <Arch/i386/PIT.hpp>
 #include <Kernel/ksleep.hpp>
 
-/*
- *	Waits the specified amount of milliseconds (approximately)
- */
-void ksleep(sleep_t ms) {
-	auto &timer = Timer::getTimer();
-	sleep_t start = (sleep_t) timer.getTimeSinceStart();
-	while((sleep_t)timer.getTimeSinceStart() < ms + start)
+void ksleep(uint64_t milliseconds) {
+	auto start = PIT::milliseconds();
+	while(PIT::milliseconds() - start < milliseconds)
 		;
 }

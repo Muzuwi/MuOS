@@ -74,6 +74,9 @@ add_executable(KernelELF
                Exception/ExceptionEntrypoint.cpp
 
                Interrupt/IRQDispatcher.cpp
+
+               Device/PIT.cpp
+               Kernel/ksleep.cpp
                )
 
 target_compile_options(KernelELF

@@ -82,10 +82,6 @@ void IDT::init(){
 	for(unsigned i = 32; i < 256; ++i)
 		register_interrupt_gate(i, irq_entrypoint_table[i - 32], type_irq, cs);
 
-	//  Legacy syscall gate
-	const uint8_t type_syscall {0xF | (0b11 << 5) | (1 << 7)};
-	register_interrupt_gate(0x80, _kernel_syscall_entry, type_syscall, GDT::get_kernel_CS());
-
 	IDTR.limit = sizeof(interrupt_descr_table);
 	IDTR.base = reinterpret_cast<uint64_t>(interrupt_descr_table);
 	lidt(&IDTR);

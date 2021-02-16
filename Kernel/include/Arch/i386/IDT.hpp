@@ -19,6 +19,7 @@ struct IDT_Entry{
 	uint32_t offset_32;
 	uint32_t _zero2;
 } __attribute__((packed));
+static_assert(sizeof(IDT_Entry) == 16);
 
 namespace IDT {
 	void init();

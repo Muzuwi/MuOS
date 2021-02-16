@@ -1,9 +1,9 @@
 #pragma once
 
-extern "C" void  _kernel_irq_dispatch(unsigned, void*);
+extern "C" void  _kernel_irq_dispatch(uint8_t, void*);
 
 class IRQDispatcher {
-	friend void  _kernel_irq_dispatch(unsigned, void*);
+	friend void  _kernel_irq_dispatch(uint8_t, void*);
 	static void dispatch_irq(uint8_t irq, void*);
 public:
 	typedef void (*HandlerFunc)(void*);

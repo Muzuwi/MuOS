@@ -4,24 +4,24 @@ section .text
 
 %macro def_entry_exception 1
 _exception_entry_%{1:1}:
-    SAVE_REGS_CALLER
+    SAVE_REGS_ALL
     mov rdi, %{1:1}
     mov rsi, rsp
 extern _kernel_exception_entrypoint
     call _kernel_exception_entrypoint
-    RESTORE_REGS_CALLER
+    RESTORE_REGS_ALL
     iretq
 %endmacro
 
 %macro def_entry_exception_errorcode 1
 _exception_entry_%{1:1}:
-    SAVE_REGS_CALLER
+    SAVE_REGS_ALL
     mov rdi, %{1:1}
     mov rsi, rsp
 extern _kernel_exception_entrypoint
     call _kernel_exception_entrypoint
-    RESTORE_REGS_CALLER
-    add rsp, 4
+    RESTORE_REGS_ALL
+    add rsp, 8
     iretq
 %endmacro
 

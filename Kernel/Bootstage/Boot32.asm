@@ -190,7 +190,7 @@ memory_setup:
     ;  Enable long mode support in EFER
     mov ecx, 0xc0000080
     rdmsr
-    or eax, EFER_LM|EFER_NXE  ;  TODO:  Verify if the CPU actually supports these
+    or eax, EFER_LM  ;  TODO:  Crash when not supported
     wrmsr
 
     ;  Enable PE/PG

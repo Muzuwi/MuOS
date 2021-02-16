@@ -56,7 +56,8 @@ SECTIONS
 	    _ukernel_text_start = .;
 	    *(.entrypoint)
 		*(.text)
-        _ukernel_text_end = .;
+		*(.text.*)
+		_ukernel_text_end = .;
 	}
 
    	/*  RO Data  */

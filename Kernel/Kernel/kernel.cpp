@@ -16,6 +16,7 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 
 	IDT::init();
 	GDT::init();
+	CPU::initialize_features();
 	PMM::handle_multiboot_memmap(multiboot_info);
 	VMM::init();
 	PMM::initialize_deferred_regions();

@@ -77,11 +77,14 @@ add_executable(KernelELF
 
                Device/PIT.cpp
                Kernel/ksleep.cpp
+
+               Arch/i386/CPU.cpp
                )
 
 target_compile_options(KernelELF
-                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large>
+                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large>
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
+                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-mno-red-zone>
                        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>
                        PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>)
 

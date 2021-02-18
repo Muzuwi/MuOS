@@ -43,7 +43,7 @@ class PageBitmapAllocator {
 
 
 	//  Quick skip through full bytes
-	size_t find_one() {
+	KOptional<size_t> find_one() {
 		auto base = m_base.as<uint8_t>();
 		auto ptr = base;
 		while (ptr - base < m_bitmap_size) {
@@ -57,17 +57,17 @@ class PageBitmapAllocator {
 				if(byte & (1u << i))
 					continue;
 				auto idx = (ptr-base)*8 + i;
-				return 1 + idx;
+				return KOptional<size_t>{idx};
 			}
 
 			ASSERT_NOT_REACHED();
 		}
 
-		return 0;
+		return KOptional<size_t>{};
 	}
 
 	//  FIXME:  Implement
-	size_t find_many(size_t) {
+	KOptional<size_t> find_many(size_t) {
 		ASSERT_NOT_REACHED();
 
 //		size_t start = 0;
@@ -79,62 +79,57 @@ class PageBitmapAllocator {
 //			current++;
 //		}
 
-		return 0;
+		return KOptional<size_t>{};
 	}
 
 
 	void mark_bits(size_t idx, size_t count, bool value) {
-		if(idx == 0)
-			return;
 
-		for(size_t i = idx-1; i < idx - 1 + count; ++i) {
-			if(bit_get(i)) {
+		for(size_t i = idx; i < idx + count; ++i) {
+			auto old = bit_get(i);
+
+			if(old == value) {
 				kerrorf("PageBitmapAllocator: Corrupted state or double free for idx=%i\n", i);
+				continue;
 			}
+
 			bit_set(i, value);
 		}
 	}
 
 
 	PhysAddr idx_to_physical(size_t idx) {
-		if(idx == 0)
-			return {};
 		return PhysAddr {m_alloc_pool_base + idx*0x1000};
 	}
 
 	size_t physical_to_idx(PhysAddr addr) {
-		auto aligned = page_align(addr);
-		if(!contains_address(aligned))
-			return 0;
-
-		auto idx = (aligned - m_alloc_pool_base) / 0x1000;
-		return 1 + idx;
+		auto idx = (addr - m_alloc_pool_base) / 0x1000;
+		return idx;
 	}
-
 
 	KOptional<PhysAddr> alloc_one() {
 		auto idx = find_one();
-		if(idx == 0)
+		if(!idx.has_value())
 			return KOptional<PhysAddr> {};
 
-		mark_bits(idx, 1, true);
-		return KOptional<PhysAddr> {idx_to_physical(idx)};
+		mark_bits(idx.unwrap(), 1, true);
+		return KOptional<PhysAddr> {idx_to_physical(idx.unwrap())};
 	}
 
 	KOptional<PhysAddr> alloc_pow2(size_t order) {
 		auto idx = find_many((1u << order));
-		if(idx == 0)
+		if(!idx.has_value())
 			return KOptional<PhysAddr> {};
 
-		mark_bits(idx, (1u << order), true);
-		return KOptional<PhysAddr> {idx_to_physical(idx)};
+		mark_bits(idx.unwrap(), (1u << order), true);
+		return KOptional<PhysAddr> {idx_to_physical(idx.unwrap())};
 	}
 
 	void _free(PhysAddr base, size_t order) {
-		auto idx = physical_to_idx(base);
-		if(idx == 0)
+		if(!contains_address(base))
 			return;
 
+		auto idx = physical_to_idx(base);
 		//  Mark bits taken by the allocation as unused
 		mark_bits(idx, (1u << order), false);
 	}

@@ -12,10 +12,7 @@
 
 using gen::List;
 
-static List<SlabAllocator,KMalloc::BootstrapAllocator> s_slab_allocators[6];
-
-//  Small objects: 4, 8, 16, 32
-//  Small structs: 64, 128
+static List<SlabAllocator,KMalloc::BootstrapAllocator> s_slab_allocators[7];
 
 static size_t index_for_size(size_t n) {
 	if(n <= 4)
@@ -30,12 +27,14 @@ static size_t index_for_size(size_t n) {
 		return 4;
 	else if(n <= 128)
 		return 5;
+	else if(n <= 256)
+		return 6;
 	//  FIXME
 	kpanic();
 }
 
 void* KHeap::allocate(size_t n) {
-	auto slabs = s_slab_allocators[index_for_size(n)];
+	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
 		if(allocator.objects_free() > 0) {
 			auto ptr = allocator.allocate();
@@ -51,7 +50,7 @@ void* KHeap::allocate(size_t n) {
 void KHeap::free(void* p, size_t n) {
 	if(!p) return;
 
-	auto slabs = s_slab_allocators[index_for_size(n)];
+	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
 		if(allocator.contains_address(p)) {
 			//kdebugf("[KHeap] Free ptr=%x%x, size=%i\n", (uintptr_t)p>>32u, (uintptr_t)p&0xffffffffu, n);
@@ -70,7 +69,7 @@ void KHeap::init() {
 
 	//  TODO: Heap base address randomization
 	void* virtual_address = &_ukernel_heap_start;
-	for(unsigned object_size = 4; object_size <= 128; object_size <<= 1) {
+	for(unsigned object_size = 4; object_size <= 256; object_size <<= 1) {
 		SlabAllocator slab{object_size, pool_order};
 		auto& slabs = s_slab_allocators[index_for_size(object_size)];
 		slabs.push_back(slab);

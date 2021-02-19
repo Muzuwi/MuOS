@@ -1,5 +1,6 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
+#include <Arch/i386/PtraceRegs.hpp>
 
 enum class ExceptionType {
 	DivZero         = 0,
@@ -36,7 +37,7 @@ enum class ExceptionType {
 	__Reserved31    = 31
 };
 
-extern "C" void _kernel_exception_entrypoint(size_t vector, void* interrupt_stack_frame);
+extern "C" void _kernel_exception_entrypoint(size_t vector, PtraceRegs* interrupt_stack_frame);
 
 namespace Exception {
 	enum class Response {
@@ -44,5 +45,5 @@ namespace Exception {
 		KernelPanic,
 		Resume
 	};
-	typedef Response(*HandlerFunction)(void* frame);
+	typedef Response(*HandlerFunction)(PtraceRegs* frame);
 }

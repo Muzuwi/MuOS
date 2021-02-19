@@ -4,12 +4,15 @@ section .text
 
 %macro define_entrypoint_for_irq 1
 irq%{1:1}:
+    ;  Ensure proper alignment of PtraceRegs
+    push qword %{1:1}
     SAVE_REGS_ALL
     mov rdi, %{1:1}
     mov rsi, rsp
 extern _kernel_irq_dispatch
     call _kernel_irq_dispatch
     RESTORE_REGS_ALL
+    add rsp, 8
     iretq
 %endmacro
 

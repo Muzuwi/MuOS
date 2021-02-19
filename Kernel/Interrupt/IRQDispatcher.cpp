@@ -1,5 +1,6 @@
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
+#include <Arch/i386/PtraceRegs.hpp>
 #include <LibGeneric/Mutex.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
@@ -18,7 +19,7 @@ static IRQDispatcher::HandlerFunc s_interrupt_handlers[256-32] {
 static Mutex s_handler_mutex;
 
 extern "C"
-void _kernel_irq_dispatch(uint8_t irq, void* interrupt_trap_frame) {
+void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 	irq = irq - 32;
 	if(irq > 7)
 		out(0xa0, 0x20);
@@ -27,7 +28,7 @@ void _kernel_irq_dispatch(uint8_t irq, void* interrupt_trap_frame) {
 	IRQDispatcher::dispatch_irq(irq, interrupt_trap_frame);
 }
 
-void IRQDispatcher::dispatch_irq(uint8_t irq, void* interrupt_trap_frame) {
+void IRQDispatcher::dispatch_irq(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 	s_handler_mutex.lock();
 	auto handler = s_interrupt_handlers[irq];
 	s_handler_mutex.unlock();

@@ -1,12 +1,14 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
 
+class PtraceRegs;
+
 class PIT final {
 	uint16_t m_divider;
 	uint64_t m_ticks;
 
 	void tick();
-	friend void _pit_irq0_handler(void*);
+	friend void _pit_irq0_handler(PtraceRegs*);
 	unsigned frequency() const;
 	uint64_t millis() const;
 public:

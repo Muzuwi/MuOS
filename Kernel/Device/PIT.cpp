@@ -1,4 +1,5 @@
 #include <Arch/i386/PIT.hpp>
+#include <Arch/i386/PtraceRegs.hpp>
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
@@ -13,7 +14,7 @@ void update_timer_reload(uint16_t freq){
 	out(PIT::port_ch0_data(), (freq >> 8) & 0xFF);
 }
 
-void _pit_irq0_handler(void*) {
+void _pit_irq0_handler(PtraceRegs*) {
 	pit.tick();
 }
 

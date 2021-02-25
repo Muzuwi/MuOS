@@ -16,4 +16,5 @@ namespace KHeap {
 	void init();
 	void* allocate(size_t size);
 	void free(void* ptr, size_t = 0);
+	void dump_stats();
 }

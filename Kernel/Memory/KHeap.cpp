@@ -1,18 +1,19 @@
-#include <Kernel/Memory/PhysBitmap.hpp>
 #include <Kernel/Memory/Allocators/SlabAllocator.hpp>
 #include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Memory/KHeap.hpp>
+#include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
-
 #include <LibGeneric/List.hpp>
-#include <Kernel/Memory/kmalloc.hpp>
-#include <LibGeneric/Vector.hpp>
+#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/LockGuard.hpp>
 
 using gen::List;
 
 static List<SlabAllocator,KMalloc::BootstrapAllocator> s_slab_allocators[7];
+static gen::Mutex s_kheap_lock {};
+static void* s_last_heap_virtual {};
+
 
 static size_t index_for_size(size_t n) {
 	if(n <= 4)
@@ -33,7 +34,28 @@ static size_t index_for_size(size_t n) {
 	kpanic();
 }
 
+
+/*
+ *  Creates a new SlabAllocator for the given object size
+ */
+static SlabAllocator* grow_heap(size_t object_size) {
+	static constexpr const unsigned pool_order = 0;
+
+	SlabAllocator slab{object_size, pool_order};
+	auto& slabs = s_slab_allocators[index_for_size(object_size)];
+	auto it = slabs.insert(slabs.end(), slab);
+	(*it).initialize(s_last_heap_virtual);
+
+	kdebugf("[KHeap] SlabAllocator(%i) at virtual %x%x, objects %i\n", object_size, (uintptr_t)s_last_heap_virtual>>32u, (uintptr_t)s_last_heap_virtual&0xffffffffu, slabs.back().objects_free());
+
+	s_last_heap_virtual = (void*)(((uintptr_t)s_last_heap_virtual + slabs.back().virtual_size() + 0x1000) & ~(0x1000-1));
+
+	return &*it;
+}
+
 void* KHeap::allocate(size_t n) {
+	gen::LockGuard<gen::Mutex> lock {s_kheap_lock};
+
 	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
 		if(allocator.objects_free() > 0) {
@@ -43,6 +65,14 @@ void* KHeap::allocate(size_t n) {
 		}
 	}
 
+	//  Growth of the heap is necessary
+	auto alloc = grow_heap(n);
+	if(alloc) {
+		auto ptr = alloc->allocate();
+//		kdebugf("[KHeap] Alloc ptr=%x%x, size=%i, overcommit=%i\n", (uintptr_t)ptr>>32u, (uintptr_t)ptr&0xffffffffu, n, alloc->object_size() - n);
+		return ptr;
+	}
+
 	kerrorf("[KHeap] Allocation request failed for size=%i\n", n);
 	return nullptr;
 }
@@ -50,6 +80,7 @@ void* KHeap::allocate(size_t n) {
 void KHeap::free(void* p, size_t n) {
 	if(!p) return;
 
+	gen::LockGuard<gen::Mutex> lock {s_kheap_lock};
 	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
 		if(allocator.contains_address(p)) {
@@ -65,18 +96,19 @@ void KHeap::free(void* p, size_t n) {
 void KHeap::init() {
 	kdebugf("[KHeap] Init slabs\n");
 
-	static constexpr const unsigned pool_order = 0;
-
 	//  TODO: Heap base address randomization
-	void* virtual_address = &_ukernel_heap_start;
-	for(unsigned object_size = 4; object_size <= 256; object_size <<= 1) {
-		SlabAllocator slab{object_size, pool_order};
-		auto& slabs = s_slab_allocators[index_for_size(object_size)];
-		slabs.push_back(slab);
-		slabs.back().initialize(virtual_address);
+	s_last_heap_virtual = &_ukernel_heap_start;
+	for(unsigned i = 0; i < 2; ++i) {
+		for(unsigned object_size = 4; object_size <= 256; object_size <<= 1) {
+			grow_heap(object_size);
+		}
+	}
+}
 
-		kdebugf("[KHeap] SlabAllocator(%i) at virtual %x%x, objects %i\n", object_size, (uintptr_t)virtual_address>>32u, (uintptr_t)virtual_address&0xffffffffu, slabs.back().objects_free());
-
-		virtual_address = (void*)(((uintptr_t)virtual_address + slabs.back().virtual_size() + 0x1000) & ~(0x1000-1));
+void KHeap::dump_stats() {
+	for(auto& size_slabs : s_slab_allocators) {
+		for(auto& v : size_slabs) {
+			kdebugf("    size=%i, free=%i, used=%i\n", v.object_size(), v.objects_free(), v.objects_used());
+		}
 	}
 }

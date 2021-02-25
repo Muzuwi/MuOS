@@ -70,9 +70,10 @@ namespace gen {
 			a->m_prev->m_next = a->m_next;
 			a->m_next->m_prev = a->m_prev;
 		}
-
+	public:
 		typedef _BidirectionalIterator_List<T, Alloc> iterator;
 		typedef _BidirectionalIterator_List_Const<T, Alloc> const_iterator;
+	protected:
 
 		typedef typename Alloc<T>::template rebind<DataNode>::other NodeAllocType;
 		typename AllocatorTraits<NodeAllocType>::allocator_type _allocator;

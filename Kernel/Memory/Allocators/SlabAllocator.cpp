@@ -7,7 +7,6 @@
 SlabAllocator::SlabAllocator(size_t object_size, size_t alloc_pool_order) {
 	m_object_size = object_size;
 	m_pool_order = alloc_pool_order;
-	m_object_count = (0x1000 << alloc_pool_order) / object_size;
 	m_virtual_start = nullptr;
 }
 
@@ -19,7 +18,7 @@ void SlabAllocator::initialize(void* virtual_base) {
 		kerrorf("Failed allocating page for SlabAllocator bitmap!\n");
 		kpanic();
 	}
-	m_allocation_bitmap = PhysBitmap{alloc.unwrap().base(), m_object_count};
+	m_allocation_bitmap = PhysBitmap{alloc.unwrap().base(), object_capacity()};
 
 	auto pool = PMM::allocate(m_pool_order);
 	if(!pool.has_value()) {
@@ -75,5 +74,9 @@ size_t SlabAllocator::objects_free() const {
 }
 
 size_t SlabAllocator::virtual_size() const {
-	return m_object_size * m_object_count;
+	return m_object_size * object_capacity();
+}
+
+size_t SlabAllocator::object_capacity() const {
+	return (0x1000 << m_pool_order) / m_object_size;
 }

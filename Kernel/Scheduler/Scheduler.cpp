@@ -1,49 +1,80 @@
+#include <Arch/i386/CPU.hpp>
+#include <Kernel/Process/ProcessNew.hpp>
 #include <Kernel/Process/Scheduler.hpp>
-#include <Arch/i386/IRQDisabler.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Debug/kpanic.hpp>
-#include <Kernel/Interrupt/IRQSubscriber.hpp>
-#include <include/Arch/i386/CPU.hpp>
-#include <include/Kernel/Debug/kassert.hpp>
-#include <LibGeneric/Algorithm.hpp>
-#include <include/Arch/i386/GDT.hpp>
 
-//#define SCHEDULE_LOG
-//#define SCHEDULE_LOG_DUMP_REG_SWITCH
 
 static bool ready = false;
-
-static gen::List<Process*> s_processes {};
-
+static gen::List<Process*> s_queue {};
+static Process* s_kernel_idle {}
 
 [[noreturn]] void _kernel_idle_task() {
 	while(true)
 		asm volatile("hlt");
 }
 
+void Scheduler::init() {
+	CPU::irq_disable();
+
+	kdebugf("[Scheduler] Init idle task\n");
+	s_kernel_idle = Process::create_idle_task(_kernel_idle_task);
+
+//	for(auto& pr : Process::s_process_list)
+//		s_queue.push_back(pr);
+
+	kdebugf("[Scheduler] Enter idle task\n");
+	//  Huge hack - only first 8 bytes of prev Process struct are used (only written), so use a dummy memory address
+	//  to prevent null deref.
+	uint64_t _dummy {0};
+	CPU::switch_to(reinterpret_cast<Process*>(&_dummy), s_kernel_idle);
+}
+
+void Scheduler::tick() {
+	if(!Process::current())
+		return;
+
+	auto* process = Process::current();
+	if(process->m_quants_left) {
+		process->m_flags.need_resched = 0;
+		process->m_quants_left--;
+	} else {
+		process->m_quants_left = 10;
+		process->m_flags.need_resched = 1;
+	}
+}
+
+void Scheduler::schedule() {
+	kpanic();
+
+}
+
+
+
 /*
  *  Initializes the kernel idle task
  */
-void Scheduler::initialize() {
-	IRQDisabler disabler;
-	kdebugf("[Scheduler] Init kernel idle task\n");
-
-	Process::m_kernel_idle = new Process(0, Ring::CPL0, {(void*)_kernel_idle_task, 0, ExecutableType::Flat});
-	s_processes.clear();
-
-	new IRQSubscriber(0, []{
-		static unsigned ticksUntilSwitch = 20;
-		if(ticksUntilSwitch-- == 0) {
-			ticksUntilSwitch = 20;
-			Scheduler::switch_task();
-		}
-	}, SubscriberPriority::MayTaskSwitch);
-}
+//void Scheduler::initialize() {
+//	s_processes.clear();
+//	auto idle_task = new Process(0);
+//
+//
+//	IRQDisabler disabler;
+//	kdebugf("[Scheduler] Init kernel idle task\n");
+//
+//	Process::m_kernel_idle = new Process(0, Ring::CPL0, {(void*)_kernel_idle_task, 0, ExecutableType::Flat});
+//	s_processes.clear();
+//
+//	new IRQSubscriber(0, []{
+//		static unsigned ticksUntilSwitch = 20;
+//		if(ticksUntilSwitch-- == 0) {
+//			ticksUntilSwitch = 20;
+//			Scheduler::switch_task();
+//		}
+//	}, SubscriberPriority::MayTaskSwitch);
+//}
 
 /*
  *  Leaves the kernel and starts the scheduling loop
- */
+
 void Scheduler::enter_scheduler_loop() {
 	asm volatile("cli\n");
 
@@ -163,3 +194,4 @@ void Scheduler::yield_with_irq_frame(uint32_t esp) {
 		CPU::jump_to_irq_frame(Process::m_current->m_current_irq_trap_frame, Process::m_current->directory());
 	}
 }
+*/

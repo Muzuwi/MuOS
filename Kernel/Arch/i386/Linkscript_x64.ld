@@ -15,7 +15,8 @@ ENTRY(_entrypoint_x32)
   ffff8000_00000000........ffffffff_ffffffff - kernel
    |ffff8000_00000000........ffffbfff_ffffffff - identity map of all physical memory (64TB)
    |ffffc000_00000000........ffffcfff_ffffffff - kernel heap (1TB)
-   |ffffd000_00000000........ffffd000_10000000 - kernel ELF (256MB)
+   |ffffd000_00000000........ffffd000_0fffffff - kernel ELF (256MB)
+   |ffffe000_00000000........ffffe0ff_ff800000 - kernel task stacks (ASLR) - 0x3fffe00 possible kstack locations
    | Rest is unused for now
    \
 */
@@ -29,6 +30,11 @@ _ukernel_heap_start = 0xffffc00000000000;
 _ukernel_elf_start = 0xffffd00000000000;
 _ukernel_virt_heap_end = 0xffffcfffffffffff;
 _ukernel_virt_elf_end = 0xffffd00010000000;
+_ukernel_virt_kstack_start = 0xffffe00000000000;
+_ukernel_virt_kstack_end = 0xffffe0ffff800000;
+
+_ukernel_shared_start = _ukernel_virtual_start;
+_ukernel_shared_end = 0xffffdfffffffffff;
 
 /*  Physical address of the preloader */
 _ukernel_preloader_physical = 0x100000;

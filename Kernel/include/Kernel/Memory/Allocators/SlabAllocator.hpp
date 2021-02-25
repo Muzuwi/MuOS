@@ -9,7 +9,6 @@ class SlabAllocator {
 	void* m_virtual_start;
 	size_t m_pool_order;
 	size_t m_object_size;
-	size_t m_object_count;
 
 	void* idx_to_virtual(size_t idx) const;
 	size_t virtual_to_idx(void*) const;
@@ -24,5 +23,6 @@ public:
 	size_t object_size() const;
 	size_t objects_used() const;
 	size_t objects_free() const;
+	size_t object_capacity() const;
 	size_t virtual_size() const;
 };

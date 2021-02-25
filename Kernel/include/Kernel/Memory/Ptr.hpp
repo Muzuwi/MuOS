@@ -16,6 +16,9 @@ class PhysPtr {
 		return reinterpret_cast<T*>(identity+offset);
 	}
 public:
+	PhysPtr() noexcept
+	: m_ptr(nullptr) {}
+
 	explicit PhysPtr(T* ptr) noexcept
 	: m_ptr(ptr) {}
 

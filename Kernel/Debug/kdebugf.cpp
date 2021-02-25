@@ -1,7 +1,6 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/TTY.hpp>
 #include <Arch/i386/PortIO.hpp>
-#include <Arch/i386/IRQDisabler.hpp>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>

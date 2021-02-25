@@ -1,16 +1,22 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
+#include <LibGeneric/Allocator.hpp>
 
 namespace gen {
+	template<template<typename> class Alloc = gen::Allocator>
 	class __SharedCount {
 	public:
 		typedef size_t _refcount_t;
 	private:
 		_refcount_t* m_ref_count;
 
+		typedef typename Alloc<_refcount_t>::template rebind<_refcount_t>::other RefAllocType;
+		typename AllocatorTraits<RefAllocType>::allocator_type _ref_allocator;
+
 		constexpr void _storage_free() {
-			delete m_ref_count;
+			AllocatorTraits<RefAllocType>::destroy(_ref_allocator, m_ref_count);
+			AllocatorTraits<RefAllocType>::deallocate(m_ref_count, 1);
 			m_ref_count = nullptr;
 		}
 
@@ -32,7 +38,7 @@ namespace gen {
 		constexpr __SharedCount(_refcount_t* p) noexcept
 		: m_ref_count(p) {}
 
-		explicit __SharedCount(const __SharedCount& ptr) noexcept
+		__SharedCount(const __SharedCount& ptr) noexcept
 		: m_ref_count(ptr.m_ref_count) {
 			_add_ref();
 		}
@@ -63,20 +69,30 @@ namespace gen {
 	};
 
 
-	template<class T>
+	template<class T, template<typename> class Alloc = gen::Allocator>
 	class SharedPtr {
+		using RefCount = __SharedCount<Alloc>;
+
 		T* m_ptr;
-		__SharedCount m_ref_count;
+		RefCount m_ref_count;
+
+		typedef typename Alloc<typename RefCount::_refcount_t>::template rebind<typename RefCount::_refcount_t>::other RefAllocType;
+		typename AllocatorTraits<RefAllocType>::allocator_type _ref_allocator;
+		typedef typename Alloc<T>::template rebind<T>::other ObjAllocType;
+		typename AllocatorTraits<ObjAllocType>::allocator_type _obj_allocator;
 
 		constexpr void _on_destruct() {
 			if(m_ref_count._use_count() == 1) {
-				delete m_ptr;
+				AllocatorTraits<ObjAllocType>::destroy(_obj_allocator, m_ptr);
+				AllocatorTraits<ObjAllocType>::deallocate(m_ptr, 1);
 				m_ptr = nullptr;
 			}
 		}
 
-		inline __SharedCount::_refcount_t* _alloc_refcount() {
-			return new __SharedCount::_refcount_t(1);
+		inline typename RefCount::_refcount_t* _alloc_refcount() {
+			auto* ptr = AllocatorTraits<RefAllocType>::allocate(1);
+			AllocatorTraits<RefAllocType>::construct(_ref_allocator, ptr, 1);
+			return ptr;
 		}
 	public:
 		constexpr SharedPtr() noexcept
@@ -122,7 +138,7 @@ namespace gen {
 			return m_ptr;
 		}
 
-		operator bool() {
+		operator bool() const {
 			return (m_ptr != nullptr);
 		}
 

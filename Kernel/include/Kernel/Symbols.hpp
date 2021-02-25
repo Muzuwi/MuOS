@@ -29,4 +29,10 @@ extern uint64_t _ukernel_physical_start;
 extern uint64_t _ukernel_text_start;
 extern uint64_t _ukernel_text_end;
 
+extern uint64_t _ukernel_virt_kstack_start;
+extern uint64_t _ukernel_virt_kstack_end;
+
+extern uint64_t _ukernel_shared_start;
+extern uint64_t _ukernel_shared_end;
+
 #endif

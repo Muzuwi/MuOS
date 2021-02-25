@@ -1,4 +1,7 @@
+#include <string.h>
 #include <Arch/i386/Paging.hpp>
+#include <Kernel/Debug/kpanic.hpp>
+#include <Kernel/Process/ProcMem.hpp>
 
 bool PML4E::get(FlagPML4E flag) const {
 	return m_data & static_cast<uint64_t>(flag);
@@ -26,4 +29,29 @@ const PML4E& PML4::operator[](void* address) const {
 
 PML4E& PML4::operator[](void* address) {
 	return m_entries[index_pml4e(address)];
+}
+
+PhysPtr<PML4> PML4::clone(ProcMem& pm) {
+	auto page = pm.allocate_phys_kernel(0);
+	assert(page.has_value());
+
+	auto pml4 = page.unwrap().base().as<PML4>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pml4.get_mapped(), this, 0x1000);
+
+	for(unsigned i = 0; i < 512; ++i) {
+		//  Kernel shared memory should be copied as-is
+		if(i >= index_pml4e(&_ukernel_virtual_start) && i <= index_pml4e(&_ukernel_shared_end)) {
+			pml4->m_entries[i] = m_entries[i];
+			continue;
+		}
+
+		//  Clone only present entries
+		if(m_entries[i].get(FlagPML4E::Present)) {
+			auto pdpt = m_entries[i].directory()->clone(pm);
+			pml4->m_entries[i].set_directory(pdpt);
+		}
+	}
+
+	return pml4;
 }

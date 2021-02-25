@@ -104,7 +104,7 @@ void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 		if(ret.has_value()) {
 			auto page = ret.unwrap();
 			auto allocation = PAllocation(page, count_order);
-
+//			kdebugf("[PMM] Allocate PAlloc base=%x%x, order=%i\n", (uint64_t)allocation.base().get() >> 32u, (uint64_t)allocation.base().get() & 0xffffffffu, allocation.order());
 			return KOptional<PAllocation>{allocation};
 		}
 	}
@@ -114,7 +114,7 @@ void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 }
 
 void PMM::free_allocation(const PAllocation& allocation) {
-	kdebugf("[PMM] Deallocate PAlloc base=%x%x, order=%i\n", (uint64_t)allocation.base().get() >> 32u, (uint64_t)allocation.base().get() & 0xffffffffu, allocation.order());
+//	kdebugf("[PMM] Deallocate PAlloc base=%x%x, order=%i\n", (uint64_t)allocation.base().get() >> 32u, (uint64_t)allocation.base().get() & 0xffffffffu, allocation.order());
 
 	for(auto& region : s_available_regions) {
 		if(region.contains(allocation.base()) && region.contains(allocation.end())) {

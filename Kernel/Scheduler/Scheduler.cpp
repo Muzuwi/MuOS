@@ -1,197 +1,179 @@
 #include <Arch/i386/CPU.hpp>
-#include <Kernel/Process/ProcessNew.hpp>
-#include <Kernel/Process/Scheduler.hpp>
+#include <Arch/i386/PortIO.hpp>
+#include <Arch/i386/PIT.hpp>
+#include <Kernel/Process/Process.hpp>
+#include <Kernel/Scheduler/RunQueue.hpp>
+#include <Kernel/Scheduler/Scheduler.hpp>
+#include <Kernel/Interrupt/IRQDispatcher.hpp>
+#include <LibGeneric/Algorithm.hpp>
+#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/LockGuard.hpp>
 
-
-static bool ready = false;
-static gen::List<Process*> s_queue {};
-static Process* s_kernel_idle {}
+static Process* s_kernel_idle {};
+static RunQueue s_rq {};
+static gen::Mutex s_rq_lock {};
 
 [[noreturn]] void _kernel_idle_task() {
 	while(true)
 		asm volatile("hlt");
 }
 
+
+void creat_test() {
+	kdebugf("Hello from other!\n");
+	uint64_t v {};
+	while (true) {
+		v = PIT::milliseconds();
+		Process::current()->msleep(1500);
+		kdebugf("3=%i\n", PIT::milliseconds() - v);
+	}
+}
+
+void hello() {
+	kdebugf("Hello world from kthread!\n");
+	uint64_t v {};
+	unsigned i = 4;
+	while (true) {
+		v = PIT::milliseconds();
+		Process::current()->msleep(500);
+		kdebugf("1=%i\n", PIT::milliseconds() - v);
+		if(i - 1 == 0) {
+			auto* p = Process::create_kernel_thread(creat_test);
+			p->start();
+		}
+		if(i)
+			i--;
+	}
+}
+
+void hello2() {
+	kdebugf("Hello world from kthread2!\n");
+	uint64_t v {};
+	while (true) {
+		v = PIT::milliseconds();
+		Process::current()->msleep(1000);
+		kdebugf("2=%i\n", PIT::milliseconds() - v);
+	}
+}
+
+static uint64_t _dummy_val {0};
+
+/*
+ *  Initialize the scheduler and enter the idle task
+ */
 void Scheduler::init() {
 	CPU::irq_disable();
 
 	kdebugf("[Scheduler] Init idle task\n");
 	s_kernel_idle = Process::create_idle_task(_kernel_idle_task);
 
-//	for(auto& pr : Process::s_process_list)
-//		s_queue.push_back(pr);
+	kdebugf("[Scheduler] Init kernel_init\n");
+	auto* kernel_init = Process::create_kernel_thread(hello);
+	kernel_init->start();
+
+	auto* test2 = Process::create_kernel_thread(hello2);
+	test2->start();
+
+	auto hndl = [](PtraceRegs*) {
+		auto b = in(0x60);
+		(void)b;
+	};
+
+	auto hndl_mouse = [](PtraceRegs*) {
+		auto b = in(0x60);
+		(void)b;
+	};
+
+	IRQDispatcher::register_handler(1, hndl);
+	IRQDispatcher::register_handler(12, hndl_mouse);
+
+	auto* userland = Process::create_userland_test();
+	userland->start();
 
 	kdebugf("[Scheduler] Enter idle task\n");
 	//  Huge hack - only first 8 bytes of prev Process struct are used (only written), so use a dummy memory address
 	//  to prevent null deref.
-	uint64_t _dummy {0};
-	CPU::switch_to(reinterpret_cast<Process*>(&_dummy), s_kernel_idle);
+	CPU::switch_to(reinterpret_cast<Process*>(&_dummy_val), s_kernel_idle);
 }
 
 void Scheduler::tick() {
 	if(!Process::current())
 		return;
 
+	if(Process::current() == s_kernel_idle) {
+		//  Force reschedule when new threads appear
+		if(rq_find_first_runnable() != nullptr)
+			Process::current()->m_flags.need_resched = 1;
+		else
+			Process::current()->m_flags.need_resched = 0;
+		return;
+	}
+
 	auto* process = Process::current();
 	if(process->m_quants_left) {
-		process->m_flags.need_resched = 0;
 		process->m_quants_left--;
 	} else {
-		process->m_quants_left = 10;
-		process->m_flags.need_resched = 1;
+		rq_process_expire(process);
 	}
 }
 
 void Scheduler::schedule() {
-	kpanic();
-
-}
-
-
-
-/*
- *  Initializes the kernel idle task
- */
-//void Scheduler::initialize() {
-//	s_processes.clear();
-//	auto idle_task = new Process(0);
-//
-//
-//	IRQDisabler disabler;
-//	kdebugf("[Scheduler] Init kernel idle task\n");
-//
-//	Process::m_kernel_idle = new Process(0, Ring::CPL0, {(void*)_kernel_idle_task, 0, ExecutableType::Flat});
-//	s_processes.clear();
-//
-//	new IRQSubscriber(0, []{
-//		static unsigned ticksUntilSwitch = 20;
-//		if(ticksUntilSwitch-- == 0) {
-//			ticksUntilSwitch = 20;
-//			Scheduler::switch_task();
-//		}
-//	}, SubscriberPriority::MayTaskSwitch);
-//}
-
-/*
- *  Leaves the kernel and starts the scheduling loop
-
-void Scheduler::enter_scheduler_loop() {
-	asm volatile("cli\n");
-
-	ready = true;
-	Process::m_current = Process::m_kernel_idle;
-	Process::m_current->finalize();
-}
-
-void Scheduler::notify_new_process(Process* v) {
-	ASSERT_IRQ_DISABLED();
-	s_processes.push_back(v);
-}
-
-//  FIXME: Change the entire scheduler
-Process* Scheduler::pick_next() {
-	ASSERT_IRQ_DISABLED();
-	if(s_processes.size() == 0) {   //  FIXME:  Bug in gen::list
-		return Process::m_kernel_idle;
+	//  Swap runqueues when all processes have expired within the active queue
+	if(rq_find_first_runnable() == nullptr) {
+		gen::swap(s_rq.m_active, s_rq.m_expired);
 	}
-	else if(Process::m_current == Process::m_kernel_idle) {
-		if(s_processes.front()->m_state == ProcessState::Sleeping)
-			return Process::m_kernel_idle;
-		else
-			return s_processes.front();
-	}
-	else {
-		auto pr = gen::find_if(s_processes, [](Process* proc) -> bool {
-			return proc->m_pid == Process::m_current->pid();
-		});
-		while(true) {
-			pr = ++pr;
 
-			if((*pr)->m_state == ProcessState::Sleeping) continue;
+	auto* next = rq_find_first_runnable();
+	//  No runnable processes found, switch to idle
+	if(!next)
+		next = s_kernel_idle;
 
-			if(pr != s_processes.end()) {
-				return *pr;
-			}
-			else {
-				if(s_processes.front()->m_state == ProcessState::Sleeping)
-					return Process::m_kernel_idle;
-				else
-					return s_processes.front();
-			}
+	CPU::switch_to(Process::current(), next);
+}
+
+void Scheduler::rq_process_expire(Process* process) {
+	//  Move the process from the active queue to the expired queue
+	s_rq.m_active->remove_process(process);
+	s_rq.m_expired->add_process(process);
+	process->m_flags.need_resched = 1;
+	process->m_quants_left = pri_to_quants((!process->flags().kernel_thread ? 120 : 0) + process->priority());
+}
+
+unsigned Scheduler::pri_to_quants(uint8_t priority) {
+	assert(priority <= 140);
+//	return (140 - priority) * 4;
+	if(priority < 120)
+		return (140 - priority) * 20;
+	else
+		return (140 - priority) * 5;
+}
+
+Process* Scheduler::rq_find_first_runnable() {
+	for(auto& pri_list : s_rq.m_active->m_lists) {
+		if(pri_list.empty()) continue;
+		for(auto& process : pri_list) {
+			if(process->state() == ProcessState::Ready)
+				return process;
 		}
 	}
+
+	return nullptr;
 }
 
-SchedulerAction Scheduler::handle_process_pick(Process* next_process) {
-	ASSERT_IRQ_DISABLED();
-	switch(next_process->m_state) {
-		case ProcessState::New:
-		case ProcessState::Ready:
-			return SchedulerAction::Use;
 
-		case ProcessState::Leaving: {
-			kdebugf("[Scheduler] Cleaning up process PID %i \n", next_process->m_pid);
+void Scheduler::interrupt_return_common() {
+	if(!Process::current())
+		return;
 
-			auto it = gen::find_if(s_processes, [&](Process* proc) -> bool {
-				return proc->m_pid == next_process->m_pid;
-			});
-			if(it != s_processes.end()) {
-				s_processes.erase(it);
-			}
+	if(!Process::current()->flags().need_resched)
+		return;
 
-			it = gen::find_if(Process::m_all_processes, [&](Process* proc) -> bool {
-				return proc->m_pid == next_process->m_pid;
-			});
-			if(it != Process::m_all_processes.end()) {
-				Process::m_all_processes.erase(it);
-			}
-
-			delete next_process;
-
-			return SchedulerAction::PickAgain;
-		}
-
-		case ProcessState::Blocking:
-			//  TODO: Check if block is done, if so we can use this process, otherwise pick another
-			kpanic();
-		case ProcessState::Running:
-			kpanic();
-		case ProcessState::Sleeping:
-			kpanic();
-		default:
-			kpanic();
-	}
+	Process::current()->m_flags.need_resched = 0;
+	schedule();
 }
 
-void Scheduler::yield_with_irq_frame(uint32_t esp) {
-	if (!ready) return;
-	ASSERT_IRQ_DISABLED();
-
-//	kdebugf("Process(%i): yield - irq frame %x\n", Process::m_current->m_pid, esp);
-
-	Process::m_current->m_current_irq_trap_frame = reinterpret_cast<TrapFrame*>(esp);
-	Process::m_current->fpu_state().store();
-
-	if (Process::m_current->m_state == ProcessState::Running)
-		Process::m_current->m_state = ProcessState::Ready;
-
-	auto* next_process = Scheduler::pick_next();
-	while (Scheduler::handle_process_pick(next_process) != SchedulerAction::Use)
-		next_process = Scheduler::pick_next();
-
-	Process::m_current = next_process;
-	Process::m_current->set_state(ProcessState::Running);
-	GDT::set_TSS_stack((void*)(0xdd004000));
-
-	//  Bootstrap task
-	if (!Process::m_current->is_finalized()) {
-		Process::m_current->finalize();
-	}
-	//  Resume paused task
-	else {
-		Process::m_current->fpu_state().restore();
-		CPU::load_segment_registers_for(Process::m_current->ring());
-		CPU::jump_to_irq_frame(Process::m_current->m_current_irq_trap_frame, Process::m_current->directory());
-	}
+void Scheduler::notify_process_start(Process* process) {
+	gen::LockGuard<Mutex> lock {s_rq_lock};
+	s_rq.m_active->add_process(process);
 }
-*/
+

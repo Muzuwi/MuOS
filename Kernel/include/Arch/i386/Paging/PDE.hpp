@@ -23,9 +23,13 @@ public:
 	void set_table(PhysPtr<PT> page_table);
 };
 
+class ProcMem;
+
 class PD {
 	PDE m_entries[512];
 public:
 	const PDE& operator[](void*) const;
 	PDE& operator[](void*);
+
+	PhysPtr<PD> clone(ProcMem&);
 };

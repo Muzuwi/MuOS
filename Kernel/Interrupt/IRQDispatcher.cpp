@@ -1,6 +1,7 @@
 #include <Arch/i386/PortIO.hpp>
-#include <Kernel/Interrupt/IRQDispatcher.hpp>
 #include <Arch/i386/PtraceRegs.hpp>
+#include <Kernel/Interrupt/IRQDispatcher.hpp>
+#include <Kernel/Scheduler/Scheduler.hpp>
 #include <LibGeneric/Mutex.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
@@ -26,6 +27,8 @@ void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 	out(0x20, 0x20);
 
 	IRQDispatcher::dispatch_irq(irq, interrupt_trap_frame);
+
+	Scheduler::interrupt_return_common();
 }
 
 void IRQDispatcher::dispatch_irq(uint8_t irq, PtraceRegs* interrupt_trap_frame) {

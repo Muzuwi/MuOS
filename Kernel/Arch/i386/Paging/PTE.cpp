@@ -1,4 +1,6 @@
+#include <string.h>
 #include <Arch/i386/Paging.hpp>
+#include <Kernel/Process/ProcMem.hpp>
 
 bool PTE::get(FlagPTE flag) const {
 	return m_data & static_cast<uint64_t>(flag);
@@ -22,4 +24,15 @@ const PTE& PT::operator[](void* address) const {
 
 PTE& PT::operator[](void* address) {
 	return m_entries[index_pte(address)];
+}
+
+PhysPtr<PT> PT::clone(ProcMem& pm) {
+	auto page = pm.allocate_phys_kernel(0);
+	assert(page.has_value());
+
+	auto pt = page.unwrap().base().as<PT>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pt.get_mapped(), this, 0x1000);
+
+	return pt;
 }

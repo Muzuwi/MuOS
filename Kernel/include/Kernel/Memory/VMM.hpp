@@ -2,32 +2,34 @@
 #include <Kernel/SystemTypes.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 #include <Arch/i386/Paging.hpp>
+#include <Kernel/Memory/PMM.hpp>
 
+class Process;
 class VMapping;
-enum class MappingPrivilege;
 
 class VMM final {
 	friend class VMapping;
+	friend class SlabAllocator;
 
-//	VMM() {}
-//	static PageDirectory* s_kernel_directory;
-//	static void notify_create_VMapping(gen::SharedPtr<VMapping>, MappingPrivilege);
-//	static void notify_free_VMapping(VMapping&);
-//	static PageTable& ensure_page_table(PageDirectoryEntry&);
+	template<class T>
+	using SharedPtr = gen::SharedPtr<T>;
 
-	static PDPTE& ensure_pdpte(void*);
-	static PDE& ensure_pde(void*);
-	static PTE& ensure_pte(void*);
+	static void vmapping_map(Process*, VMapping const&);
+	static void vmapping_unmap(Process*, VMapping const&);
+
+	static PDPTE& ensure_pdpt(PhysPtr<PML4>, void* addr, ProcMem*);
+	static PDE& ensure_pd(PhysPtr<PML4>, void* addr, ProcMem*);
+	static PTE& ensure_pt(PhysPtr<PML4>, void* addr, ProcMem*);
+
 	static void map_kernel_executable();
 	static void map_physical_identity();
-public:
+	static void prealloc_kernel_pml4e();
 	static void map_pallocation(PAllocation, void*);
-//	static PageDirectory* get_directory();
-//	static VMM& get();
-//	static void init();
-//
-//	static void* allocate_user_stack(size_t stack_size);
-//	static void* allocate_interrupt_stack();
-//	static void* allocate_kerneltask_stack();
+public:
 	static void init();
+	static PhysPtr<PML4> kernel_pml4();
+
+	static constexpr unsigned kernel_stack_size() {
+		return 0x4000;
+	}
 };

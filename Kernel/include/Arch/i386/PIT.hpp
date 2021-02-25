@@ -27,4 +27,6 @@ public:
 	static constexpr unsigned base_frequency() {
 		return 1193182;
 	}
+
+	static void sleep(uint64_t);
 };

@@ -23,9 +23,13 @@ public:
 	void set_page(PhysAddr);
 };
 
+class ProcMem;
+
 class PT {
 	PTE m_entries[512];
 public:
 	const PTE& operator[](void*) const;
 	PTE& operator[](void*);
+
+	PhysPtr<PT> clone(ProcMem&);
 };

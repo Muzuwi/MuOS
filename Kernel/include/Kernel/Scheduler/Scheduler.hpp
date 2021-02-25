@@ -1,23 +1,18 @@
 #pragma once
-
-enum class SchedulerAction {
-	Use,
-	PickAgain
-};
+#include <Kernel/SystemTypes.hpp>
 
 class Process;
 
 class Scheduler {
-//	static Process* pick_next();
-//	static SchedulerAction handle_process_pick(Process*);
+	static unsigned pri_to_quants(uint8_t priority);
+	static void rq_process_expire(Process*);
+	static Process* rq_find_first_runnable();
+
 public:
 	static void init();
 	static void tick();
 	static void schedule();
-//	static void initialize();
-//	static void enter_scheduler_loop();
-//	static void notify_new_process(Process*);
 
-//	static void yield_with_irq_frame(uint32_t esp);
-//	static void switch_task();
+	static void interrupt_return_common();
+	static void notify_process_start(Process*);
 };

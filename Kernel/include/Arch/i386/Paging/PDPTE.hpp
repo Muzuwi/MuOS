@@ -23,9 +23,13 @@ public:
 	void set_directory(PhysPtr<PD> page_directory);
 };
 
+class ProcMem;
+
 class PDPT {
 	PDPTE m_entries[512];
 public:
 	const PDPTE& operator[](void*) const;
 	PDPTE& operator[](void*);
+
+	PhysPtr<PDPT> clone(ProcMem&);
 };

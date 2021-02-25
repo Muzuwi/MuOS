@@ -79,7 +79,12 @@ add_executable(KernelELF
                Kernel/ksleep.cpp
 
                Arch/i386/CPU.cpp
-               )
+               Process/Process.cpp
+               Process/PidAllocator.cpp
+               Arch/i386/asm/SwitchTo.asm
+               Scheduler/Scheduler.cpp
+               Process/ProcMem.cpp
+               Scheduler/RunQueue.cpp Process/ProcCreate.cpp)
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large>

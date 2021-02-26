@@ -19,7 +19,7 @@ Process* Process::create_idle_task(void(*function)()) {
 	auto* kernel_idle = Process::create({.kernel_thread=1}, {0});
 	gen::LockGuard<Mutex> lock {kernel_idle->m_process_lock};
 
-	kernel_idle->m_pml4 = VMM::kernel_pml4();
+	kernel_idle->m_pml4 = VMM::kernel_pml4()->clone(kernel_idle->m_address_space);
 	kernel_idle->m_kernel_stack_bottom = kernel_idle->create_kernel_stack();
 	kernel_idle->m_interrupted_task_frame = (InactiveTaskFrame*)kernel_idle->modify_kernel_stack_bootstrap((void*)function);
 	kernel_idle->m_state = ProcessState::Ready;

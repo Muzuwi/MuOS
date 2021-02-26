@@ -41,7 +41,7 @@ PhysPtr<PML4> PML4::clone(ProcMem& pm) {
 
 	for(unsigned i = 0; i < 512; ++i) {
 		//  Kernel shared memory should be copied as-is
-		if(i >= index_pml4e(&_ukernel_virtual_start) && i <= index_pml4e(&_ukernel_shared_end)) {
+		if(i >= index_pml4e(&_ukernel_shared_start) && i <= index_pml4e(&_ukernel_shared_end)) {
 			pml4->m_entries[i] = m_entries[i];
 			continue;
 		}

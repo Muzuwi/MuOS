@@ -75,6 +75,7 @@ class Process {
 	[[maybe_unused]] static void finalize_switch(Process* prev, Process* next);
 
 	void* create_kernel_stack();
+	void* create_user_stack();
 	void* modify_kernel_stack_bootstrap(void* ret_address);
 public:
 	static Process* current();

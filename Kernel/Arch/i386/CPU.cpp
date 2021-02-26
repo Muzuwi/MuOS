@@ -4,6 +4,7 @@
 #include <Kernel/Process/Process.hpp>
 #include <Arch/i386/CPU.hpp>
 #include <Arch/i386/CPUID.hpp>
+#include <Arch/i386/PortIO.hpp>
 
 void CPU::initialize_features() {
 	uint32_t new_efer {0x100}; //  Long-Mode enable
@@ -19,8 +20,7 @@ void CPU::initialize_features() {
 	}
 	kdebugf("\n");
 
-	asm volatile("wrmsr"
-	:: "a"(new_efer), "d"(0), "c"(0xC0000080));
+	wrmsr(0xC0000080, (uint64_t)new_efer);
 }
 
 extern "C" void _switch_to_asm(Process*, Process*);

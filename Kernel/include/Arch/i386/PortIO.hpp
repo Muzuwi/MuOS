@@ -16,6 +16,10 @@ uint8_t in(uint16_t);
 uint16_t inw(uint16_t);
 uint32_t ind(uint16_t);
 
+void wrmsr(uint32_t ecx, uint64_t value);
+uint64_t rdmsr(uint32_t ecx);
+
+
 #ifdef __cplusplus
 }
 #endif

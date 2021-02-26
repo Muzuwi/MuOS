@@ -1,4 +1,5 @@
 #include <string.h>
+#include <Arch/i386/CPU.hpp>
 #include <Arch/i386/GDT.hpp>
 #include <Kernel/Process/PidAllocator.hpp>
 #include <Kernel/Process/Process.hpp>
@@ -139,6 +140,9 @@ void Process::finalize_switch(Process* prev, Process* next) {
 
 	//  Reset IRQ stack in the TSS
 	GDT::set_irq_stack(next->m_kernel_stack_bottom);
+
+	//  Set kernel GS_base to point to the new process
+	CPU::set_kernel_gs_base(next);
 }
 
 

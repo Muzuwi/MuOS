@@ -41,3 +41,7 @@ void CPU::irq_disable() {
 void CPU::irq_enable() {
 	asm volatile("sti");
 }
+
+void CPU::set_kernel_gs_base(void* p) {
+	wrmsr(0xC0000102, (uint64_t)p);
+}

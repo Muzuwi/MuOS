@@ -86,6 +86,9 @@ add_executable(KernelELF
                Process/ProcMem.cpp
                Scheduler/RunQueue.cpp
                Process/ProcCreate.cpp
+
+               Syscalls/SysEntry.asm
+               Syscalls/Syscall.cpp
                )
 
 target_compile_options(KernelELF

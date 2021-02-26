@@ -16,8 +16,8 @@ List<Process*> Process::s_process_list {};
 gen::Mutex Process::s_process_list_lock {};
 
 Process::Process(pid_t pid, ProcessFlags flags)
-: m_interrupted_task_frame(nullptr), m_pid(pid), m_flags(flags),
-  m_state(ProcessState::New), m_kernel_stack_bottom(nullptr), m_address_space(), m_quants_left(0), m_process_lock()
+: m_interrupted_task_frame(nullptr), m_kernel_stack_bottom(nullptr), m_userland_stack(nullptr), m_process_lock(),
+  m_pid(pid), m_flags(flags), m_state(ProcessState::New),  m_address_space(), m_priority(0), m_quants_left(0)
 {
 }
 

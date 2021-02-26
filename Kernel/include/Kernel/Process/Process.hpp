@@ -46,16 +46,17 @@ class Process {
 	static Mutex s_process_list_lock;
 
 	//  !!!!!!!!!!!!!!!!!!!!!
-	//  These MUST be the first 2 members of the class
+	//  These MUST be the first 4 members of the class
 	//  !!!!!!!!!!!!!!!!!!!!!
-	[[maybe_unused]] InactiveTaskFrame* m_interrupted_task_frame;
-	PhysPtr<PML4> m_pml4;
+	[[maybe_unused]] InactiveTaskFrame* m_interrupted_task_frame;   //  Offset 0x0
+	PhysPtr<PML4> m_pml4;                                           //  Offset 0x8
+	void* m_kernel_stack_bottom;                                    //  Offset 0x10
+	[[maybe_unused]] void* m_userland_stack;                                         //  Offset 0x18
 
 	Mutex m_process_lock;
 	pid_t m_pid;
 	ProcessFlags m_flags;
 	ProcessState m_state;
-	void* m_kernel_stack_bottom;
 	ProcMem m_address_space;
 	uint8_t m_priority;
 	uint64_t m_quants_left;

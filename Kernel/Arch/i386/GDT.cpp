@@ -22,11 +22,12 @@ static uint64_t descriptor_table[16] {
 	0x0,                        //  Null
 	0x00209A0000000000,         //  Code0
 	0x0000920000000000,         //  Data0
-	0x0020FA0000000000,         //  Code3
+	0x0,                        //  Null
 	0x0000F20000000000,         //  Data3
+	0x0020FA0000000000,         //  Code3
 	_create_tss_lower_descriptor(),    //  TSS_lower
 	_create_tss_higher_descriptor(),    //  TSS_higher,
-	0,0,0,0,0,0,0,0,0
+	0,0,0,0,0,0,0,0,
 };
 
 

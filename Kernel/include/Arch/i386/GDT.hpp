@@ -3,9 +3,9 @@
 
 constexpr unsigned kernelcdescr_offset = 1,
 		kernelddescr_offset = 2,
-		usercdescr_offset = 3,
+		usercdescr_offset = 5,
 		userddescr_offset = 4,
-		tss_offset = 5;
+		tss_offset = 6;
 
 constexpr unsigned user_CS = usercdescr_offset * 8,
 		user_DS = userddescr_offset * 8,
@@ -34,6 +34,10 @@ namespace GDT {
 
 	constexpr unsigned get_kernel_DS() {
 		return kernel_DS;
+	}
+
+	constexpr unsigned get_user_base_seg() {
+		return 3*8;
 	}
 
 	void lgdt(void* ptr);

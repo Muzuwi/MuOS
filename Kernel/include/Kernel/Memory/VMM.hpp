@@ -32,4 +32,8 @@ public:
 	static constexpr unsigned kernel_stack_size() {
 		return 0x4000;
 	}
+
+	static constexpr unsigned user_stack_size() {
+		return 0x4000;
+	}
 };

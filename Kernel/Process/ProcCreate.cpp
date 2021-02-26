@@ -80,7 +80,20 @@ void* Process::modify_kernel_stack_bootstrap(void* ret_address) {
 
 	//  Set up user stack
 	if(!m_flags.kernel_thread) {
-		auto stack_mapping = VMapping::create((void*)0x7fff00000000, 0x4000, VM_READ | VM_WRITE, MAP_PRIVATE);
+		//  FIXME: Actually randomize
+		auto random = [](size_t, size_t) -> size_t {
+			return 4;
+		};
+
+		uint64_t stack_top;
+		if(m_flags.randomize_vm) {
+			stack_top = (uintptr_t)&_userspace_stack_start
+			             + VMM::user_stack_size() * random(0, 0x40000);
+		} else {
+			stack_top = (uintptr_t)&_userspace_stack_start;
+		}
+
+		auto stack_mapping = VMapping::create((void*)stack_top, VMM::user_stack_size(), VM_READ | VM_WRITE, MAP_PRIVATE);
 		stack_mapping->map(this);
 		m_address_space.create_vmregion(gen::move(stack_mapping));
 
@@ -155,8 +168,13 @@ void* Process::create_kernel_stack() {
 		return 4;
 	};
 
-	auto kstack_top = (uintptr_t)&_ukernel_virt_kstack_start
-	                  + VMM::kernel_stack_size() * random(0, 0x3fffe00);
+	uint64_t kstack_top;
+	if(m_flags.randomize_vm) {
+		kstack_top = (uintptr_t)&_ukernel_virt_kstack_start
+		             + VMM::kernel_stack_size() * random(0, 0x3fffe00);
+	} else {
+		kstack_top = (uintptr_t)&_ukernel_virt_kstack_start;
+	}
 	auto kstack_bottom = kstack_top + VMM::kernel_stack_size();
 
 	auto mapping = VMapping::create((void*)kstack_top, VMM::kernel_stack_size(), VM_READ | VM_WRITE | VM_KERNEL, MAP_PRIVATE);

@@ -23,6 +23,8 @@ ENTRY(_entrypoint_x32)
 
 _userspace_virtual_start = 0x0;
 _userspace_virtual_end = 0x00007fffffffffff;
+_userspace_stack_start = 0x00007fff00000000;
+_userspace_stack_end = 0x00007fffffffffff;
 
 _ukernel_virtual_start = 0xffff800000000000;
 _ukernel_identity_start = 0xffff800000000000;

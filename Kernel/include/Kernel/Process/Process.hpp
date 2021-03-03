@@ -60,6 +60,7 @@ class Process {
 	ProcMem m_address_space;
 	uint8_t m_priority;
 	uint64_t m_quants_left;
+	uint64_t m_preempt_count;
 
 	//	List<Process*> m_children;
 
@@ -82,6 +83,9 @@ public:
 	static Process* current();
 	static Process* create_kernel_thread(void(*)());
 
+	static void self_lock();
+	static void self_unlock();
+
 	void start();
 	void set_state(ProcessState);
 	void force_reschedule();
@@ -94,6 +98,10 @@ public:
 	uint8_t priority() const;
 	InactiveTaskFrame* frame() const;
 	ProcMem* memory();
+
+	void preempt_enable();
+	void preempt_disable();
+	uint64_t preempt_count() const;
 };
 
 //static_assert(__builtin_offsetof(Process, m_interrupted_task_frame) == 0);

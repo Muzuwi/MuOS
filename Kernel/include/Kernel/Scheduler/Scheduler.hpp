@@ -15,4 +15,5 @@ public:
 
 	static void interrupt_return_common();
 	static void notify_process_start(Process*);
+	static void wake_up(Process*);
 };

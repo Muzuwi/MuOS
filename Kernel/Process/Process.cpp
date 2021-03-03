@@ -17,7 +17,8 @@ gen::Mutex Process::s_process_list_lock {};
 
 Process::Process(pid_t pid, ProcessFlags flags)
 : m_interrupted_task_frame(nullptr), m_kernel_stack_bottom(nullptr), m_userland_stack(nullptr), m_process_lock(),
-  m_pid(pid), m_flags(flags), m_state(ProcessState::New),  m_address_space(), m_priority(0), m_quants_left(0)
+  m_pid(pid), m_flags(flags), m_state(ProcessState::New),  m_address_space(), m_priority(0), m_quants_left(0),
+  m_preempt_count(0)
 {
 }
 
@@ -83,4 +84,26 @@ void Process::start() {
 
 ProcMem* Process::memory() {
 	return &m_address_space;
+}
+
+void Process::preempt_enable() {
+	__atomic_add_fetch(&m_preempt_count, -1, __ATOMIC_SEQ_CST);
+}
+
+void Process::preempt_disable() {
+	__atomic_add_fetch(&m_preempt_count, 1, __ATOMIC_SEQ_CST);
+}
+
+uint64_t Process::preempt_count() const {
+	return __atomic_load_n(&m_preempt_count, __ATOMIC_SEQ_CST);
+}
+
+void Process::self_lock() {
+	auto* process = Process::current();
+	process->m_process_lock.lock();
+}
+
+void Process::self_unlock() {
+	auto* process = Process::current();
+	process->m_process_lock.unlock();
 }

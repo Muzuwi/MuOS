@@ -110,6 +110,11 @@ void Scheduler::tick() {
 	}
 
 	auto* process = Process::current();
+	//  Cannot preempt, process is holding locks
+	if(process->preempt_count() > 0) {
+		return;
+	}
+
 	if(process->m_quants_left) {
 		process->m_quants_left--;
 	} else {
@@ -118,6 +123,7 @@ void Scheduler::tick() {
 }
 
 void Scheduler::schedule() {
+	Process::current()->preempt_disable();
 	//  Swap runqueues when all processes have expired within the active queue
 	if(rq_find_first_runnable() == nullptr) {
 		gen::swap(s_rq.m_active, s_rq.m_expired);
@@ -129,6 +135,7 @@ void Scheduler::schedule() {
 		next = s_kernel_idle;
 
 	CPU::switch_to(Process::current(), next);
+	Process::current()->preempt_enable();
 }
 
 void Scheduler::rq_process_expire(Process* process) {
@@ -177,3 +184,13 @@ void Scheduler::notify_process_start(Process* process) {
 	s_rq.m_active->add_process(process);
 }
 
+void Scheduler::wake_up(Process* process) {
+	if(!process) return;
+
+	assert(process->state() != ProcessState::Running);
+	process->set_state(ProcessState::Ready);
+
+	auto* current = Process::current();
+	if(process->priority() < current->priority())
+		current->force_reschedule();
+}

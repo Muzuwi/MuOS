@@ -1,19 +1,16 @@
-#ifndef LIBC_UNISTD_H
-#define LIBC_UNISTD_H
+#ifndef __LIBC_UNISTD_H
+# define __LIBC_UNISTD_H
 
 #include <sys/types.h>
 
-#ifdef __cplusplus
+# ifdef __cplusplus
 extern "C" {
-#endif
+# endif
 
-ssize_t write(int, const void*, size_t);
+pid_t fork(void);
 
-pid_t getpid();
-unsigned int sleep(unsigned int ms);
-
-#ifdef __cplusplus
+# ifdef __cplusplus
 }
-#endif
+# endif
 
 #endif

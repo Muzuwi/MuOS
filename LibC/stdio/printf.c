@@ -188,7 +188,8 @@ int printf(const char* format, ...){
 	int c = _vsnprintf_internal(format, destination, args);
 	va_end(args);
 
-	puts(buf);
+	//  FIXME:  Dummy
+//	puts(buf);
 
 	return c;
 }
@@ -202,7 +203,8 @@ int vprintf(const char* format, va_list args){
 
 	int c = _vsnprintf_internal(format, destination, args);
 
-	puts(buf);
+	//  FIXME:  Dummy
+//	puts(buf);
 
 	return c;
 }

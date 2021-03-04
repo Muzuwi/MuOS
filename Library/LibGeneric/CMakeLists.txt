@@ -6,6 +6,7 @@ add_library(
     Allocator.hpp)
 
 set_target_properties(LibGeneric PROPERTIES PREFIX "")
+set_target_properties(LibGeneric PROPERTIES OUTPUT_NAME "libGeneric")
 
 target_compile_options(LibGeneric
         PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -fpermissive -D__is_kernel_build__ -mcmodel=large -mno-red-zone>)

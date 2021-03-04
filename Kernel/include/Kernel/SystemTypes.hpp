@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <asm/errno.h>
-#include <sys/mman.h>
 #include <sys/types.h>
 
 struct mem_range_t {

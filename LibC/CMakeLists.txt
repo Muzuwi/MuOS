@@ -16,13 +16,10 @@ add_library(
         string/strcmp.c
         string/strlen.c
         stdio/perror.c
-        sys/write.c
-        sys/syscall.c
-        sys/sleep.c
-        sys/getpid.c
 )
 
 set_target_properties(LibC PROPERTIES PREFIX "")
+set_target_properties(LibC PROPERTIES OUTPUT_NAME "libC")
 
 target_compile_options(LibC
         PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large -mno-red-zone>

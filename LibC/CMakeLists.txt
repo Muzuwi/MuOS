@@ -1,4 +1,7 @@
 include(../Toolchain/CMakeLists.txt)
+message("-- Userland library install prefix is ${CMAKE_INSTALL_PREFIX}")
+
+add_subdirectory(CRT/)
 
 add_library(
         LibC
@@ -19,26 +22,25 @@ add_library(
         sys/getpid.c
 )
 
-add_library(crt0 OBJECT
-    crt0.asm
-    )
-set_target_properties(crt0 PROPERTIES PREFIX "")
+set_target_properties(LibC PROPERTIES PREFIX "")
 
 target_compile_options(LibC
         PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large -mno-red-zone>
 )
+
 add_dependencies(LibC
-    crt0
-)
+                 LibC_CRT0
+                 LibC_CRTi
+                 LibC_CRTn
+                )
 
 install(TARGETS LibC
         DESTINATION lib
 )
 
-install(TARGETS crt0
-        OBJECTS DESTINATION lib
-)
-
 install(DIRECTORY include/
         DESTINATION include
 )
+
+add_custom_command(TARGET LibC POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} --install ${CMAKE_CURRENT_BINARY_DIR})

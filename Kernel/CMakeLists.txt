@@ -89,7 +89,9 @@ add_executable(KernelELF
 
                Syscalls/SysEntry.asm
                Syscalls/Syscall.cpp
-               Locks/KMutex.cpp)
+               Locks/KMutex.cpp
+               Process/ProcSyscalls.cpp
+               )
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large>

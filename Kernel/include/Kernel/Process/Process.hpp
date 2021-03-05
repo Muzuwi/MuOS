@@ -103,6 +103,12 @@ public:
 	void preempt_enable();
 	void preempt_disable();
 	uint64_t preempt_count() const;
+
+	/*
+	 *  Syscalls - defined in ProcSyscalls.cpp
+	 */
+	static pid_t getpid();
+	static uint64_t getpriority();
 };
 
 //static_assert(__builtin_offsetof(Process, m_interrupted_task_frame) == 0);

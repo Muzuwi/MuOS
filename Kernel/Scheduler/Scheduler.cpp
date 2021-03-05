@@ -56,7 +56,7 @@ void hello2() {
 	}
 }
 
-static uint64_t _dummy_val {0};
+static uint8_t _dummy_val[sizeof(Process)] {};
 
 /*
  *  Initialize the scheduler and enter the idle task

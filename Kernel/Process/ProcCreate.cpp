@@ -135,14 +135,22 @@ void Process::finalize_switch(Process* prev, Process* next) {
 	if(prev->state() == ProcessState::Running)
 		prev->set_state(ProcessState::Ready);
 
+	//  Save previous process' kernel GS base
+	prev->m_kernel_gs_base = CPU::get_kernel_gs_base();
+
 	s_current = next;
 	s_current->set_state(ProcessState::Running);
 
 	//  Reset IRQ stack in the TSS
 	GDT::set_irq_stack(next->m_kernel_stack_bottom);
 
-	//  Set kernel GS_base to point to the new process
-	CPU::set_kernel_gs_base(next);
+	//  Restore saved kernel gs base of next process
+	CPU::set_kernel_gs_base((void*)next->m_kernel_gs_base);
+	//  Restore proper gs base for the process
+	//  As the process is always preempted in kernel mode,
+	//  the kernel_gs_base is pointing to userland's GS_base after SWAPGS,
+	//  and gs_base is pointing to the process struct
+	CPU::set_gs_base(next);
 }
 
 

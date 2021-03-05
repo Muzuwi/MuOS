@@ -17,10 +17,10 @@ _ukernel_syscall_entry:
 
     mov rdi, rsp
 
-;    sti
+    sti
 extern _ZN7Syscall14syscall_handleEP10PtraceRegs
     call _ZN7Syscall14syscall_handleEP10PtraceRegs
-;    cli
+    cli
 
     RESTORE_REGS_ALL
 

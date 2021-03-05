@@ -55,3 +55,11 @@ void CPU::irq_enable() {
 void CPU::set_kernel_gs_base(void* p) {
 	wrmsr(0xC0000102, (uint64_t)p);
 }
+
+uint64_t CPU::get_kernel_gs_base() {
+	return rdmsr(0xC0000102);
+}
+
+void CPU::set_gs_base(void* p) {
+	wrmsr(0xC0000101, (uint64_t)p);
+}

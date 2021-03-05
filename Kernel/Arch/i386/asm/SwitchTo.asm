@@ -29,6 +29,9 @@ _task_enter_bootstrap:
     RESTORE_REGS_ALL
     ;  Skip over PtraceRegs.origin
     add rsp, 8
+    ;  Unconditionally swapgs, afterwards kernel_gs_base points to the process and gs_base
+    ;  is set in the process struct.
+    swapgs
     ;  Enter task for the first time
     iretq
 

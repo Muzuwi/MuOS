@@ -61,6 +61,7 @@ class Process {
 	uint8_t m_priority;
 	uint64_t m_quants_left;
 	uint64_t m_preempt_count;
+	uint64_t m_kernel_gs_base;
 
 	//	List<Process*> m_children;
 

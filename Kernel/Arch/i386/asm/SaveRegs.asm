@@ -75,3 +75,17 @@
     pop rbx
     pop rax
 %endmacro
+
+%macro SWAPGS_WHEN_NECESSARY 0
+    cmp qword [rsp+8], 8
+    je %%__skip_swapgs
+    swapgs
+%%__skip_swapgs:
+%endmacro
+
+%macro EXCEPT_SWAPGS_WHEN_NECESSARY 0
+    cmp qword [rsp+16], 8
+    je %%__skip_swapgs
+    swapgs
+%%__skip_swapgs:
+%endmacro

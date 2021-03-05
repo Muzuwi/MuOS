@@ -6,12 +6,14 @@ section .text
 _exception_entry_%{1:1}:
     ;  Exception does not provide error code, pad with 0 for proper PtraceRegs struct alignment
     push dword 0
+    EXCEPT_SWAPGS_WHEN_NECESSARY
     SAVE_REGS_ALL
     mov rdi, %{1:1}
     mov rsi, rsp
 extern _kernel_exception_entrypoint
     call _kernel_exception_entrypoint
     RESTORE_REGS_ALL
+    EXCEPT_SWAPGS_WHEN_NECESSARY
     ;  Clear padding for PtraceRegs
     add rsp, 8
     iretq
@@ -19,12 +21,14 @@ extern _kernel_exception_entrypoint
 
 %macro def_entry_exception_errorcode 1
 _exception_entry_%{1:1}:
+    EXCEPT_SWAPGS_WHEN_NECESSARY
     SAVE_REGS_ALL
     mov rdi, %{1:1}
     mov rsi, rsp
 extern _kernel_exception_entrypoint
     call _kernel_exception_entrypoint
     RESTORE_REGS_ALL
+    EXCEPT_SWAPGS_WHEN_NECESSARY
     add rsp, 8
     iretq
 %endmacro

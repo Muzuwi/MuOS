@@ -29,6 +29,7 @@ static_assert(sizeof(ProcessFlags) == sizeof(uint32_t), "ProcessFlags should be 
 
 class PML4;
 class VMapping;
+template<class T> class UserPtr;
 struct RunQueue;
 
 using gen::Mutex;
@@ -109,6 +110,7 @@ public:
 	 */
 	static pid_t getpid();
 	static uint64_t getpriority();
+	static void klog(UserPtr<const char>);
 };
 
 //static_assert(__builtin_offsetof(Process, m_interrupted_task_frame) == 0);

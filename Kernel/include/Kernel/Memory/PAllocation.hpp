@@ -16,7 +16,7 @@ public:
 	}
 
 	PhysAddr end() const {
-		return m_allocation_base + (1u<<m_allocation_order)*0x1000;
+		return m_allocation_base + size();
 	}
 
 	PhysAddr last() const {
@@ -25,5 +25,9 @@ public:
 
 	size_t order() const {
 		return m_allocation_order;
+	}
+
+	size_t size() const {
+		return (1u<<m_allocation_order)*0x1000;
 	}
 };

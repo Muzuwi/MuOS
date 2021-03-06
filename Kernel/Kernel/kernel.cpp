@@ -11,6 +11,7 @@
 #include <Arch/i386/CPU.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Scheduler/Scheduler.hpp>
+#include <Kernel/Syscalls/Syscall.hpp>
 
 /*
 	Main kernel entrypoint
@@ -30,6 +31,8 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 	PMM::initialize_deferred_regions();
 
 	KHeap::init();
+
+	Syscall::init();
 
 	kdebugf("[uKernel] Init done, time passed: %ims\n", PIT::milliseconds());
 

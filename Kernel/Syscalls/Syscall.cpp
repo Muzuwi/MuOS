@@ -3,7 +3,7 @@
 #include <Kernel/Syscalls/Syscall.hpp>
 
 template<typename... Args>
-static uint64_t call(void* ptr, Args&&... args) {
+static uint64_t call(void* ptr, Args... args) {
 	return reinterpret_cast<uint64_t(*)(Args...)>(ptr)(args...);
 }
 
@@ -29,8 +29,6 @@ void Syscall::init() {
 }
 
 [[maybe_unused]] void Syscall::syscall_handle(PtraceRegs* regs) {
-	kdebugf("Syscall %x%x in process pid=%i\n", regs->rax>>32u, regs->rax&0xffffffffu, Process::current()->pid());
-
 	auto id = (uint8_t)regs->rax;
 	auto& handler = s_syscall_functions[id];
 	if(!handler._ptr) {

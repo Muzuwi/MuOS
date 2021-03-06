@@ -91,6 +91,8 @@ add_executable(KernelELF
                Syscalls/Syscall.cpp
                Locks/KMutex.cpp
                Process/ProcSyscalls.cpp
+               Memory/UserPtr/UserPtrGeneric.cpp
+               Memory/UserPtr/UserPtrString.cpp
                )
 
 target_compile_options(KernelELF

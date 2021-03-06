@@ -12,6 +12,14 @@ _ukernel_syscall_entry:
     ;  Load kernel stack
     mov rsp, gs:0x10
 
+    ;  Provide PtraceRegs.origin
+    push qword 0
+    push qword 5
+    push qword 5
+    push qword 5
+    push qword 5
+    push qword 5
+
     ;  Save user registers
     SAVE_REGS_ALL
 
@@ -24,6 +32,8 @@ extern _ZN7Syscall14syscall_handleEP10PtraceRegs
 
     RESTORE_REGS_ALL
 
+    ;  Skip PtraceRegs.origin
+    add rsp, 8+5*8
     ;  Restore user stack
     mov rsp, gs:0x18
     ;  Restore userland GS

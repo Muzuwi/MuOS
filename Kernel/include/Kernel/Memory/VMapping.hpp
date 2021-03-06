@@ -2,6 +2,7 @@
 #include <LibGeneric/List.hpp>
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Memory/PAllocation.hpp>
+#include <Kernel/Memory/UserPtr.hpp>
 
 enum VMappingFlags : uint32_t {
 	VM_KERNEL = 0x00000001,
@@ -92,5 +93,24 @@ public:
 
 	void unmap(Process* process) const {
 		VMM::vmapping_unmap(process, *this);
+	}
+
+	KOptional<PhysPtr<uint8_t>> page_for(void* vaddr) const {
+		if(vaddr < m_addr || vaddr >= (uint8_t*)m_addr+m_size)
+			return {};
+
+		auto* region_start = (uint8_t*)m_addr;
+		for(auto& alloc : m_pages) {
+			auto* region_end = region_start + alloc.size();
+			if(vaddr >= region_start && vaddr < region_end) {
+				auto offset = (uint8_t*)vaddr - (uint8_t*)region_start;
+				auto addr = alloc.base().as<uint8_t>()+offset;
+				return addr;
+			}
+
+			region_start = region_end;
+		}
+
+		return {};
 	}
 };

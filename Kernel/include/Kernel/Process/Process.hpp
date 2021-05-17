@@ -40,11 +40,11 @@ class Process {
 	using List = gen::List<T>;
 	template<class T>
 	using SharedPtr = gen::SharedPtr<T>;
-	using Mutex = gen::Spinlock;
+	using Spinlock = gen::Spinlock;
 
 	static Process* s_current;
 	static List<Process*> s_process_list;
-	static Mutex s_process_list_lock;
+	static Spinlock s_process_list_lock;
 
 	//  !!!!!!!!!!!!!!!!!!!!!
 	//  These MUST be the first 4 members of the class
@@ -54,7 +54,7 @@ class Process {
 	void* m_kernel_stack_bottom;                                    //  Offset 0x10
 	[[maybe_unused]] void* m_userland_stack;                                         //  Offset 0x18
 
-	Mutex m_process_lock;
+	Spinlock m_process_lock;
 	pid_t m_pid;
 	ProcessFlags m_flags;
 	ProcessState m_state;

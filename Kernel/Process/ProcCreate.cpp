@@ -18,7 +18,7 @@ Process* Process::create(ProcessFlags flags, KOptional<pid_t> force_pid) {
  */
 Process* Process::create_idle_task(void(*function)()) {
 	auto* kernel_idle = Process::create({.kernel_thread=1}, {0});
-	gen::LockGuard<Mutex> lock {kernel_idle->m_process_lock};
+	gen::LockGuard<Spinlock> lock {kernel_idle->m_process_lock};
 
 	kernel_idle->m_pml4 = VMM::kernel_pml4()->clone(kernel_idle->m_address_space);
 	kernel_idle->m_kernel_stack_bottom = kernel_idle->create_kernel_stack();
@@ -31,7 +31,7 @@ Process* Process::create_idle_task(void(*function)()) {
 
 Process* Process::create_kernel_thread(void (*function)()) {
 	auto* kthread = Process::create({.kernel_thread=1});
-	gen::LockGuard<Mutex> lock {kthread->m_process_lock};
+	gen::LockGuard<Spinlock> lock {kthread->m_process_lock};
 
 	kthread->m_pml4 = VMM::kernel_pml4()->clone(kthread->m_address_space);
 	kthread->m_kernel_stack_bottom = kthread->create_kernel_stack();

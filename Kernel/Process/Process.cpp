@@ -24,7 +24,7 @@ Process::Process(pid_t pid, ProcessFlags flags)
 
 Process::~Process() {
 	assert(m_state == ProcessState::Leaving);
-	LockGuard<Mutex> plist_lock {s_process_list_lock};
+	LockGuard<Spinlock> plist_lock {s_process_list_lock};
 	auto it = gen::find(s_process_list, this);
 	s_process_list.erase(it);
 }
@@ -77,7 +77,7 @@ void Process::msleep(uint64_t ms) {
 }
 
 void Process::start() {
-	gen::LockGuard<Mutex> lock {s_process_list_lock};
+	gen::LockGuard<Spinlock> lock {s_process_list_lock};
 	s_process_list.push_back(this);
 	Scheduler::notify_process_start(this);
 }

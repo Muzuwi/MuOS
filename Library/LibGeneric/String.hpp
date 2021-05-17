@@ -1,287 +1,299 @@
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
-
 #include <LibGeneric/TypeTraits/CharTraits.hpp>
-#include <LibGeneric/Basic_StringView.hpp>
-
-#ifdef __is_kernel_build__
-#include <Kernel/Debug/kassert.hpp>
-#endif
+#include <LibGeneric/Vector.hpp>
 
 namespace gen {
-    template<class CharType>
-    class Basic_String {
-        typedef char_traits<CharType> Traits;
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	class BasicString : protected Vector<CharType, Alloc> {
+		typedef char_traits<CharType> Traits;
 
-        CharType* m_string;
-        size_t m_size;
-        size_t m_buffer_size;
+		typedef typename Alloc<CharType>::template rebind<CharType>::other ObjAllocType;
+		typename AllocatorTraits<ObjAllocType>::allocator_type _allocator;
 
-        void from_basic_string(const Basic_String&);
-        void from_chartype(const CharType*);
+		void _buffer_append(CharType const* cstr) {
+			auto len = Traits::length(cstr);
+			auto old_size = size();
+			resize(old_size + len);
+			Traits::copy(&at(old_size), cstr, len);
+		}
+		void _buffer_append(BasicString const& str) {
+			auto len = str.size();
+			auto old_size = size();
+			resize(old_size + len);
+			Traits::copy(&at(old_size), &str.at(0), len);
+		}
 
-    public:
-        Basic_String();
-        Basic_String(const Basic_String&);
-        Basic_String(const CharType*);
-        ~Basic_String();
+		CharType* _bufptr() {
+			return &Vector<CharType, Alloc>::at(0);
+		}
 
-        CharType& at(size_t) const;
-        CharType& operator[](size_t) const;
+		CharType const* _bufptr() const {
+			return &Vector<CharType, Alloc>::at(0);
+		}
 
-        Basic_String& operator+=(const Basic_String&);
-        Basic_String& operator+=(const CharType*);
-        Basic_String& operator+=(CharType);
+		static size_t _find(CharType const* buf1, size_t n1, CharType const* buf2, size_t n2) {
+			auto r = Traits::find(buf1, n1, buf2, n2);
+			if(r == n1)
+				return npos;
+			else
+				return r;
+		}
 
-        Basic_String& operator=(const Basic_String&);
-        Basic_String& operator=(const CharType*);
+	public:
+		static constexpr size_t npos = -1;
 
-        size_t length() const;
-        size_t size() const;
-        bool empty() const;
+		typedef CharType* iterator;
+		typedef CharType const* const_iterator;
 
-        size_t find(CharType ch) const;
-        size_t find(const Basic_String&) const;
+		BasicString() noexcept
+		: Vector<CharType,Alloc>() {}
 
-        Basic_StringView<CharType> substr(size_t start, size_t n);
+		BasicString(CharType const* cstr) noexcept
+		: Vector<CharType,Alloc>() {
+			_buffer_append(cstr);
+		}
 
-        CharType* chars();
+		BasicString(BasicString const& str) noexcept
+		: Vector<CharType, Alloc>(str) {}
 
-        void clear();
-    };
+		~BasicString() {}
 
-    template<class CharType>
-    Basic_String<CharType>::Basic_String() {
-        m_string = nullptr;
-        m_size = 0;
-        m_buffer_size = 0;
-    }
+		/*
+		 *  Getters
+		 */
+		CharType& at(size_t n) {
+			return Vector<CharType, Alloc>::at(n);
+		}
+		CharType const& at(size_t n) const {
+			return Vector<CharType, Alloc>::at(n);
+		}
 
-    template<class CharType>
-    Basic_String<CharType>::Basic_String(const Basic_String& string) {
-        this->from_basic_string(string);
-    }
+		CharType& operator[](size_t n) {
+			return Vector<CharType, Alloc>::operator[](n);
+		}
+		CharType const& operator[](size_t n) const {
+			return Vector<CharType, Alloc>::operator[](n);
+		}
 
-    template<class CharType>
-    Basic_String<CharType>::Basic_String(const CharType* c_string) {
-        this->from_chartype(c_string);
-    }
+		CharType& front() {
+			return Vector<CharType, Alloc>::at(0);
+		}
+		CharType const& front() const {
+			return Vector<CharType, Alloc>::at(0);
+		}
+		CharType& back() {
+			return Vector<CharType, Alloc>::at(size()-1);
+		}
+		CharType const& back() const {
+			return Vector<CharType, Alloc>::at(size()-1);
+		}
 
-    template<class CharType>
-    Basic_String<CharType>::~Basic_String() {
-        this->clear();
-    }
+		bool empty() const {
+			return Vector<CharType, Alloc>::empty();
+		}
 
-    template<class CharType>
-    void Basic_String<CharType>::from_basic_string(const Basic_String &string) {
-        m_size = string.m_size;
-        m_buffer_size = static_cast<size_t>(m_size*1.5f + 0.5f);
-        m_string = nullptr;
+		size_t size() const {
+			return Vector<CharType, Alloc>::size();
+		}
 
-        if(m_size == 0) return;
+		size_t capacity() const {
+			return Vector<CharType, Alloc>::capacity();
+		}
 
-        m_string = new CharType[m_buffer_size];
-        Traits::copy(m_string, string.m_string, string.m_size);
-    }
+		/*
+		 *  Iterators
+		 */
+		iterator begin() {
+			return Vector<CharType, Alloc>::begin();
+		}
 
-    template<class CharType>
-    void Basic_String<CharType>::from_chartype(const CharType *c_str) {
-        m_size = Traits::length(c_str);
-        m_buffer_size = static_cast<size_t>(m_size*1.5f + 0.5f);
-        m_string = nullptr;
+		const_iterator begin() const {
+			return Vector<CharType, Alloc>::begin();
+		}
 
-        if(m_size == 0) return;
+		iterator end() {
+			return Vector<CharType, Alloc>::end();
+		}
 
-        m_string = new CharType[m_buffer_size];
-        Traits::copy(m_string, c_str, m_size);
-    }
+		const_iterator end() const {
+			return Vector<CharType, Alloc>::end();
+		}
 
-    template<class CharType>
-    void Basic_String<CharType>::clear() {
-        delete[] m_string;
-        m_string = nullptr;
-        m_size = 0;
-        m_buffer_size = 0;
-    }
+		/*
+		 *  Mutators
+		 */
+		void reserve(size_t n) {
+			Vector<CharType, Alloc>::reserve(n);
+		}
+
+		void resize(size_t n, CharType const& v = CharType()) {
+			Vector<CharType, Alloc>::resize(n, v);
+		}
+
+		void clear() {
+			Vector<CharType, Alloc>::clear();
+		}
 
 
+		size_t find(BasicString const& pattern, size_t pos = 0) const {
+			if(pos >= size())
+				return npos;
+			auto len = size() - pos;
+			auto idx = _find(_bufptr()+pos, len, pattern._bufptr(), pattern.size());
+			if (idx != npos)
+				idx += pos;
+			return idx;
+		}
 
-    template<class CharType>
-    size_t Basic_String<CharType>::length() const {
-        return this->size();
-    }
+		size_t find(CharType const* buf, size_t pos, size_t count) const {
+			if(pos >= size())
+				return npos;
+			auto len = size() - pos;
+			auto idx = _find(_bufptr()+pos, len, buf, count);
+			if (idx != npos)
+				idx += pos;
+			return idx;
+		}
 
-    template<class CharType>
-    size_t Basic_String<CharType>::size() const {
-        return m_size;
-    }
+		BasicString& operator+=(BasicString const& str) {
+			_buffer_append(str);
+			return *this;
+		}
 
-    template<class CharType>
-    bool Basic_String<CharType>::empty() const {
-        return m_size == 0;
-    }
+		BasicString& operator+=(CharType const* cstr) {
+			_buffer_append(cstr);
+			return *this;
+		}
 
-    template<class CharType>
-    CharType& Basic_String<CharType>::operator[](size_t n) const {
-#ifdef USE_GEN_EXCEPTIONS
-        //  TODO: Eventually allow exceptions in userland
-#else
-        assert(n < m_size);
-#endif
-        return m_string[n];
-    }
+		BasicString& operator+=(CharType ch) {
+			Vector<CharType, Alloc>::push_back(ch);
+			return *this;
+		}
 
-    template<class CharType>
-    CharType& Basic_String<CharType>::at(size_t n) const {
-        return this->operator[](n);
-    }
+		bool operator==(BasicString const& str) const {
+			if(size() != str.size())
+				return false;
+			return !Traits::compare(_bufptr(), str._bufptr(), size());
+		}
 
-    template<class CharType>
-    Basic_StringView<CharType> Basic_String<CharType>::substr(size_t start, size_t n) {
-#ifdef USE_GEN_EXCEPTIONS
-        //  TODO: Eventually allow exceptions in userland
-#else
-        assert(n < m_size);
-        assert(start + n*sizeof(CharType) < m_size);
-#endif
-        return Basic_StringView<CharType>(m_string + sizeof(CharType)*start, n);
-    }
+		bool operator==(CharType const* cstr) const {
+			if(size() != Traits::length(cstr))
+				return false;
+			return !Traits::compare(_bufptr(), cstr, size());
+		}
 
-    /*
-     *      Overloaded operators for strings
-     */
+	};
 
-    template<class CharType>
-    Basic_String<CharType>& Basic_String<CharType>::operator+=(const Basic_String& string) {
-        if(string.m_size == 0) return *this;
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	BasicString<CharType, Alloc> operator+(BasicString<CharType, Alloc> const& str, BasicString<CharType, Alloc> const& str2) {
+		BasicString<CharType, Alloc> tmp {str};
+		tmp += str2;
+		return tmp;
+	}
 
-        size_t required_buf_size = m_size + string.m_buffer_size;
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	BasicString<CharType, Alloc> operator+(BasicString<CharType, Alloc> const& str, CharType const* str2) {
+		BasicString<CharType, Alloc> tmp {str};
+		tmp += str2;
+		return tmp;
+	}
 
-        if(required_buf_size < m_buffer_size - m_size) {
-            Traits::copy(m_string, string.m_string, string.m_size, m_size);
-            m_size += string.m_size;
-        } else {
-            auto new_buf_size = static_cast<size_t>(required_buf_size*1.5f + 0.5f);
-            auto new_buffer = new CharType[new_buf_size];
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	class BasicStringView {
+		typedef char_traits<CharType> Traits;
+		typedef BasicString<CharType,Alloc> StrType;
 
-            Traits::copy(new_buffer, m_string, m_size);
-            Traits::copy(new_buffer, string.m_string, string.m_size, m_size);
+		StrType const& m_str;
+		size_t m_index;
+		size_t m_len;
+	public:
+		typedef typename StrType::iterator iterator;
+		typedef typename StrType::const_iterator const_iterator;
 
-            delete[] m_string;
+		BasicStringView(StrType const& str, size_t i, size_t len)
+		: m_str(str), m_index(i), m_len(len) {}
 
-            m_string = new_buffer;
-            m_buffer_size = new_buf_size;
-            m_size += string.m_size;
-        }
+		~BasicStringView() {}
 
-        return *this;
-    }
+		const_iterator begin() const {
+			return &m_str.at(m_index);
+		}
 
-    template<class CharType>
-    Basic_String<CharType>& Basic_String<CharType>::operator+=(const CharType *c_string) {
-        size_t len = Traits::length(c_string);
-        if(len == 0) return *this;
+		const_iterator end() const {
+			return &m_str.at(m_index) + m_len;
+		}
 
-        size_t required_buf_size = m_size + len;
+		size_t size() const {
+			return m_len;
+		}
 
-        if(required_buf_size < m_buffer_size) {
-            Traits::copy(m_string, c_string, len, m_size);
-            m_size += len;
-        } else {
-            auto new_buf_size = static_cast<size_t>(required_buf_size*1.5f + 0.5f);
-            auto new_buffer = new CharType[new_buf_size];
+		bool empty() const {
+			return m_len == 0;
+		}
 
-            Traits::copy(new_buffer, m_string, m_size);
-            Traits::copy(new_buffer, c_string, len, m_size);
+		CharType const& at(size_t n) const {
+			return m_str.at(m_index+n);
+		}
 
-            delete[] m_string;
+		CharType const& front() const {
+			return m_str.operator[](m_index);
+		}
 
-            m_string = new_buffer;
-            m_size += len;
-            m_buffer_size = new_buf_size;
-        }
+		CharType const& back() const {
+			return m_str.operator[](m_index+m_len-1);
+		}
 
-        return *this;
-    }
+		int compare(BasicStringView const& view) const {
+			if(view.size() < size())
+				return -1;
+			else if(view.size() > size())
+				return 1;
 
-    template<class CharType>
-    Basic_String<CharType>& Basic_String<CharType>::operator+=(CharType character) {
-        if(m_buffer_size - m_size > 1) {
-            m_string[m_size++] = character;
-        } else {
-            size_t required_buf_size = m_size + 1;
-            auto new_buf_size = static_cast<size_t>(required_buf_size*1.5f + 0.5f);
-            auto new_buffer = new CharType[new_buf_size];
+			return Traits::compare(&m_str.at(m_index), &view.at(view.m_index), size());
+		}
 
-            Traits::copy(new_buffer, m_string, m_size);
+		int compare(StrType const& str) const {
+			if(str.size() < size())
+				return -1;
+			else if(str.size() > size())
+				return 1;
 
-            new_buffer[m_size] = character;
+			return Traits::compare(&m_str.at(m_index), &str.at(0), size());
+		}
 
-            delete[] m_string;
-            m_string = new_buffer;
-            m_size++;
-            m_buffer_size = new_buf_size;
-        }
+		int compare(CharType const* cstr) const {
+			auto len = Traits::length(cstr);
+			if(len < size())
+				return -1;
+			else if(len > size())
+				return 1;
 
-        return *this;
-    }
+			return Traits::compare(&m_str.at(m_index), cstr, size());
+		}
+	};
 
-    template<class CharType>
-    Basic_String<CharType> operator+(const Basic_String<CharType> &A, const Basic_String<CharType> &B){
-        Basic_String<CharType> result(A);
-        result += B;
-        return result;
-    }
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	bool operator==(BasicStringView<CharType,Alloc> const& v1, BasicStringView<CharType,Alloc> const& v2) {
+		return v1.compare(v2) == 0;
+	}
 
-    template<class CharType>
-    Basic_String<CharType> operator+(const Basic_String<CharType> &A, const CharType *B){
-        Basic_String<CharType> result(A);
-        result += B;
-        return result;
-    }
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	bool operator==(BasicStringView<CharType,Alloc> const& view, CharType const* cstr) {
+		return view.compare(cstr) == 0;
+	}
 
-    template<class CharType>
-    Basic_String<CharType> operator+(const Basic_String<CharType> &A, const CharType &B){
-        Basic_String<CharType> result(A);
-        result += B;
-        return result;
-    }
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	bool operator==(BasicString<CharType,Alloc> const& str, BasicStringView<CharType,Alloc> const& view) {
+		return view.compare(str) == 0;
+	}
 
-    template<class CharType>
-    Basic_String<CharType>& Basic_String<CharType>::operator=(const Basic_String<CharType> &str) {
-        if(this == &str)
-            return *this;
-        this->clear();
-        this->from_basic_string(str);
-        return *this;
-    }
+	template<class CharType, template<typename> class Alloc = gen::Allocator>
+	bool operator==(BasicStringView<CharType,Alloc> const& view, BasicString<CharType,Alloc> const& str) {
+		return view.compare(str) == 0;
+	}
 
-    template<class CharType>
-    Basic_String<CharType>& Basic_String<CharType>::operator=(const CharType *c_str) {
-        this->clear();
-        this->from_chartype(c_str);
-        return *this;
-    }
-
-    template<class CharType>
-    size_t Basic_String<CharType>::find(CharType ch) const {
-        Basic_String<CharType> temp;
-        temp += ch;
-
-        return Traits::find(this->m_string, this->m_size, temp.m_string, temp.m_size);
-    }
-
-    template<class CharType>
-    size_t Basic_String<CharType>::find(const Basic_String &str) const {
-        return Traits::find(this->m_string, this->m_size, str.m_string, str.m_size);
-    }
-
-    template<class CharType>
-    CharType* Basic_String<CharType>::chars() {
-        return m_string;
-    }
-
-    typedef Basic_String<char> String;
+	typedef BasicString<char> String;
+	typedef BasicStringView<char> StringView;
 }
+
 

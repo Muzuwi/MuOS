@@ -6,7 +6,7 @@
 #include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <LibGeneric/List.hpp>
-#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
 struct Alarm {
@@ -17,7 +17,7 @@ struct Alarm {
 
 static PIT pit;
 static gen::List<Alarm> s_alarms {};
-static gen::Mutex s_alarms_lock;
+static gen::Spinlock s_alarms_lock;
 
 /*
 	Updates the reload value on channel0 PIT
@@ -77,7 +77,7 @@ uint64_t PIT::milliseconds() {
 }
 
 void PIT::sleep(uint64_t len) {
-	gen::LockGuard<gen::Mutex> guard {s_alarms_lock};
+	gen::LockGuard<gen::Spinlock> guard {s_alarms_lock};
 	auto* proc = Process::current();
 	auto time = milliseconds();
 //	kdebugf("set sleep for pid=%i\n", proc->pid());

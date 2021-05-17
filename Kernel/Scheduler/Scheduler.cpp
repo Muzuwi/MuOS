@@ -6,12 +6,12 @@
 #include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
 #include <LibGeneric/Algorithm.hpp>
-#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
 static Process* s_kernel_idle {};
 static RunQueue s_rq {};
-static gen::Mutex s_rq_lock {};
+static gen::Spinlock s_rq_lock {};
 
 [[noreturn]] void _kernel_idle_task() {
 	while(true)
@@ -180,7 +180,7 @@ void Scheduler::interrupt_return_common() {
 }
 
 void Scheduler::notify_process_start(Process* process) {
-	gen::LockGuard<Mutex> lock {s_rq_lock};
+	gen::LockGuard<Spinlock> lock {s_rq_lock};
 	s_rq.m_active->add_process(process);
 }
 

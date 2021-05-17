@@ -6,7 +6,7 @@
 #include <Kernel/Process/ProcMem.hpp>
 #include <Kernel/SystemTypes.hpp>
 #include <LibGeneric/List.hpp>
-#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 
 enum class ProcessState {
@@ -32,7 +32,7 @@ class VMapping;
 template<class T> class UserPtr;
 struct RunQueue;
 
-using gen::Mutex;
+using gen::Spinlock;
 class Process {
 	friend class Scheduler;
 
@@ -40,7 +40,7 @@ class Process {
 	using List = gen::List<T>;
 	template<class T>
 	using SharedPtr = gen::SharedPtr<T>;
-	using Mutex = gen::Mutex;
+	using Mutex = gen::Spinlock;
 
 	static Process* s_current;
 	static List<Process*> s_process_list;

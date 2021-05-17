@@ -4,7 +4,7 @@
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/Symbols.hpp>
 #include <LibGeneric/BitMap.hpp>
-#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/StdRequired.hpp>
 
@@ -15,7 +15,7 @@
 #define KMALLOC_SANITIZER_BYTE 0x99
 
 KMalloc::Chunk m_mem_allocations[KMalloc::array_count()] {};
-static gen::Mutex s_kmalloc_lock {};
+static gen::Spinlock s_kmalloc_lock {};
 
 KMalloc::KMalloc() {
 	m_total_allocations = 0;
@@ -70,7 +70,7 @@ void KMalloc::mark_range(size_t start_chunk, size_t end_chunk, bool clear=false)
  *  Allocates a memory region
  */
 void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
-	gen::LockGuard<gen::Mutex> lock {s_kmalloc_lock};
+	gen::LockGuard<gen::Spinlock> lock {s_kmalloc_lock};
 
 	//  We're using a structure at the beginning of the
 	//  allocated memory to make freeing memory easier
@@ -155,7 +155,7 @@ void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
 void KMalloc::kmalloc_free(void* pointer) {
 	if(!is_kmalloc_memory(pointer)) return;
 
-	gen::LockGuard<gen::Mutex> lock {s_kmalloc_lock};
+	gen::LockGuard<gen::Spinlock> lock {s_kmalloc_lock};
 
 	uintptr_t address = (uintptr_t)pointer - sizeof(allocation_t);
 #ifdef KMALLOC_DEBUG

@@ -3,7 +3,7 @@
 
 namespace gen {
 
-	class Mutex {
+	class Spinlock {
 		volatile uint64_t m_lock {0};
 	public:
 		void lock() {

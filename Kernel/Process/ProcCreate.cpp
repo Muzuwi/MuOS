@@ -3,7 +3,7 @@
 #include <Arch/i386/GDT.hpp>
 #include <Kernel/Process/PidAllocator.hpp>
 #include <Kernel/Process/Process.hpp>
-#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
 Process* Process::create(ProcessFlags flags, KOptional<pid_t> force_pid) {

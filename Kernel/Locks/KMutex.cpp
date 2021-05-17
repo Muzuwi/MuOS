@@ -3,7 +3,7 @@
 #include <Kernel/Process/Process.hpp>
 
 KMutex::KMutex() noexcept
-: m_owner(nullptr), m_mutex(), m_waiters() {
+: m_owner(nullptr), m_spinlock(), m_waiters() {
 }
 
 void KMutex::lock() {
@@ -19,7 +19,7 @@ void KMutex::unlock() {
 
 bool KMutex::_lock() {
 	//  Successfully acquired the lock
-	if(m_mutex.try_lock()) {
+	if(m_spinlock.try_lock()) {
 		m_owner = Process::current();
 		return true;
 	}
@@ -36,7 +36,7 @@ bool KMutex::_unlock() {
 
 	Process::current()->preempt_disable();
 	m_owner = nullptr;
-	m_mutex.unlock();
+	m_spinlock.unlock();
 	waiter_try_wake_up();
 	Process::current()->preempt_enable();
 

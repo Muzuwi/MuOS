@@ -1,5 +1,5 @@
 #pragma once
-#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/List.hpp>
 
 class Process;
@@ -10,9 +10,9 @@ struct KMutexWaiter {
 
 class KMutex {
 	Process* m_owner;
-	gen::Mutex m_mutex;
+	gen::Spinlock m_spinlock;
 	gen::List<KMutexWaiter> m_waiters;
-	gen::Mutex m_waiters_lock;
+	gen::Spinlock m_waiters_lock;
 
 	bool _lock();
 	bool _unlock();

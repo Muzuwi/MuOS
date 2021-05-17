@@ -5,13 +5,13 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <LibGeneric/List.hpp>
-#include <LibGeneric/Mutex.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
 using gen::List;
 
 static List<SlabAllocator,KMalloc::BootstrapAllocator> s_slab_allocators[7];
-static gen::Mutex s_kheap_lock {};
+static gen::Spinlock s_kheap_lock {};
 static void* s_last_heap_virtual {};
 
 
@@ -54,7 +54,7 @@ static SlabAllocator* grow_heap(size_t object_size) {
 }
 
 void* KHeap::allocate(size_t n) {
-	gen::LockGuard<gen::Mutex> lock {s_kheap_lock};
+	gen::LockGuard<gen::Spinlock> lock {s_kheap_lock};
 
 	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
@@ -80,7 +80,7 @@ void* KHeap::allocate(size_t n) {
 void KHeap::free(void* p, size_t n) {
 	if(!p) return;
 
-	gen::LockGuard<gen::Mutex> lock {s_kheap_lock};
+	gen::LockGuard<gen::Spinlock> lock {s_kheap_lock};
 	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
 		if(allocator.contains_address(p)) {

@@ -7,13 +7,13 @@
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Algorithm.hpp>
 
-using gen::Mutex;
+using gen::Spinlock;
 using gen::List;
 using gen::LockGuard;
 
 Process* Process::s_current {nullptr};
 List<Process*> Process::s_process_list {};
-gen::Mutex Process::s_process_list_lock {};
+gen::Spinlock Process::s_process_list_lock {};
 
 Process::Process(pid_t pid, ProcessFlags flags)
 : m_interrupted_task_frame(nullptr), m_kernel_stack_bottom(nullptr), m_userland_stack(nullptr), m_process_lock(),
@@ -68,7 +68,7 @@ void Process::force_reschedule() {
 
 void Process::msleep(uint64_t ms) {
 	CPU::irq_disable();
-	gen::LockGuard<gen::Mutex> lock {m_process_lock};
+	gen::LockGuard<gen::Spinlock> lock {m_process_lock};
 	m_state = ProcessState::Sleeping;
 	PIT::sleep(ms);
 

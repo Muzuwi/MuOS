@@ -93,6 +93,8 @@ add_executable(KernelELF
                Process/ProcSyscalls.cpp
                Memory/UserPtr/UserPtrGeneric.cpp
                Memory/UserPtr/UserPtrString.cpp
+
+               ACPI/ACPI.cpp
                )
 
 target_compile_options(KernelELF

@@ -13,6 +13,8 @@
 #include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/Syscalls/Syscall.hpp>
 
+#include <Kernel/ACPI/ACPI.hpp>
+
 /*
 	Main kernel entrypoint
 */
@@ -36,6 +38,7 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 
 	kdebugf("[uKernel] Init done, time passed: %ims\n", PIT::milliseconds());
 
+	ACPI::parse_tables();
 	Scheduler::init();
 
 	while (true)

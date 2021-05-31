@@ -1,28 +1,73 @@
-#ifndef PORTIO_KERNEL_H
-#define PORTIO_KERNEL_H
+#pragma once
+#include <Kernel/SystemTypes.hpp>
 
-#include <stddef.h>
-#include <stdint.h>
+namespace Ports {
+	inline void out(uint16 port, uint8 value) {
+		asm volatile("mov %%al, %0\n"
+		             "mov %%dx, %1\n"
+		             "out %%dx, %%al\t\n"
+		:
+		:""(value), ""(port)
+		: "eax");
+	}
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+	inline void outw(uint16 port, uint16 value) {
+		asm volatile("mov %%ax, %0\n"
+		             "mov %%dx, %1\n"
+		             "out %%dx, %%ax\t\n"
+		:
+		:""(value), ""(port)
+		: "eax");
 
-void out(uint16_t, uint8_t);
-void outw(uint16_t port, uint16_t value);
-void outd(uint16_t, uint32_t);
+	}
 
-uint8_t in(uint16_t);
-uint16_t inw(uint16_t);
-uint32_t ind(uint16_t);
+	inline void outd(uint16 port, uint32 value) {
+		asm volatile("mov %%eax, %0\n"
+		             "mov %%dx, %1\n"
+		             "out %%dx, %%eax\t\n"
+		:
+		:""(value), ""(port)
+		: "eax");
+	}
+
+	inline uint8 in(uint16 port) {
+		uint32 data = 0;
+		asm volatile("mov %%dx, %1\n"
+		             "in %%al, %%dx\n"
+		             "mov %0, %%eax\t\n"
+		: "=r"(data)
+		: ""(port)
+		: "eax"
+		);
+		return data;
+	}
+
+	inline uint16 inw(uint16 port) {
+		uint16_t data = 0;
+		asm volatile("mov %%dx, %1\n"
+		             "in %%ax, %%dx\n"
+		             "mov %0, %%ax\t\n"
+		: "=r"(data)
+		: ""(port)
+		: "memory"
+		);
+		return data;
+	}
+
+	inline uint32 ind(uint16 port) {
+		uint32 data = 0;
+		asm volatile("mov %%dx, %1\n"
+		             "in %%eax, %%dx\n"
+		             "mov %0, %%eax\t\n"
+		: "=r"(data)
+		: ""(port)
+		: "memory"
+		);
+		return data;
+
+	}
+}
 
 void wrmsr(uint32_t ecx, uint64_t value);
 uint64_t rdmsr(uint32_t ecx);
 
-
-#ifdef __cplusplus
-}
-#endif
-
-
-#endif

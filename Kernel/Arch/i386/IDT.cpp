@@ -32,20 +32,20 @@ inline void lidt(void* idtr) {
 	by 0x20 to avoid overlapping standard arch interrupts
 */
 static void remap_pic(){
-	out(PIC_MASTER_CMD, 0x11);
-	out(PIC_SLAVE_CMD, 0x11);
+	Ports::out(PIC_MASTER_CMD, 0x11);
+	Ports::out(PIC_SLAVE_CMD, 0x11);
 
-	out(PIC_MASTER_DATA, 0x20);
-	out(PIC_SLAVE_DATA, 40);
+	Ports::out(PIC_MASTER_DATA, 0x20);
+	Ports::out(PIC_SLAVE_DATA, 40);
 
-	out(PIC_MASTER_DATA, 4);
-	out(PIC_SLAVE_DATA, 2);
+	Ports::out(PIC_MASTER_DATA, 4);
+	Ports::out(PIC_SLAVE_DATA, 2);
 
-	out(PIC_MASTER_DATA, ICW4_8086);
-	out(PIC_SLAVE_DATA, ICW4_8086);
+	Ports::out(PIC_MASTER_DATA, ICW4_8086);
+	Ports::out(PIC_SLAVE_DATA, ICW4_8086);
 
-	out(PIC_MASTER_DATA, 0);
-	out(PIC_SLAVE_DATA, 0);
+	Ports::out(PIC_MASTER_DATA, 0);
+	Ports::out(PIC_SLAVE_DATA, 0);
 }
 
 template<typename T>

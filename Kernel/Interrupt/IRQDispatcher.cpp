@@ -23,8 +23,8 @@ extern "C"
 void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 	irq = irq - 32;
 	if(irq > 7)
-		out(0xa0, 0x20);
-	out(0x20, 0x20);
+		Ports::out(0xa0, 0x20);
+	Ports::out(0x20, 0x20);
 
 	IRQDispatcher::dispatch_irq(irq, interrupt_trap_frame);
 

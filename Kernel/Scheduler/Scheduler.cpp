@@ -75,12 +75,12 @@ void Scheduler::init() {
 	test2->start();
 
 	auto hndl = [](PtraceRegs*) {
-		auto b = in(0x60);
+		auto b = Ports::in(0x60);
 		(void)b;
 	};
 
 	auto hndl_mouse = [](PtraceRegs*) {
-		auto b = in(0x60);
+		auto b = Ports::in(0x60);
 		(void)b;
 	};
 

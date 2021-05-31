@@ -19,3 +19,4 @@ Kernel/include/Kernel/PCI
 Kernel/VFS
 Kernel/include/Kernel/VFS
 VFS/
+Userland/Test

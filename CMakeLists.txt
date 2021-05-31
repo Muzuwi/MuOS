@@ -7,6 +7,7 @@ cmake_minimum_required(VERSION 3.15)
 add_subdirectory(LibC/)
 add_subdirectory(Kernel/)
 add_subdirectory(Library/LibGeneric/)
+add_subdirectory(Userland/)
 
 #  Toolchain configuration
 include (Toolchain/CMakeLists.txt)

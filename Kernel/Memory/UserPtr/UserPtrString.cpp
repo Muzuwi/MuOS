@@ -19,7 +19,11 @@ gen::SharedPtr<typename UserPtr<const char>::type> UserPtr<const char>::copy_to_
 		}
 
 		auto page = region.unwrap()->mapping().page_for(user_ptr + size);
-		assert(page.has_value());
+		if(!page.has_value()) {
+			kerrorf("Process[pid=%i] - tried reading from unmapped memory", Process::current()->pid());
+			return gen::SharedPtr<type>{nullptr};
+		}
+
 		auto byte = page.unwrap();
 
 		if(*byte == 0x0) {

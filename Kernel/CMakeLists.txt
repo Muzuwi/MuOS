@@ -95,6 +95,7 @@ add_executable(KernelELF
                Memory/UserPtr/UserPtrString.cpp
 
                ACPI/ACPI.cpp
+               APIC/APIC.cpp
                )
 
 target_compile_options(KernelELF

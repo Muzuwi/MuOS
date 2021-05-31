@@ -14,3 +14,8 @@ Toolchain/*
 MuOS.*
 cmake-build-muos/
 Root/
+Kernel/PCI
+Kernel/include/Kernel/PCI
+Kernel/VFS
+Kernel/include/Kernel/VFS
+VFS/

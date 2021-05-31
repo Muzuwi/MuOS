@@ -9,7 +9,7 @@
 #include <Arch/i386/PortIO.hpp>
 
 void CPU::initialize_features() {
-	uint32_t new_efer {0x100}; //  Long-Mode enable
+	uint32_t new_efer {0x500}; //  Long-Mode enable + Long-mode active
 
 	kdebugf("[CPU] Support ");
 	if(CPUID::has_NXE()) {
@@ -19,6 +19,9 @@ void CPU::initialize_features() {
 	if(CPUID::has_SEP()) {
 		kdebugf("SEP ");
 		new_efer |= 1;
+	}
+	if(CPUID::has_LAPIC()) {
+		kdebugf("LAPIC ");
 	}
 	kdebugf("\n");
 

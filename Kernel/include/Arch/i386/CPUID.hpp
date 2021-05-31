@@ -5,4 +5,5 @@ namespace CPUID {
 	bool has_NXE();
 	bool has_SEP();
 	bool has_RDRAND();
+	bool has_LAPIC();
 }

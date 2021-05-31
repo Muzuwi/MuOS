@@ -25,3 +25,9 @@ bool CPUID::has_RDRAND() {
 	__get_cpuid(0x1, &eax, &_unused, &ecx, &edx);
 	return ecx & (1u << 30u);
 }
+
+bool CPUID::has_LAPIC() {
+	unsigned int eax, _unused, edx;
+	__get_cpuid(0x1, &eax, &_unused, &_unused, &edx);
+	return edx & (1u << 9u);
+}

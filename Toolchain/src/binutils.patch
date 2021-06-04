@@ -1,0 +1,98 @@
+diff -ruN binutils-2.35/bfd/config.bfd binutils/bfd/config.bfd
+--- binutils-2.35/bfd/config.bfd	2020-07-24 11:12:19.000000000 +0200
++++ binutils/bfd/config.bfd	2020-12-23 19:37:16.467842761 +0100
+@@ -222,6 +222,19 @@
+ 
+ case "${targ}" in
+ # START OF targmatch.h
++  i[3-7]86-*-muos*)
++    targ_defvec=i386_elf32_vec
++    targ_selvecs=
++    targ64_selvecs=x86_64_elf64_vec
++    ;;
++    
++#ifdef BFD64
++  x86_64-*-muos*)
++    targ_defvec=x86_64_elf64_vec
++    targ_selvecs=i386_elf32_vec
++    want64=true
++    ;;
++#endif
+ #ifdef BFD64
+   aarch64-*-darwin*)
+     targ_defvec=aarch64_mach_o_vec
+diff -ruN binutils-2.35/config.sub binutils/config.sub
+--- binutils-2.35/config.sub	2020-07-24 11:12:19.000000000 +0200
++++ binutils/config.sub	2020-12-23 19:37:20.867780479 +0100
+@@ -1366,7 +1366,8 @@
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+ 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+-	     | nsk* | powerunix)
++	     | nsk* | powerunix \
++	     | muos* )
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	qnx*)
+diff -ruN binutils-2.35/gas/configure.tgt binutils/gas/configure.tgt
+--- binutils-2.35/gas/configure.tgt	2020-07-24 11:12:19.000000000 +0200
++++ binutils/gas/configure.tgt	2020-12-23 19:35:02.106412526 +0100
+@@ -255,6 +255,8 @@
+   i386-*-*nt*)				fmt=coff em=pe ;;
+   i386-*-rdos*)				fmt=elf ;;
+   i386-*-darwin*)			fmt=macho ;;
++  
++  i386-*-muos*)				fmt=elf ;;
+ 
+   ia16-*-elf*)				fmt=elf ;;
+ 
+diff -ruN binutils-2.35/ld/configure.tgt binutils/ld/configure.tgt
+--- binutils-2.35/ld/configure.tgt	2020-07-24 11:12:20.000000000 +0200
++++ binutils/ld/configure.tgt	2020-12-23 19:35:02.106412526 +0100
+@@ -43,6 +43,15 @@
+ # Please try to keep this table more or less in alphabetic order - it
+ # makes it much easier to lookup a specific archictecture.
+ case "${targ}" in
++i[3-7]86-*-muos*)
++			targ_emul=elf_i386_muos
++			targ_extra_emuls=elf_i386
++			targ64_extra_emuls="elf_x86_64_muos elf_x86_64"
++			;;
++x86_64-*-muos*)
++			targ_emul=elf_x86_64_muos
++			targ_extra_emuls="elf_i386_muos elf_x86_64 elf_i386"
++			;;
+ aarch64_be-*-elf)	targ_emul=aarch64elfb
+ 			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b armelfb armelf"
+ 			;;
+diff -ruN binutils-2.35/ld/emulparams/elf_i386_muos.sh binutils/ld/emulparams/elf_i386_muos.sh
+--- binutils-2.35/ld/emulparams/elf_i386_muos.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils/ld/emulparams/elf_i386_muos.sh	2020-12-23 19:35:02.106412526 +0100
+@@ -0,0 +1,3 @@
++. ${srcdir}/emulparams/elf_i386.sh
++GENERATE_SHLIB_SCRIPT=yes
++GENERATE_PIE_SCRIPT=yes
+diff -ruN binutils-2.35/ld/emulparams/elf_x86_64_muos.sh binutils/ld/emulparams/elf_x86_64_muos.sh
+--- binutils-2.35/ld/emulparams/elf_x86_64_muos.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils/ld/emulparams/elf_x86_64_muos.sh	2020-12-23 19:35:02.106412526 +0100
+@@ -0,0 +1 @@
++. ${srcdir}/emulparams/elf_x86_64.sh
+diff -ruN binutils-2.35/ld/Makefile.am binutils/ld/Makefile.am
+--- binutils-2.35/ld/Makefile.am	2020-07-24 11:12:20.000000000 +0200
++++ binutils/ld/Makefile.am	2020-12-23 19:35:02.109745812 +0100
+@@ -286,6 +286,7 @@
+ 	eelf_i386_ldso.c \
+ 	eelf_i386_sol2.c \
+ 	eelf_i386_vxworks.c \
++	eelf_i386_muos.c \
+ 	eelf_iamcu.c \
+ 	eelf_s390.c \
+ 	eh8300elf.c \
+@@ -452,6 +453,7 @@
+ 	eelf_x86_64_cloudabi.c \
+ 	eelf_x86_64_fbsd.c \
+ 	eelf_x86_64_sol2.c \
++	eelf_x86_64_muos.c \
+ 	ehppa64linux.c \
+ 	ei386pep.c \
+ 	emmo.c

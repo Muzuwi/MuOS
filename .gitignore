@@ -4,12 +4,15 @@
 *.bin
 *.iso
 *.img
-*.sh
 .idea/*
 .stdir/*
 .gdb_history
 docs/*
-Toolchain/*
+Toolchain/src/archives
+Toolchain/src/binutils/
+Toolchain/src/build-binutils/
+Toolchain/src/gcc/
+Toolchain/src/build-gcc/
 !Toolchain/CMakeLists.txt
 MuOS.*
 cmake-build-muos/

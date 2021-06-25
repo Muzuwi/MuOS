@@ -16,11 +16,14 @@
 #include <Kernel/APIC/APIC.hpp>
 #include <Kernel/ACPI/ACPI.hpp>
 
+#include <Kernel/Device/Serial.hpp>
+
 /*
 	Main kernel entrypoint
 */
 extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 	TTY::init();
+	Serial::init();
 	kdebugf("[uKernel64] Hello, world!\n");
 
 	IDT::init();

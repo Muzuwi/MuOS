@@ -96,7 +96,7 @@ add_executable(KernelELF
 
                ACPI/ACPI.cpp
                APIC/APIC.cpp
-               )
+    Device/Serial.cpp)
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large>

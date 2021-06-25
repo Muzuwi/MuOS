@@ -37,3 +37,10 @@ typedef uint16_t allocation_t;
 typedef int FSResult;
 typedef uint64_t lba_t;
 typedef char* path_t;
+
+typedef uint16_t umode_t;
+typedef uint32_t uid_t;
+typedef uint32_t gid_t;
+typedef uint32_t loff_t;
+typedef uint32_t mode_t;
+typedef int64_t ssize_t;

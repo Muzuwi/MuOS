@@ -17,6 +17,7 @@
 #include <Kernel/ACPI/ACPI.hpp>
 
 #include <Kernel/Device/Serial.hpp>
+#include <Kernel/SMP/SMP.hpp>
 
 /*
 	Main kernel entrypoint
@@ -44,6 +45,7 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 
 	ACPI::parse_tables();
 	APIC::discover();
+	SMP::init_control_blocks();
 
 	Scheduler::init();
 

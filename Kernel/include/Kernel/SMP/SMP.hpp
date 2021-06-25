@@ -1,0 +1,8 @@
+#pragma once
+#include <Kernel/SMP/ControlBlock.hpp>
+
+class SMP {
+public:
+	static void init_control_blocks();
+	static ControlBlock& ctb();
+};

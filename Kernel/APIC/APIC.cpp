@@ -82,8 +82,8 @@ void APIC::find_local_base() {
 				auto acpi_processor_id = *(madt + offset + 2).as<uint8>();
 				auto apic_id = *(madt + offset + 3).as<uint8>();
 				auto flags = *(madt + offset + 4).as<uint32>();
-				//  Check if online capable AP
-				if(!(flags & 2)) {
+				//  Check if online capable AP and isn't already running
+				if(!(flags & 1) && !(flags & 2)) {
 					break;
 				}
 

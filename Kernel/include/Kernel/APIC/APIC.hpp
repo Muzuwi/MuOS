@@ -1,4 +1,5 @@
 #pragma once
+#include <Kernel/SystemTypes.hpp>
 #include <Kernel/KOptional.hpp>
 
 enum class LAPICReg : unsigned {
@@ -13,6 +14,9 @@ namespace APIC {
 	void find_local_base();
 	void discover();
 
-	uint32_t lapic_read(LAPICReg);
-	void lapic_write(LAPICReg, uint32_t);
+	uint32 lapic_read(LAPICReg);
+	void lapic_write(LAPICReg, uint32);
+
+	gen::List<uint8> const& ap_list();
+	uint8 ap_bootstrap_id();
 }

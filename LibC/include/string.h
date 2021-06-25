@@ -9,8 +9,13 @@
 extern "C" {
 # endif
 
+#ifndef NULL
+#define NULL 0
+#endif
+
 size_t strlen(const char*);
 int strcmp(const char*, const char*);
+int strncmp(const char* str1, const char* str2, size_t num);
 char* strcpy(char* dest, const char* src);
 char* strncpy(char* dest, const char* src, size_t n);
 

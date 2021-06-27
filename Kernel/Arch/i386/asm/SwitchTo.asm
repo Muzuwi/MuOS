@@ -29,9 +29,14 @@ _task_enter_bootstrap:
     RESTORE_REGS_ALL
     ;  Skip over PtraceRegs.origin
     add rsp, 8
-    ;  Unconditionally swapgs, afterwards kernel_gs_base points to the process and gs_base
-    ;  is set in the process struct.
+
+    ;  When switching kernel->user, do swapgs so that gsbase represents userland gsbase.
+    ;  Otherwise, leave gsbase pointing to the current CTB for kernel threads
+    cmp qword [rsp+8], 8
+    je ._skip_swapgs
     swapgs
+    ._skip_swapgs:
+
     ;  Enter task for the first time
     iretq
 

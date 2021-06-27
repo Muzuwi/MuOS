@@ -5,12 +5,15 @@ section .text
 ;  Global syscall entrypoint
 global _ukernel_syscall_entry:
 _ukernel_syscall_entry:
-    ;  Switch to kernel GS
+    ;  Switch to kernel GS (CTB)
     swapgs
-    ;  Save user stack
+
+    ;  Temporarily save user stack to CTB scratch space
     mov gs:0x18, rsp
-    ;  Load kernel stack
-    mov rsp, gs:0x10
+    mov rsp, gs:0x8        ;  rsp - task pointer
+    mov rsp, [rsp + 0x10]  ;  now on kernel stack
+    ;  Save user stack from CTB
+    push qword [gs:0x18]
 
     ;  Provide PtraceRegs.origin
     push qword 0
@@ -35,7 +38,8 @@ extern _ZN7Syscall14syscall_handleEP10PtraceRegs
     ;  Skip PtraceRegs.origin
     add rsp, 8+5*8
     ;  Restore user stack
-    mov rsp, gs:0x18
+    mov rsp, [rsp]
+
     ;  Restore userland GS
     swapgs
 

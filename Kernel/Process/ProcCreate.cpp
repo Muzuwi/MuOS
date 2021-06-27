@@ -3,6 +3,7 @@
 #include <Arch/i386/GDT.hpp>
 #include <Kernel/Process/PidAllocator.hpp>
 #include <Kernel/Process/Process.hpp>
+#include <Kernel/SMP/SMP.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
@@ -139,9 +140,12 @@ void Process::finalize_switch(Process* prev, Process* next) {
 	if(prev->state() == ProcessState::Running)
 		prev->set_state(ProcessState::Ready);
 
-	//  Save previous process' kernel GS base
+	//  Save previous process' kernel GS base (userland GSbase when task is a ring3 task,
+	//  and unused GSbase for kernel threads)
 	prev->m_kernel_gs_base = CPU::get_kernel_gs_base();
 
+	//  Set new process as current in CTB
+	SMP::ctb().set_process(next);
 	s_current = next;
 	s_current->set_state(ProcessState::Running);
 
@@ -150,11 +154,9 @@ void Process::finalize_switch(Process* prev, Process* next) {
 
 	//  Restore saved kernel gs base of next process
 	CPU::set_kernel_gs_base((void*)next->m_kernel_gs_base);
-	//  Restore proper gs base for the process
-	//  As the process is always preempted in kernel mode,
-	//  the kernel_gs_base is pointing to userland's GS_base after SWAPGS,
-	//  and gs_base is pointing to the process struct
-	CPU::set_gs_base(next);
+
+	//  Set the GS base to point to the current AP's CTB
+	CPU::set_gs_base((void*)(&SMP::ctb()));
 }
 
 

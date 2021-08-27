@@ -17,7 +17,7 @@ bool Serial::probe(Serial::Port port) {
 	register_write(port, Register::ModemControl, 0x1E);
 
 	//  Clear any pending data
-	while(data_pending(port))
+	for(unsigned i = 0; i < 10; ++i)
 		(void)register_read(port, Register::Data);
 
 	const uint8 magic = 0xDA;
@@ -40,7 +40,7 @@ void Serial::initialize(Serial::Port port) {
 	IRQDispatcher::register_handler(4, _serial_irq_handler);
 
 	//  Clear any pending data
-	while(data_pending(port))
+	for(unsigned i = 0; i < 10; ++i)
 		(void)register_read(port, Register::Data);
 
 	kdebugf("[Serial] Initialized COM%i, speed 115200, 8N1, IRQ 4\n", (unsigned)port);

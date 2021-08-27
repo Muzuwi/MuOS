@@ -11,10 +11,9 @@ extern "C" void _ukernel_syscall_entry();
  *  Function id's are taken directly from LibC
  */
 #define SYSCALL_ENUMERATE \
-	DEFINE_SYSCALL(__SYS_getpid, Process::getpid, 0, true) \
-	DEFINE_SYSCALL(__SYS_getpriority, Process::getpriority, 0, true) \
-	DEFINE_SYSCALL(__SYS_klog, Process::klog, 1, false)
-
+	DEFINE_SYSCALL(__SYS_getpid, &Process::getpid, 0, true) \
+	DEFINE_SYSCALL(__SYS_klog, &Process::klog, 1, false)    \
+	DEFINE_SYSCALL(254, &Thread::sys_msleep, 1, false)      \
 
 namespace Syscall {
 	void init();

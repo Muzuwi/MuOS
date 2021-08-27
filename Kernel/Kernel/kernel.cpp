@@ -2,7 +2,6 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Memory/KHeap.hpp>
 #include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Multiboot/MultibootInfo.hpp>
 #include <Arch/i386/GDT.hpp>
 #include <Arch/i386/IDT.hpp>
@@ -10,7 +9,6 @@
 #include <Arch/i386/PIT.hpp>
 #include <Arch/i386/CPU.hpp>
 #include <Kernel/Process/Process.hpp>
-#include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/Syscalls/Syscall.hpp>
 
 #include <Kernel/APIC/APIC.hpp>
@@ -22,7 +20,7 @@
 /*
 	Main kernel entrypoint
 */
-extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
+extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 	TTY::init();
 	Serial::init();
 	kdebugf("[uKernel64] Hello, world!\n");
@@ -31,10 +29,11 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 	GDT::init();
 	CPU::initialize_features();
 
+	SMP::bootstrap_ctb();
 	CPU::irq_enable();
 
 	PMM::handle_multiboot_memmap(multiboot_info);
-	VMM::init();
+	VMM::initialize_kernel_vm();
 	PMM::initialize_deferred_regions();
 
 	KHeap::init();
@@ -46,9 +45,7 @@ extern "C" void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
 	ACPI::parse_tables();
 	APIC::discover();
 	SMP::init_control_blocks();
+	SMP::ctb().scheduler().bootstrap();
 
-	Scheduler::init();
-
-	while (true)
-		asm volatile("hlt\n");
+	kpanic();
 }

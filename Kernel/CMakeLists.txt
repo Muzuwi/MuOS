@@ -83,9 +83,7 @@ add_executable(KernelELF
                Process/PidAllocator.cpp
                Arch/i386/asm/SwitchTo.asm
                Scheduler/Scheduler.cpp
-               Process/ProcMem.cpp
                Scheduler/RunQueue.cpp
-               Process/ProcCreate.cpp
 
                Syscalls/SysEntry.asm
                Syscalls/Syscall.cpp
@@ -96,10 +94,15 @@ add_executable(KernelELF
 
                ACPI/ACPI.cpp
                APIC/APIC.cpp
-    Device/Serial.cpp SMP/SMP.cpp)
+               Device/Serial.cpp
+               SMP/SMP.cpp
+               Process/ProcCreate.cpp
+               Process/Thread.cpp
+               Process/ThreadCreate.cpp
+    )
 
 target_compile_options(KernelELF
-                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large>
+                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-mno-red-zone>
                        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>

@@ -3,6 +3,9 @@
 #include <Kernel/Memory/Allocators/SlabAllocator.hpp>
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/VMM.hpp>
+//#include <Kernel/SMP/SMP.hpp>
+//#include <Kernel/Process/Thread.hpp>
+#include <Kernel/Process/Process.hpp>
 
 SlabAllocator::SlabAllocator(size_t object_size, size_t alloc_pool_order) {
 	m_object_size = object_size;
@@ -28,7 +31,8 @@ void SlabAllocator::initialize(void* virtual_base) {
     m_pool_base = pool.unwrap().base();
 	memset(m_pool_base.get_mapped(), 0, 0x1000 << m_pool_order);
 
-	VMM::map_pallocation(pool.unwrap(), m_virtual_start);
+//	SMP::ctb().current_thread()->parent()->vmm()._map_pallocation(pool.unwrap(), m_virtual_start);
+	Process::_kerneld_ref().vmm()._map_pallocation(pool.unwrap(), m_virtual_start);
 }
 
 void* SlabAllocator::allocate() {

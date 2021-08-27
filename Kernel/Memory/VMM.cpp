@@ -1,274 +1,537 @@
-﻿#include <string.h>
 #include <Arch/i386/CPUID.hpp>
-#include <Arch/i386/Paging.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
-#include <Kernel/Debug/kpanic.hpp>
+#include <Arch/i386/GDT.hpp>
+#include <Arch/i386/InactiveTaskFrame.hpp>
 #include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/Units.hpp>
 #include <Kernel/Memory/VMM.hpp>
-#include <Kernel/Memory/VMapping.hpp>
+#include <Kernel/Memory/Units.hpp>
 #include <Kernel/Process/Process.hpp>
-#include <Kernel/Symbols.hpp>
+#include <string.h>
 
-using Units::MiB;
-using Units::GiB;
+using namespace Units;
 
-static PhysPtr<PML4> s_kernel_pml4 {nullptr};
+/*
+ *  Initializes the address space used by the kernel in the kerneld process
+ */
+void VMM::initialize_kernel_vm() {
+	Process& kerneld = Process::_kerneld_ref();
 
-void VMM::init() {
-	kdebugf("[VMM] Init kernel PML4\n");
+	kdebugf("[VMM] Initializing kerneld address space\n");
 
 	auto res = PMM::allocate();
 	if (!res.has_value()) {
-		kerrorf("[VMM] Failed to allocate page for PML4!\n");
+		kerrorf("[VMM] Failed allocating page for kerneld PML4! Out of memory?\n");
 		kpanic();
 	}
+
 	auto pml4 = res.unwrap().base();
 	memset(pml4.get_mapped(), 0, 0x1000);
-	s_kernel_pml4 = pml4.as<PML4>();
+	kerneld.vmm().m_pml4 = res.unwrap().base().as<PML4>();
 
 	kdebugf("[VMM] Mapping kernel executable\n");
-	map_kernel_executable();
+	kerneld.vmm()._map_kernel_executable();
+
 	kdebugf("[VMM] Creating physical identity map\n");
-	map_physical_identity();
+	kerneld.vmm()._map_physical_identity();
 
 	kdebugf("[VMM] Preallocating kernel PML4E\n");
-	prealloc_kernel_pml4e();
+	kerneld.vmm()._map_kernel_prealloc_pml4();
 
 	asm volatile(
 	"mov %%rax, %0\n"
 	"mov cr3, %%rax\n"
 	:
-	:""(s_kernel_pml4.get())
+	:""(pml4.get())
 	:"rax"
 	);
 }
 
-void VMM::map_kernel_executable() {
-	const auto kernel_elf_start = reinterpret_cast<uint8_t*>(&_ukernel_elf_start);
-	const auto kernel_elf_end = reinterpret_cast<uint8_t*>(&_ukernel_elf_end);
-	const auto kernel_text_start = reinterpret_cast<uint8_t*>(&_ukernel_text_start);
-	const auto kernel_text_end = reinterpret_cast<uint8_t*>(&_ukernel_text_end);
+
+
+
+/*
+ *  Maps the given PAllocation starting at virtual address vaddr
+ *  Should only be used by lower level kernel allocators, userland should use VMappings
+ */
+void VMM::_map_pallocation(PAllocation allocation, void* vaddr) {
+	auto physical = allocation.base();
+	while (physical < allocation.end()) {
+		PML4E& pml4e = (*m_pml4)[vaddr];
+		auto* pdpte = ensure_pdpt(vaddr, LeakAllocatedPage::Yes);
+		auto* pde = ensure_pd(vaddr, LeakAllocatedPage::Yes);
+		auto* pte = ensure_pt(vaddr, LeakAllocatedPage::Yes);
+
+		if(!pdpte || !pde || !pte) {
+			kerrorf("[VMM] Failed mapping PAllocation for address %x%x! Page structure allocation failed.\n", (uintptr_t)vaddr>>32u, (uintptr_t)vaddr&0xffffffffu);
+			kpanic();
+		}
+
+		pml4e.set(FlagPML4E::Present, true);
+		pdpte->set(FlagPDPTE::Present, true);
+		pde->set(FlagPDE::Present, true);
+		pte->set(FlagPTE::Present, true);
+		pte->set(FlagPTE::Global, true);
+		pte->set_page(physical);
+
+		physical += 0x1000;
+	}
+}
+
+
+/*
+ *  Maps the kernel executable in the target process memory.
+ *  Only called on kerneld during kernel initialization
+ */
+void VMM::_map_kernel_executable() {
+	auto* const kernel_elf_start  = reinterpret_cast<uint8_t*>(&_ukernel_elf_start);
+	auto* const kernel_elf_end  = reinterpret_cast<uint8_t*>(&_ukernel_elf_end);
+	auto* const kernel_text_start  = reinterpret_cast<uint8_t*>(&_ukernel_text_start);
+	auto* const kernel_text_end  = reinterpret_cast<uint8_t*>(&_ukernel_text_end);
+	PhysPtr<PML4> pml4 = m_pml4;
 
 	auto kernel_physical = PhysAddr {&_ukernel_physical_start};
 	for (auto addr = kernel_elf_start; addr < kernel_elf_end; addr += 0x1000) {
-		auto& pml4e = (*s_kernel_pml4)[addr];
-		auto& pdpte = ensure_pdpt(s_kernel_pml4, addr, nullptr);
-		auto& pde = ensure_pd(s_kernel_pml4, addr, nullptr);
-		auto& pte = ensure_pt(s_kernel_pml4, addr, nullptr);
+		auto& pml4e = (*pml4)[addr];
+		auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
+		auto* pde = ensure_pd(addr, LeakAllocatedPage::Yes);
+		auto* pte = ensure_pt(addr, LeakAllocatedPage::Yes);
+		if(!pdpte || !pde || !pte) {
+			kerrorf("[VMM] PDPTE/PDE/PTE allocation failure during ELF mapping. Out of memory?\n");
+			kpanic();
+		}
 
 		pml4e.set(FlagPML4E::Present, true);
 		pml4e.set(FlagPML4E::User, false);
-		pdpte.set(FlagPDPTE::Present, true);
-		pdpte.set(FlagPDPTE::User, false);
-		pde.set(FlagPDE::Present, true);
-		pde.set(FlagPDE::User, false);
-		pte.set(FlagPTE::Present, true);
-		pte.set(FlagPTE::Global, true);
-		pte.set(FlagPTE::User, false);
-		pte.set_page(kernel_physical);
+		pdpte->set(FlagPDPTE::Present, true);
+		pdpte->set(FlagPDPTE::User, false);
+		pde->set(FlagPDE::Present, true);
+		pde->set(FlagPDE::User, false);
+		pte->set(FlagPTE::Present, true);
+		pte->set(FlagPTE::Global, true);
+		pte->set(FlagPTE::User, false);
+		pte->set_page(kernel_physical);
 
 		if (CPUID::has_NXE()) {
 			//  Execute only in text sections
 			bool xd = !(addr >= kernel_text_start && addr < kernel_text_end);
-			pte.set(FlagPTE::ExecuteDisable, xd);
+			pte->set(FlagPTE::ExecuteDisable, xd);
 		}
 
-		kernel_physical += 4096;
+		kernel_physical += 0x1000;
 	}
 }
 
-void VMM::map_physical_identity() {
+
+/*
+ *  Creates the identity map in the current address space. Only called on kernel
+ *  initialization
+ */
+void VMM::_map_physical_identity() {
 	auto identity_start = reinterpret_cast<uint8_t*>(&_ukernel_identity_start);
 	auto physical = PhysAddr {nullptr};
+	PhysPtr<PML4> pml4 = m_pml4;
 
 	if (CPUID::has_huge_pages()) {
-		for (auto addr = identity_start; addr < identity_start + 512 * GiB; addr += 1 * GiB) {
-			auto& pml4e = (*s_kernel_pml4)[addr];
-			auto& pdpte = ensure_pdpt(s_kernel_pml4, addr, nullptr);
+		for (auto addr = identity_start; addr < identity_start + 512*GiB; addr += 1 * GiB) {
+			auto& pml4e = (*pml4)[addr];
+			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
+			if(!pdpte) {
+				kerrorf("[VMM] PDPTE allocation for physical identity map failed! Out of memory?\n");
+				kpanic();
+			}
 
 			pml4e.set(FlagPML4E::Present, true);
 			pml4e.set(FlagPML4E::User, false);
-			pdpte.set(FlagPDPTE::Present, true);
-			pdpte.set(FlagPDPTE::User, false);
-			pdpte.set(FlagPDPTE::HugePage, true);
-			pdpte.set_directory(physical.as<PD>());
+			pdpte->set(FlagPDPTE::Present, true);
+			pdpte->set(FlagPDPTE::User, false);
+			pdpte->set(FlagPDPTE::HugePage, true);
+			pdpte->set_directory(physical.as<PD>());
 
-			physical += 1 * GiB;
+			physical += 1 * Units::GiB;
 		}
 	} else {
-		//  FIXME: Assuming support for 2MiB pages
-		//  FIXME: Hard limit on supported physical memory
 		for (auto addr = identity_start; addr < identity_start + 512 * GiB; addr += 2 * MiB) {
-			auto& pml4e = (*s_kernel_pml4)[addr];
-			auto& pdpte = ensure_pdpt(s_kernel_pml4, addr, nullptr);
-			auto& pde = ensure_pd(s_kernel_pml4, addr, nullptr);
+			auto& pml4e = (*pml4)[addr];
+			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
+			auto* pde   = ensure_pd(addr, LeakAllocatedPage::Yes);
+			if(!pdpte || !pde) {
+				kerrorf("[VMM] PDPTE/PDE allocation for physical identity map failed! Out of memory?\n");
+				kpanic();
+			}
 
 			pml4e.set(FlagPML4E::Present, true);
 			pml4e.set(FlagPML4E::User, false);
-			pdpte.set(FlagPDPTE::Present, true);
-			pdpte.set(FlagPDPTE::User, false);
-			pde.set(FlagPDE::Present, true);
-			pde.set(FlagPDE::User, false);
-			pde.set(FlagPDE::LargePage, true);
-			pde.set_table(physical.as<PT>());
+			pdpte->set(FlagPDPTE::Present, true);
+			pdpte->set(FlagPDPTE::User, false);
+			pde->set(FlagPDE::Present, true);
+			pde->set(FlagPDE::User, false);
+			pde->set(FlagPDE::LargePage, true);
+			pde->set_table(physical.as<PT>());
 
 			physical += 2 * MiB;
 		}
 	}
 }
 
-/*
- *  Maps the given PAllocation starting at virtual address vaddr
- *  Should only be used by lower level kernel allocators, userland should use VMappings
- */
-void VMM::map_pallocation(PAllocation allocation, void* vaddr) {
-	auto physical = allocation.base();
-	while (physical < allocation.end()) {
-		auto& pml4e = (*s_kernel_pml4)[vaddr];
-		auto& pdpte = ensure_pdpt(s_kernel_pml4, vaddr, nullptr);
-		auto& pde = ensure_pd(s_kernel_pml4, vaddr, nullptr);
-		auto& pte = ensure_pt(s_kernel_pml4, vaddr, nullptr);
-
-		pml4e.set(FlagPML4E::Present, true);
-		pdpte.set(FlagPDPTE::Present, true);
-		pde.set(FlagPDE::Present, true);
-		pte.set(FlagPTE::Present, true);
-		pte.set(FlagPTE::Global, true);
-		pte.set_page(physical);
-
-		physical += 0x1000;
-	}
-}
-
-PhysPtr<PML4> VMM::kernel_pml4() {
-	return s_kernel_pml4;
-}
-
-/*
- *  Maps a given VMapping in the target process
- */
-void VMM::vmapping_map(Process* process, VMapping const& mapping) {
-	auto pml4 = process->pml4();
-
-	auto virtual_addr = (uint8_t*) mapping.addr();
-	for (auto& page : mapping.pages()) {
-		auto phys = page.base();
-		for (unsigned i = 0; i < (1u << page.order()); ++i) {
-			auto& pml4e = (*pml4)[virtual_addr];
-			auto& pdpte = ensure_pdpt(pml4, virtual_addr, process->memory());
-			auto& pde = ensure_pd(pml4, virtual_addr, process->memory());
-			auto& pte = ensure_pt(pml4, virtual_addr, process->memory());
-
-			auto flags = mapping.flags();
-
-			pml4e.set(FlagPML4E::Present, true);
-			pml4e.set(FlagPML4E::User, !(flags & VM_KERNEL));
-			pml4e.set(FlagPML4E::RW, flags & VM_WRITE);
-
-			pdpte.set(FlagPDPTE::Present, true);
-			pdpte.set(FlagPDPTE::User, !(flags & VM_KERNEL));
-			pdpte.set(FlagPDPTE::RW, flags & VM_WRITE);
-
-			pde.set(FlagPDE::Present, true);
-			pde.set(FlagPDE::User, !(flags & VM_KERNEL));
-			pde.set(FlagPDE::RW, flags & VM_WRITE);
-
-			pte.set(FlagPTE::Present, flags & VM_READ);
-			pte.set(FlagPTE::User, !(flags & VM_KERNEL));
-			pte.set(FlagPTE::ExecuteDisable, !(flags & VM_EXEC));
-			pte.set_page(phys);
-			pte.set(FlagPTE::RW, (flags & VM_READ) && (flags & VM_WRITE));
-
-//			kdebugf("%x%x -> %x%x\n", (uintptr_t)phys.get()>>32u, (uintptr_t)phys.get()&0xffffffffu, (uintptr_t)virtual_addr>>32u, (uintptr_t)virtual_addr&0xffffffffu);
-			virtual_addr += 0x1000;
-			phys += 0x1000;
-		}
-	}
-}
-
-
-/*
- *  Called when a VMapping for a given process is unmapped from it
- */
-void VMM::vmapping_unmap(Process*, const VMapping&) {
-	//  FIXME:
-	kpanic();
-}
-
-
-PDPTE& VMM::ensure_pdpt(PhysPtr<PML4> pml4, void* addr, ProcMem* pm) {
-	auto& pml4e = (*pml4)[addr];
-	if (!pml4e.directory()) {
-		KOptional<PAllocation> alloc;
-		if (pm)
-			alloc = pm->allocate_phys_kernel(0);
-		else
-			alloc = PMM::allocate();
-
-		if (!alloc.has_value()) {
-			kerrorf("[VMM] Failed to allocate page for PDPT!\n");
-			kpanic();
-		}
-		memset(alloc.unwrap().base().get_mapped(), 0x0, 0x1000);
-		pml4e.set_directory(alloc.unwrap().base().as<PDPT>());
-	}
-
-	return (*pml4e.directory())[addr];
-}
-
-
-PDE& VMM::ensure_pd(PhysPtr<PML4> pml4, void* addr, ProcMem* pm) {
-	auto& pdpte = ensure_pdpt(pml4, addr, pm);
-	if (!pdpte.directory()) {
-		KOptional<PAllocation> alloc;
-		if (pm)
-			alloc = pm->allocate_phys_kernel(0);
-		else
-			alloc = PMM::allocate();
-
-		if (!alloc.has_value()) {
-			kerrorf("[VMM] Failed to allocate page for PD!\n");
-			kpanic();
-		}
-		memset(alloc.unwrap().base().get_mapped(), 0x0, 0x1000);
-		pdpte.set_directory(alloc.unwrap().base().as<PD>());
-	}
-
-	return (*pdpte.directory())[addr];
-}
-
-
-PTE& VMM::ensure_pt(PhysPtr<PML4> pml4, void* addr, ProcMem* pm) {
-	auto& pde = ensure_pd(pml4, addr, pm);
-	if (!pde.table()) {
-		KOptional<PAllocation> alloc;
-		if (pm)
-			alloc = pm->allocate_phys_kernel(0);
-		else
-			alloc = PMM::allocate();
-
-		if (!alloc.has_value()) {
-			kerrorf("[VMM] Failed to allocate page for PT!\n");
-			kpanic();
-		}
-
-		memset(alloc.unwrap().base().get_mapped(), 0x0, 0x1000);
-		pde.set_table(alloc.unwrap().base().as<PT>());
-	}
-
-	return (*pde.table())[addr];
-}
 
 /*
  *  Preallocate all PML4 PDPT nodes for the kernel shared address space
  *  That way, any changes to the shared kernel address space will persist throughout all processes,
  *  as all process PML4's are clones of the root PML4
  */
-void VMM::prealloc_kernel_pml4e() {
+void VMM::_map_kernel_prealloc_pml4() {
+	PhysPtr<PML4> pml4 = m_pml4;
 	for(unsigned i = index_pml4e(&_ukernel_shared_start); i <= index_pml4e(&_ukernel_shared_end); ++i) {
 		auto addr = (void*)((uint64_t)i << 39ul);
-		(*s_kernel_pml4)[addr].set(FlagPML4E::Present, true);
-		ensure_pdpt(s_kernel_pml4, addr, nullptr);
+		(*pml4)[addr].set(FlagPML4E::Present, true);
+
+		ensure_pdpt(addr, LeakAllocatedPage::Yes);
 	}
+}
+
+
+/*
+ *  Maps a given VMapping in the target process
+ */
+bool VMM::map(VMapping const& mapping) {
+	PhysPtr<PML4> pml4 = m_pml4;
+
+	auto virtual_addr = (uint8_t*) mapping.addr();
+	for (auto& page : mapping.pages()) {
+		auto phys = page.base();
+		for (unsigned i = 0; i < (1u << page.order()); ++i) {
+			auto& pml4e = (*pml4)[virtual_addr];
+			auto* pdpte = ensure_pdpt(virtual_addr, LeakAllocatedPage::No);
+			auto* pde = ensure_pd(virtual_addr, LeakAllocatedPage::No);
+			auto* pte = ensure_pt(virtual_addr, LeakAllocatedPage::No);
+			if(!pdpte || !pde || !pte) {
+				kerrorf("[VMM] VMapping map failed - PDPTE/PDE/PTE allocation failed.\n");
+				return false;
+			}
+
+			auto flags = mapping.flags();
+			//  FIXME: Weird flag combinations
+			pml4e.set(FlagPML4E::Present, true);
+			pml4e.set(FlagPML4E::User, !(flags & VM_KERNEL));
+			pml4e.set(FlagPML4E::RW, flags & VM_WRITE);
+
+			pdpte->set(FlagPDPTE::Present, true);
+			pdpte->set(FlagPDPTE::User, !(flags & VM_KERNEL));
+			pdpte->set(FlagPDPTE::RW, flags & VM_WRITE);
+
+			pde->set(FlagPDE::Present, true);
+			pde->set(FlagPDE::User, !(flags & VM_KERNEL));
+			pde->set(FlagPDE::RW, flags & VM_WRITE);
+
+			pte->set(FlagPTE::Present, flags & VM_READ);
+			pte->set(FlagPTE::User, !(flags & VM_KERNEL));
+			pte->set(FlagPTE::RW, (flags & VM_READ) && (flags & VM_WRITE));
+			pte->set(FlagPTE::ExecuteDisable, !(flags & VM_EXEC));
+			pte->set_page(phys);
+
+			virtual_addr += 0x1000;
+			phys += 0x1000;
+		}
+	}
+	return true;
+}
+
+
+bool VMM::unmap(VMapping const&) {
+	//  TODO:
+	return false;
+}
+
+
+PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
+	PML4E& pml4e = (*m_pml4)[addr];
+
+	if (!pml4e.directory()) {
+		PhysAddr phys;
+		if(leak == LeakAllocatedPage::Yes) {
+			KOptional<PAllocation> alloc = PMM::allocate(0);
+			if (!alloc.has_value()) {
+				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				return nullptr;
+			}
+			phys = alloc.unwrap().base();
+		} else {
+			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
+			if (!alloc.has_value()) {
+				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				return nullptr;
+			}
+			phys = alloc.unwrap();
+		}
+
+		memset(phys.get_mapped(), 0x0, 0x1000);
+		pml4e.set_directory(phys.as<PDPT>());
+	}
+
+	return &(*pml4e.directory())[addr];
+}
+
+
+PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
+	auto* pdpte = ensure_pdpt(addr, leak);
+	if(!pdpte) return nullptr;
+
+	if (!pdpte->directory()) {
+		PhysAddr phys;
+		if(leak == LeakAllocatedPage::Yes) {
+			KOptional<PAllocation> alloc = PMM::allocate(0);
+			if (!alloc.has_value()) {
+				kerrorf("[VMM] Failed to allocate page for PD!\n");
+				return nullptr;
+			}
+			phys = alloc.unwrap().base();
+		} else {
+			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
+			if (!alloc.has_value()) {
+				kerrorf("[VMM] Failed to allocate page for PD!\n");
+				return nullptr;
+			}
+			phys = alloc.unwrap();
+		}
+
+		memset(phys.get_mapped(), 0x0, 0x1000);
+		pdpte->set_directory(phys.as<PD>());
+	}
+
+	return &(*pdpte->directory())[addr];
+}
+
+
+PTE* VMM::ensure_pt(void* addr, LeakAllocatedPage leak) {
+	auto* pde = ensure_pd(addr, leak);
+	if(!pde) return nullptr;
+
+	if (!pde->table()) {
+		PhysAddr phys;
+		if(leak == LeakAllocatedPage::Yes) {
+			KOptional<PAllocation> alloc = PMM::allocate(0);
+			if (!alloc.has_value()) {
+				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				return nullptr;
+			}
+			phys = alloc.unwrap().base();
+		} else {
+			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
+			if (!alloc.has_value()) {
+				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				return nullptr;
+			}
+			phys = alloc.unwrap();
+		}
+
+		memset(phys.get_mapped(), 0x0, 0x1000);
+		pde->set_table(phys.as<PT>());
+	}
+
+	return &(*pde->table())[addr];
+}
+
+
+/*
+ *  Allocates a physical page for use in the kernel, on behalf of the current process.
+ *  After the process is removed, these pages WILL BE FREED.
+ *  Can't use VMappings for these, as most often they won't have an underlying VM mapping
+ */
+KOptional<PhysAddr> VMM::_allocate_kernel_page(size_t order) {
+	auto alloc = PMM::allocate(order);
+	if(!alloc.has_value())
+		return {};
+
+	m_kernel_pages.push_back(alloc.unwrap());
+	return { alloc.unwrap().base() };
+}
+
+
+/*
+ *  Looks for a VMapping for the given virtual address
+ */
+KOptional<SharedPtr<VMapping>> VMM::find_vmapping(void* vaddr) const {
+	for(auto& vmapping : m_mappings) {
+		if(!vmapping) continue;
+		if(!vmapping->contains(vaddr)) continue;
+
+		return { vmapping };
+	}
+
+	return { };
+}
+
+
+/*
+ *  Validates whether the given VMapping does not overlap with any other mappings,
+ *  and saves it into the list
+ */
+bool VMM::insert_vmapping(SharedPtr<VMapping>&& mapping) {
+	if(!mapping) return false;
+
+	auto find_vmapping_iterator = [this](void* address) {
+		auto it = m_mappings.begin();
+		while(it != m_mappings.end() && (*it)->addr() < address)
+			++it;
+
+		return it;
+	};
+
+	auto it = find_vmapping_iterator(mapping->addr());
+    if(it == m_mappings.end()) {
+    	m_mappings.push_back(mapping);
+	    return map(*mapping);
+    }
+
+    if(mapping->overlaps(**it)) {
+    	return false;
+    }
+
+    m_mappings.insert(it, mapping);
+	return map(*mapping);
+}
+
+
+void* VMM::allocate_user_stack(uint64 stack_size) {
+	//  FIXME: Actually randomize
+	auto random = [](size_t, size_t) -> size_t {
+		return 4;
+	};
+
+	uint64_t stack_top;
+	if(m_process.flags().randomize_vm) {
+		stack_top = (uintptr_t)&_userspace_stack_start
+		            + VMM::user_stack_size() * random(0, 0x40000);
+	} else {
+		stack_top = (uintptr_t)&_userspace_stack_start;
+	}
+
+	auto stack_mapping = VMapping::create((void*)stack_top, VMM::user_stack_size(), VM_READ | VM_WRITE, MAP_PRIVATE);
+	kassert(insert_vmapping(gen::move(stack_mapping)));
+
+	return (void*)(stack_top + VMM::user_stack_size());
+}
+
+
+VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
+	void* kstack_top = m_next_kernel_stack_at;
+	void* kstack_bottom = (void*)((uintptr_t)m_next_kernel_stack_at + stack_size);
+
+	//  FIXME/LIMITS
+	if(kstack_bottom > &_ukernel_virt_kstack_end) {
+		return {};
+	}
+	//  FIXME: Handle randomize_vm flag
+
+	m_next_kernel_stack_at = (void*)((uintptr_t)m_next_kernel_stack_at + stack_size + 0x1000);
+
+	auto mapping = VMapping::create(
+			(void*)kstack_top,
+			stack_size,
+			VM_READ | VM_WRITE | VM_KERNEL,
+			MAP_PRIVATE
+			);
+	auto mapping_ptr = mapping.get();
+	kassert(insert_vmapping(gen::move(mapping)));
+
+	return mapping_ptr;
+}
+
+
+KOptional<PhysPtr<PML4>> VMM::clone_pml4(PhysPtr<PML4> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pml4 = page.unwrap().as<PML4>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pml4.get_mapped(), source.get_mapped(), 0x1000);
+
+	for(unsigned i = 0; i < 512; ++i) {
+		//  Kernel shared memory should be copied as-is
+		if(i >= index_pml4e(&_ukernel_shared_start) && i <= index_pml4e(&_ukernel_shared_end)) {
+			pml4->m_entries[i] = source->m_entries[i];
+			continue;
+		}
+
+		//  Clone only present entries
+		if(pml4->m_entries[i].get(FlagPML4E::Present)) {
+			auto pdpt = clone_pdpt(pml4->m_entries[i].directory());
+			if(!pdpt.has_value())
+				return {};
+
+			pml4->m_entries[i].set_directory(pdpt.unwrap());
+		}
+	}
+
+	return pml4;
+}
+
+
+KOptional<PhysPtr<PDPT>> VMM::clone_pdpt(PhysPtr<PDPT> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pdpt = page.unwrap().as<PDPT>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pdpt.get_mapped(), source.get_mapped(), 0x1000);
+
+	for(unsigned i = 0; i < 512; ++i) {
+		//  Skip entries marked as huge page - these do not contain any paging structures but physical addresses
+		if(pdpt->m_entries[i].get(FlagPDPTE::HugePage))
+			continue;
+
+		//  Clone only present entries
+		if(pdpt->m_entries[i].get(FlagPDPTE::Present)) {
+			auto pd = clone_pd(pdpt->m_entries[i].directory());
+			if(!pd.has_value())
+				return {};
+
+			pdpt->m_entries[i].set_directory(pd.unwrap());
+		}
+	}
+
+	return pdpt;
+
+}
+
+
+KOptional<PhysPtr<PD>> VMM::clone_pd(PhysPtr<PD> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pd = page.unwrap().as<PD>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pd.get_mapped(), source.get_mapped(), 0x1000);
+
+	for(unsigned i = 0; i < 512; ++i) {
+		//  Skip entries marked as large page - these do not contain any paging structures but physical addresses
+		if(pd->m_entries[i].get(FlagPDE::LargePage))
+			continue;
+
+		//  Clone only present entries
+		if(pd->m_entries[i].get(FlagPDE::Present)) {
+			auto pt = clone_pt(pd->m_entries[i].table());
+			if(!pt.has_value())
+				return {};
+
+			pd->m_entries[i].set_table(pt.unwrap());
+		}
+	}
+
+	return pd;
+}
+
+
+KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pt = page.unwrap().as<PT>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pt.get_mapped(), source.get_mapped(), 0x1000);
+
+	return {pt};
 }

@@ -13,13 +13,13 @@ _switch_to_asm:
     mov rsp, [rsi + 0x0]
 
     ;  Restore cr3 of next task
-    mov rax, [rsi + 0x8]
+    mov rax, [rsi + 0x18]
     mov cr3, rax
 
     RESTORE_REGS_CALLEE
     ;  Finalize task switch
-extern _ZN7Process15finalize_switchEPS_S0_
-    jmp _ZN7Process15finalize_switchEPS_S0_
+extern _ZN6Thread15finalize_switchEPS_S0_
+    jmp _ZN6Thread15finalize_switchEPS_S0_
 
 ;   All new tasks start here
 ;   By modifying the PtraceRegs on the kernel stack, we can control

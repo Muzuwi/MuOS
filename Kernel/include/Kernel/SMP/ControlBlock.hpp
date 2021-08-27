@@ -1,31 +1,40 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
+#include <Kernel/Scheduler/Scheduler.hpp>
 
-class Process;
+class Thread;
 
 class ControlBlock {
-	//                              Offset
+									//  Offset:
 	ControlBlock& m_self_reference; //  0, store self reference for quick ctrlblock fetching
-	Process* m_process;             //  8
+	Thread* m_thread;               //  8
 	uint64   m_ap_id;               //  16
-	uint64   _scratch;        //  24 - only used in SysEntry to temporarily preserve user rsp
+	uint64   _scratch;              //  24, only used in SysEntry to temporarily preserve user rsp
+	Scheduler m_sched;
 public:
 	ControlBlock(uint8 ap_id) noexcept
-	: m_self_reference(*this), m_process(nullptr), m_ap_id(ap_id), _scratch(0) {
+	: m_self_reference(*this), m_thread(nullptr), m_ap_id(ap_id), _scratch(0) {
 		(void)m_self_reference;
 		(void)_scratch;
 	}
 
-	Process* current_process() const {
-		return m_process;
+	Thread* current_thread() const {
+		return m_thread;
 	}
 
-	void set_process(Process* process) {
-		m_process = process;
+	void set_thread(Thread* thread) {
+		m_thread = thread;
 	}
 
 	uint8 current_ap() const {
 		return m_ap_id;
 	}
 
+	void set_ap(uint8 const id) {
+		m_ap_id = id;
+	}
+
+	Scheduler& scheduler() {
+		return m_sched;
+	}
 } __attribute__((packed));

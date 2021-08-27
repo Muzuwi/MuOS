@@ -1,33 +1,57 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
-#include <LibGeneric/SharedPtr.hpp>
-#include <Arch/i386/Paging.hpp>
-#include <Kernel/Memory/PMM.hpp>
+#include <LibGeneric/List.hpp>
+#include <Kernel/KOptional.hpp>
+#include <Kernel/Memory/VMapping.hpp>
+#include <Kernel/Process/Thread.hpp>
 
-class Process;
-class VMapping;
+using gen::List;
 
-class VMM final {
-	friend class VMapping;
+class VMM {
 	friend class SlabAllocator;
+	friend class Scheduler;
 
-	template<class T>
-	using SharedPtr = gen::SharedPtr<T>;
+	Process& m_process;
+	PhysPtr<PML4> m_pml4;
+	List<SharedPtr<VMapping>> m_mappings;
+	List<PAllocation> m_kernel_pages;
+	void* m_next_kernel_stack_at;   //  FIXME/SMP: Lock this
 
-	static void vmapping_map(Process*, VMapping const&);
-	static void vmapping_unmap(Process*, VMapping const&);
+	enum class LeakAllocatedPage {
+		No,
+		Yes
+	};
 
-	static PDPTE& ensure_pdpt(PhysPtr<PML4>, void* addr, ProcMem*);
-	static PDE& ensure_pd(PhysPtr<PML4>, void* addr, ProcMem*);
-	static PTE& ensure_pt(PhysPtr<PML4>, void* addr, ProcMem*);
+	void _map_pallocation(PAllocation, void*);
+	void _map_kernel_executable();
+	void _map_physical_identity();
+	void _map_kernel_prealloc_pml4();
+	KOptional<PhysAddr> _allocate_kernel_page(size_t order);
 
-	static void map_kernel_executable();
-	static void map_physical_identity();
-	static void prealloc_kernel_pml4e();
-	static void map_pallocation(PAllocation, void*);
+	KOptional<PhysPtr<PML4>> clone_pml4(PhysPtr<PML4>);
+	KOptional<PhysPtr<PDPT>> clone_pdpt(PhysPtr<PDPT>);
+	KOptional<PhysPtr<PD>>   clone_pd(PhysPtr<PD>);
+	KOptional<PhysPtr<PT>>   clone_pt(PhysPtr<PT>);
+
+	PDPTE* ensure_pdpt(void* addr, LeakAllocatedPage);
+	PDE*   ensure_pd(void* addr, LeakAllocatedPage);
+	PTE*   ensure_pt(void* addr, LeakAllocatedPage);
+
+	//  -----------
+	//   VMappings
+	//  -----------
+	bool map(VMapping const&);
+	bool unmap(VMapping const&);
 public:
-	static void init();
-	static PhysPtr<PML4> kernel_pml4();
+	KOptional<SharedPtr<VMapping>> find_vmapping(void* vaddr) const;
+	[[nodiscard]] bool insert_vmapping(SharedPtr<VMapping>&&);
+
+	void* allocate_user_stack(uint64 stack_size);
+	VMapping* allocate_kernel_stack(uint64 stack_size);
+public:
+	VMM(Process& proc)
+	: m_process(proc), m_pml4(), m_next_kernel_stack_at(&_ukernel_virt_kstack_start) {}
+
+	static void initialize_kernel_vm();
 
 	static constexpr unsigned kernel_stack_size() {
 		return 0x4000;

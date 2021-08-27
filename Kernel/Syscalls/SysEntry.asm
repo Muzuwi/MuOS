@@ -11,7 +11,7 @@ _ukernel_syscall_entry:
     ;  Temporarily save user stack to CTB scratch space
     mov gs:0x18, rsp
     mov rsp, gs:0x8        ;  rsp - task pointer
-    mov rsp, [rsp + 0x10]  ;  now on kernel stack
+    mov rsp, [rsp + 0x8]  ;  now on kernel stack
     ;  Save user stack from CTB
     push qword [gs:0x18]
 

@@ -26,10 +26,9 @@ public:
 class ProcMem;
 
 class PDPT {
+	friend class VMM;
 	PDPTE m_entries[512];
 public:
 	const PDPTE& operator[](void*) const;
 	PDPTE& operator[](void*);
-
-	PhysPtr<PDPT> clone(ProcMem&);
 };

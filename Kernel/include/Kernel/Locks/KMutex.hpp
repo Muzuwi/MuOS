@@ -2,14 +2,14 @@
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/List.hpp>
 
-class Process;
+class Thread;
 
 struct KMutexWaiter {
-	Process* m_waiter;
+	Thread* m_waiter;
 };
 
 class KMutex {
-	Process* m_owner;
+	Thread* m_owner;
 	gen::Spinlock m_spinlock;
 	gen::List<KMutexWaiter> m_waiters;
 	gen::Spinlock m_waiters_lock;

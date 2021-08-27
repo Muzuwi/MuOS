@@ -36,14 +36,9 @@ void CPU::initialize_features() {
 	wrmsr(0xC0000084, 1u << 9u);
 }
 
-extern "C" void _switch_to_asm(Process*, Process*);
+extern "C" void _switch_to_asm(Thread*, Thread*);
 
-#define S(a) (uintptr_t)a>>32u, (uintptr_t)a&0xffffffffu
-
-void CPU::switch_to(Process* prev, Process* next) {
-//	kdebugf("Switch from: %x%x [pid=%i], to %x%x [pid=%i]\n", (uintptr_t)prev>>32u, (uintptr_t)prev&0xffffffffu, prev->pid(), (uintptr_t)next>>32u, (uintptr_t)next&0xffffffffu, next->pid());
-//	kdebugf("Nextframe=%x%x\n", S(next->frame()));
-//	kdebugf("PML4=%x%x\n", S(next->pml4().get()));
+void CPU::switch_to(Thread* prev, Thread* next) {
 	_switch_to_asm(prev, next);
 }
 
@@ -65,4 +60,8 @@ uint64_t CPU::get_kernel_gs_base() {
 
 void CPU::set_gs_base(void* p) {
 	wrmsr(0xC0000101, (uint64_t)p);
+}
+
+uint64_t CPU::get_gs_base() {
+	return rdmsr(0xC0000101);
 }

@@ -36,6 +36,8 @@ void Syscall::init() {
 		return;
 	}
 
+	kdebugf("Thread(%i): syscall=%i\n", Thread::current()->tid(), id);
+
 	auto argc = handler._argc;
 	auto ptr = handler._ptr;
 	bool has_retval = handler._ret;

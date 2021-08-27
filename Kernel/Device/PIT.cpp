@@ -5,12 +5,14 @@
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
 #include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/Process/Process.hpp>
+#include <Kernel/Process/Thread.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
+#include <Kernel/SMP/SMP.hpp>
 
 struct Alarm {
-	Process* m_proc;
+	Thread* m_thread;
 	uint64_t m_start;
 	uint64_t m_len;
 };
@@ -29,20 +31,17 @@ void update_timer_reload(uint16_t freq){
 
 void _pit_irq0_handler(PtraceRegs*) {
 	pit.tick();
-	Scheduler::tick();
+	SMP::ctb().scheduler().tick();
 
 	for(auto it = s_alarms.begin(); it != s_alarms.end(); ++it) {
 		auto& alarm = *it;
 		if(alarm.m_start + alarm.m_len > PIT::milliseconds())
 			continue;
 
-//		kdebugf("running in pid=%i for alarm of process pid=%i\n", Process::current()->pid(), alarm.m_proc->pid());
-		assert(alarm.m_proc->state() == ProcessState::Sleeping);
-		if(alarm.m_proc->state() == ProcessState::Sleeping) {
+		assert(alarm.m_thread->state() == TaskState::Sleeping);
+		if(alarm.m_thread->state() == TaskState::Sleeping) {
 			//  Wake up
-			alarm.m_proc->set_state(ProcessState::Ready);
-			//  Force rescheduling of current task
-			Process::current()->force_reschedule();
+			SMP::ctb().scheduler().wake_up(alarm.m_thread);
 		}
 		s_alarms.erase(it);
 	}
@@ -78,10 +77,10 @@ uint64_t PIT::milliseconds() {
 
 void PIT::sleep(uint64_t len) {
 	gen::LockGuard<gen::Spinlock> guard {s_alarms_lock};
-	auto* proc = Process::current();
+	auto* thread = SMP::ctb().current_thread();
 	auto time = milliseconds();
 //	kdebugf("set sleep for pid=%i\n", proc->pid());
 
-	s_alarms.push_back({.m_proc = proc, .m_start = time, .m_len = len });
+	s_alarms.push_back({.m_thread = thread, .m_start = time, .m_len = len });
 
 }

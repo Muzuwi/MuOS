@@ -1,6 +1,8 @@
 #include <Kernel/Locks/KMutex.hpp>
 #include <Kernel/Scheduler/Scheduler.hpp>
-#include <Kernel/Process/Process.hpp>
+#include <Kernel/Process/Thread.hpp>
+#include <Kernel/SMP/SMP.hpp>
+#include <Kernel/Debug/kassert.hpp>
 
 KMutex::KMutex() noexcept
 : m_owner(nullptr), m_spinlock(), m_waiters() {
@@ -20,7 +22,7 @@ void KMutex::unlock() {
 bool KMutex::_lock() {
 	//  Successfully acquired the lock
 	if(m_spinlock.try_lock()) {
-		m_owner = Process::current();
+		m_owner = SMP::ctb().current_thread();
 		return true;
 	}
 
@@ -31,45 +33,48 @@ bool KMutex::_unlock() {
 	if(!m_owner)
 		return false;
 
-	if(m_owner && Process::current() != m_owner)
+	auto thread = SMP::ctb().current_thread();
+	if(thread != m_owner)
 		return false;
 
-	Process::current()->preempt_disable();
+	thread->preempt_disable();
 	m_owner = nullptr;
 	m_spinlock.unlock();
 	waiter_try_wake_up();
-	Process::current()->preempt_enable();
+	thread->preempt_enable();
 
 	return true;
 }
 
 void KMutex::waiter_try_wake_up() {
-	Process::current()->preempt_disable();
+	auto thread = SMP::ctb().current_thread();
+	thread->preempt_disable();
 
 	m_waiters_lock.lock();
 	if(!m_waiters.empty()) {
 		auto mutex_waiter = m_waiters.front();
 		m_waiters.pop_front();
 
-		auto* process = mutex_waiter.m_waiter;
-		assert(process->state() == ProcessState::Blocking);
-		Scheduler::wake_up(process);
+		auto* thread = mutex_waiter.m_waiter;
+		kassert(thread->state() == TaskState::Blocking);
+		SMP::ctb().scheduler().wake_up(thread);
 	}
 	m_waiters_lock.unlock();
 
-	Process::current()->preempt_enable();
+	thread->preempt_enable();
 }
 
 void KMutex::wait() {
-	Process::current()->preempt_disable();
+	auto thread = SMP::ctb().current_thread();
+	thread->preempt_disable();
 
 	m_waiters_lock.lock();
-	m_waiters.push_back(KMutexWaiter{.m_waiter = Process::current()});
+	m_waiters.push_back(KMutexWaiter{.m_waiter = thread});
  	m_waiters_lock.unlock();
 
  	//  FIXME_SMP: Race condition when different core would try waking up a process while we haven't been preempted
-	Process::current()->set_state(ProcessState::Blocking);
-	Scheduler::schedule();
+ 	thread->set_state(TaskState::Blocking);
+ 	SMP::ctb().scheduler().schedule();
 
-	Process::current()->preempt_enable();
+	thread->preempt_enable();
 }

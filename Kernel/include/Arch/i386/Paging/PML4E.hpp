@@ -25,10 +25,9 @@ public:
 class ProcMem;
 
 class PML4 {
+	friend class VMM;
 	PML4E m_entries[512];
 public:
 	const PML4E& operator[](void*) const;
 	PML4E& operator[](void*);
-
-	PhysPtr<PML4> clone(ProcMem&);
 };

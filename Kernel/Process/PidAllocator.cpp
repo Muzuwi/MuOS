@@ -6,7 +6,7 @@ using gen::Spinlock;
 using gen::LockGuard;
 
 static Spinlock s_pid_lock {};
-static pid_t s_current_pid {1};
+static pid_t s_current_pid {3};
 
 pid_t PidAllocator::next() {
 	LockGuard<Spinlock> pid_lock {s_pid_lock};

@@ -1,5 +1,6 @@
 #pragma once
 #include <LibGeneric/List.hpp>
+#include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Memory/PAllocation.hpp>
 #include <Kernel/Memory/UserPtr.hpp>
@@ -87,12 +88,18 @@ public:
 		return m_addr;
 	}
 
-	void map(Process* process) const {
-		VMM::vmapping_map(process, *this);
+	void* end() const {
+		return (void*)((uintptr_t)m_addr + m_size);
 	}
 
-	void unmap(Process* process) const {
-		VMM::vmapping_unmap(process, *this);
+	bool contains(void* vaddr) {
+		return (uintptr_t)vaddr >= (uintptr_t)m_addr &&
+		       (uintptr_t)vaddr <  (uintptr_t)m_addr + m_size;
+	}
+
+	bool overlaps(VMapping const& other) {
+		//  TODO:
+		return false;
 	}
 
 	KOptional<PhysPtr<uint8_t>> page_for(void* vaddr) const {

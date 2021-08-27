@@ -2,6 +2,7 @@
 #include <Arch/i386/PtraceRegs.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
 #include <Kernel/Scheduler/Scheduler.hpp>
+#include <Kernel/SMP/SMP.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
@@ -28,7 +29,7 @@ void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 
 	IRQDispatcher::dispatch_irq(irq, interrupt_trap_frame);
 
-	Scheduler::interrupt_return_common();
+	SMP::ctb().scheduler().interrupt_return_common();
 }
 
 void IRQDispatcher::dispatch_irq(uint8_t irq, PtraceRegs* interrupt_trap_frame) {

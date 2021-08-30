@@ -41,9 +41,12 @@ extern "C" void _kernel_exception_entrypoint(size_t vector, PtraceRegs* interrup
 
 namespace Exception {
 	enum class Response {
-		TerminateProcess,
+		TerminateThread,
 		KernelPanic,
 		Resume
 	};
-	typedef Response(*HandlerFunction)(PtraceRegs* frame);
+	typedef Response(*HandlerFunction)(PtraceRegs* frame, uint8 vector);
+
+	Response handle_uncaught(PtraceRegs*, uint8 vector);
+	Response handle_page_fault(PtraceRegs*, uint8);
 }

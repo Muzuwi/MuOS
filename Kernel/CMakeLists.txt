@@ -41,64 +41,65 @@ set(CMAKE_CXX_LINK_EXECUTABLE
     "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> ${MU_LINKER_FLAGS} <LINK_FLAGS> -Xlinker -x ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o <OBJECTS> <LINK_LIBRARIES> ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o -o <TARGET>")
 
 add_executable(KernelELF
-               Kernel/kernel.cpp
-               Kernel/stackchk.cpp
-               Debug/kdebugf.cpp
-               Debug/kpanic.cpp
-               Debug/kassert.cpp
-               Debug/TTY.cpp
-               Arch/i386/PortIO.cpp
-               Arch/i386/VGA.cpp
+    Kernel/kernel.cpp
+    Kernel/stackchk.cpp
+    Debug/kdebugf.cpp
+    Debug/kpanic.cpp
+    Debug/kassert.cpp
+    Debug/TTY.cpp
+    Arch/i386/PortIO.cpp
+    Arch/i386/VGA.cpp
 
-               Arch/i386/GDT.cpp
-               Arch/i386/asm/LGDT.asm
+    Arch/i386/GDT.cpp
+    Arch/i386/asm/LGDT.asm
 
-               Arch/i386/IDT.cpp
-               Exception/asm/ExceptionEntrypoint.asm
-               Interrupt/asm/IRQEntrypoint.asm
+    Arch/i386/IDT.cpp
+    Exception/asm/ExceptionEntrypoint.asm
+    Interrupt/asm/IRQEntrypoint.asm
 
-               Memory/kmalloc.cpp
+    Memory/kmalloc.cpp
 
-               Memory/PMM.cpp
-               Memory/VMM.cpp
-               Arch/i386/Paging/PTE.cpp
-               Arch/i386/Paging/PDE.cpp
-               Arch/i386/Paging/PDPTE.cpp
-               Arch/i386/Paging/PML4E.cpp
+    Memory/PMM.cpp
+    Memory/VMM.cpp
+    Arch/i386/Paging/PTE.cpp
+    Arch/i386/Paging/PDE.cpp
+    Arch/i386/Paging/PDPTE.cpp
+    Arch/i386/Paging/PML4E.cpp
 
-               Arch/i386/CPUID.cpp
+    Arch/i386/CPUID.cpp
 
-               Memory/KHeap.cpp
-               Memory/Allocators/SlabAllocator.cpp
+    Memory/KHeap.cpp
+    Memory/Allocators/SlabAllocator.cpp
 
-               Exception/ExceptionEntrypoint.cpp
+    Exception/ExceptionEntrypoint.cpp
 
-               Interrupt/IRQDispatcher.cpp
+    Interrupt/IRQDispatcher.cpp
 
-               Device/PIT.cpp
-               Kernel/ksleep.cpp
+    Device/PIT.cpp
+    Kernel/ksleep.cpp
 
-               Arch/i386/CPU.cpp
-               Process/Process.cpp
-               Process/PidAllocator.cpp
-               Arch/i386/asm/SwitchTo.asm
-               Scheduler/Scheduler.cpp
-               Scheduler/RunQueue.cpp
+    Arch/i386/CPU.cpp
+    Process/Process.cpp
+    Process/PidAllocator.cpp
+    Arch/i386/asm/SwitchTo.asm
+    Scheduler/Scheduler.cpp
+    Scheduler/RunQueue.cpp
 
-               Syscalls/SysEntry.asm
-               Syscalls/Syscall.cpp
-               Locks/KMutex.cpp
-               Process/ProcSyscalls.cpp
-               Memory/UserPtr/UserPtrGeneric.cpp
-               Memory/UserPtr/UserPtrString.cpp
+    Syscalls/SysEntry.asm
+    Syscalls/Syscall.cpp
+    Locks/KMutex.cpp
+    Process/ProcSyscalls.cpp
+    Memory/UserPtr/UserPtrGeneric.cpp
+    Memory/UserPtr/UserPtrString.cpp
 
-               ACPI/ACPI.cpp
-               APIC/APIC.cpp
-               Device/Serial.cpp
-               SMP/SMP.cpp
-               Process/ProcCreate.cpp
-               Process/Thread.cpp
-               Process/ThreadCreate.cpp
+    ACPI/ACPI.cpp
+    APIC/APIC.cpp
+    Device/Serial.cpp
+    SMP/SMP.cpp
+    Process/ProcCreate.cpp
+    Process/Thread.cpp
+    Process/ThreadCreate.cpp
+    Exception/Handlers.cpp
     )
 
 target_compile_options(KernelELF

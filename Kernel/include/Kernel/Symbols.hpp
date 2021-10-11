@@ -38,4 +38,7 @@ extern uint64_t _ukernel_shared_end;
 extern uint64_t _userspace_stack_start;
 extern uint64_t _userspace_stack_end;
 
+extern uint64_t _userspace_heap_start;
+extern uint64_t _userspace_heap_end;
+
 #endif

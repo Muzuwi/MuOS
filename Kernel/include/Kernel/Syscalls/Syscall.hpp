@@ -13,6 +13,7 @@ extern "C" void _ukernel_syscall_entry();
 #define SYSCALL_ENUMERATE \
 	DEFINE_SYSCALL(__SYS_getpid, &Process::getpid, 0, true) \
 	DEFINE_SYSCALL(__SYS_klog, &Process::klog, 1, false)    \
+	DEFINE_SYSCALL(100, &Process::heap_alloc, 1, true)  \
 	DEFINE_SYSCALL(254, &Thread::sys_msleep, 1, false)      \
 
 namespace Syscall {

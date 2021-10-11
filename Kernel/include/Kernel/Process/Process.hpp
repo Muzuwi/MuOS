@@ -54,6 +54,7 @@ public:
 	// ------------
 	static pid_t getpid();
 	static void klog(UserPtr<const char> str);
+	static uint64 heap_alloc(size_t region_size);
 };
 
 

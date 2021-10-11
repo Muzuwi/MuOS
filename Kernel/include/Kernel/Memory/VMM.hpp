@@ -15,6 +15,7 @@ class VMM {
 	List<SharedPtr<VMapping>> m_mappings;
 	List<PAllocation> m_kernel_pages;
 	void* m_next_kernel_stack_at;   //  FIXME/SMP: Lock this
+	void* m_next_anon_vm_at;
 
 	enum class LeakAllocatedPage {
 		No,
@@ -47,9 +48,11 @@ public:
 
 	void* allocate_user_stack(uint64 stack_size);
 	VMapping* allocate_kernel_stack(uint64 stack_size);
+
+	void* allocate_user_heap(size_t region_size);
 public:
 	VMM(Process& proc)
-	: m_process(proc), m_pml4(), m_next_kernel_stack_at(&_ukernel_virt_kstack_start) {}
+	: m_process(proc), m_pml4(), m_next_kernel_stack_at(&_ukernel_virt_kstack_start), m_next_anon_vm_at(&_userspace_heap_start) {}
 
 	static void initialize_kernel_vm();
 

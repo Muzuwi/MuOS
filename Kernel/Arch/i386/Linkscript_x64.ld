@@ -6,6 +6,8 @@ ENTRY(_entrypoint_x32)
     for now, only non-PIE executables
 
   00000000_00000000........00007fff_ffffffff - userspace
+   |00001000_00000000........00001fff_ffffffff - executable
+   |00002000_00000000........00002fff_ffffffff - <hole>
    |00003000_00000000........00006fff_ffffffff - heap (4TB)
    |00007000_00000000........00007ffe_ffffffff - <hole>
    |00007fff_00000000........00007fff_ffffffff - stack
@@ -25,6 +27,8 @@ _userspace_virtual_start = 0x0;
 _userspace_virtual_end = 0x00007fffffffffff;
 _userspace_stack_start = 0x00007fff00000000;
 _userspace_stack_end = 0x00007fffffffffff;
+_userspace_heap_start = 0x0000300000000000;
+_userspace_heap_end = 0x00006fffffffffff;
 
 _ukernel_virtual_start = 0xffff800000000000;
 _ukernel_identity_start = 0xffff800000000000;

@@ -49,7 +49,7 @@ Exception::Response Exception::handle_page_fault(PtraceRegs*, uint8) {
 	}
 
 	if(thread->parent()->flags().privilege == User) {
-		kerrorf("Thread(tid=%i): Page fault - killing\n");
+		kerrorf("Thread(tid=%i): Page fault - killing\n", thread->tid());
 		return Response::TerminateThread;
 	}
 

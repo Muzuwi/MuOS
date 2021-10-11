@@ -535,3 +535,21 @@ KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
 
 	return {pt};
 }
+
+void* VMM::allocate_user_heap(size_t region_size) {
+	size_t size_rounded = region_size & ~(0x1000 - 1);
+	if(size_rounded == 0) {
+		return (void*)(-1);
+	}
+
+	auto addr = m_next_anon_vm_at;
+	auto vmapping = VMapping::create(addr, size_rounded, VM_READ | VM_WRITE, MAP_PRIVATE);
+
+	if(!insert_vmapping(gen::move(vmapping))) {
+		return (void*)(-1);
+	}
+
+	m_next_anon_vm_at = (void*)((uint64)m_next_anon_vm_at + size_rounded);
+
+	return addr;
+}

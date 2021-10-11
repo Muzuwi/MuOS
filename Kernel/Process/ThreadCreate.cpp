@@ -8,13 +8,34 @@
 #include <Kernel/SMP/SMP.hpp>
 
 
-SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent) {
+SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void(*kernel_exec)()) {
 	auto thread = SharedPtr {
 		new (KHeap::allocate(sizeof(Thread))) Thread {parent, PidAllocator::next()}
 	};
 
-	parent->add_thread(thread);
+	if(!thread) {
+		return {};
+	}
 
+//	kdebugf("Creating thread[tid=%i] in parent[pid=%i]\n", thread->tid(), parent->pid());
+	parent->add_thread(thread);
+	auto stack_mapping = parent->vmm().allocate_kernel_stack(VMM::kernel_stack_size());
+	void* const stack_bottom = (void*)((uintptr_t)stack_mapping->addr() + VMM::kernel_stack_size());
+	auto stack_last_page = stack_mapping->page_for((void*)((uintptr_t)stack_bottom-1)).unwrap();
+
+	thread->m_kernel_stack_bottom = stack_bottom;
+	PtraceRegs state = PtraceRegs::kernel_default();
+	state.rip = (uint64)kernel_exec;
+	state.rsp = (uint64)stack_bottom;
+	state.rbp = (uint64)stack_bottom;
+	thread->m_interrupted_task_frame = (InactiveTaskFrame*)thread->_bootstrap_task_stack(
+			PhysAddr{(stack_last_page+1).get()}, state
+	);
+	thread->sched_ctx().priority = 1;
+	thread->set_state(TaskState::Ready);
+	thread->m_pml4 = parent->vmm().pml4();
+
+//	kdebugf("Thread PML4=%x%x\n",(uintptr_t)thread->m_pml4.get() >> 32u, (uintptr_t)thread->m_pml4.get() & 0xFFFFFFFFu);
 	return thread;
 }
 

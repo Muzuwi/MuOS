@@ -40,3 +40,27 @@ _task_enter_bootstrap:
     ;  Enter task for the first time
     iretq
 
+
+;   Does a mode switch to userland for the first time. Pretty
+;   much the same thing as _task_enter_bootstrap, except at this
+;   point it would be dangerous to modify the kernel stack as we're
+;   currently running on it!
+;   Used by code running in kernel context to initialize execution of a userland thread
+;   rdi - pointer to a PtraceRegs structure, representing
+;         the initial register state of the program
+global _bootstrap_user
+_bootstrap_user:
+    ;  Use the structure as a stack
+    mov rsp, rdi
+    ;  Restore all GPRs
+    RESTORE_REGS_ALL
+
+    ;  Skip over the origin field
+    add rsp, 8
+
+    ;  Unconditionally swapgs
+    ;  This function is only to be used for KERNEL->USER switches
+    swapgs
+
+    ;  Enter userland
+    iretq

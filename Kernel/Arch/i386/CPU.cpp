@@ -65,3 +65,27 @@ void CPU::set_gs_base(void* p) {
 uint64_t CPU::get_gs_base() {
 	return rdmsr(0xC0000101);
 }
+
+uint64 CPU::cr2() {
+	uint64 data = 0;
+	asm volatile(
+			"mov %0, %%cr2"
+			:"=a"(data)
+			::);
+	return data;
+}
+
+uint64 CPU::cr3() {
+	uint64 data = 0;
+	asm volatile(
+	"mov %0, %%cr3"
+	:"=a"(data)
+	::);
+	return data;
+}
+
+extern "C" [[noreturn]] void _bootstrap_user(PtraceRegs* regs);
+
+[[noreturn]] void CPU::jump_to_user(PtraceRegs* regs) {
+	_bootstrap_user(regs);
+}

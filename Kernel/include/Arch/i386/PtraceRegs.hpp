@@ -1,5 +1,6 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
+#include <Arch/i386/GDT.hpp>
 
 struct PtraceRegs {
 	uint64_t r15;
@@ -26,4 +27,22 @@ struct PtraceRegs {
 	uint64_t rflags;
 	uint64_t rsp;
 	uint64_t ss;
+
+	static PtraceRegs user_default() {
+		PtraceRegs regs {};
+		regs.rflags = 0x200;
+		regs.cs = GDT::get_user_CS() | 3;
+		regs.ss = GDT::get_user_DS() | 3;
+		return regs;
+	}
+
+	static PtraceRegs kernel_default() {
+		PtraceRegs regs {};
+		regs.rflags = 0x200;
+		regs.cs = GDT::get_kernel_CS();
+		regs.ss = GDT::get_kernel_DS();
+		return regs;
+	}
 };
+
+static_assert(sizeof(PtraceRegs) == 21 * sizeof(uint64), "PtraceRegs has invalid size");

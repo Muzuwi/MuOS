@@ -56,6 +56,10 @@ public:
 
 	static void initialize_kernel_vm();
 
+	PhysPtr<PML4> pml4() const {
+		return m_pml4;
+	}
+
 	static constexpr unsigned kernel_stack_size() {
 		return 0x4000;
 	}

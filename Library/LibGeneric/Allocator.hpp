@@ -61,11 +61,19 @@ namespace gen {
 
 		template<class T, class... Args>
 		static void construct(Alloc&, T* p, Args&&... args) {
+			if(p == nullptr) {
+				return;
+			}
+
 			::new(static_cast<void*>(p)) T(gen::forward<Args>(args)...);
 		}
 
 		template<class T>
 		static void destroy(Alloc&, T* p) {
+			if(p == nullptr) {
+				return;
+			}
+
 			p->~T();
 		}
 	};

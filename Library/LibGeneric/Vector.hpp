@@ -25,30 +25,29 @@ namespace gen {
 			AllocatorTraits<ObjAllocType>::deallocate(base, buffer_size);
 		}
 
-//		void _buffer_delete(T* base, size_t constr_count, size_t obj_count) {
-//			for(auto* p = base; p < base + constr_count; ++p)
-//				AllocatorTraits<ObjAllocType>::destroy(_allocator, p);
-//			AllocatorTraits<ObjAllocType>::deallocate(base, obj_count);
-//		}
-
-//		T* _buffer_create(size_t n) {
-//			auto* buf = AllocatorTraits<ObjAllocType>::allocate(n);
-//			for(auto* p = buf; p < buf + n; ++p)
-//				AllocatorTraits<ObjAllocType>::construct(_allocator, p);
-//			return buf;
-//		}
-
 		void _object_destroy(T* buffer, size_t n) {
+			if(buffer == nullptr) {
+				return;
+			}
+
 			for(auto* p = buffer; p < buffer + n; ++p)
 				AllocatorTraits<ObjAllocType>::destroy(_allocator, p);
 		}
 
 		void _object_construct(T* buffer, size_t n, const T& value) {
+			if(buffer == nullptr) {
+				return;
+			}
+
 			for(auto* p = buffer; p < buffer + n; ++p)
 				AllocatorTraits<ObjAllocType>::construct(_allocator, p, value);
 		}
 
 		void _construct_from(T const* source, size_t count) {
+			if(source == nullptr) {
+				return;
+			}
+
 			for(auto* p = m_data; p < m_data + count && p < m_data + m_buffer_size; ++p) {
 				AllocatorTraits<ObjAllocType>::construct(_allocator, p, *source);
 				source++;

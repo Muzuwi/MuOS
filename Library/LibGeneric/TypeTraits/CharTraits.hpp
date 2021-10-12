@@ -32,7 +32,7 @@ namespace _trait_space {
     template<class CharType>
     size_t char_traits<CharType>::length(const CharType* a) {
         size_t i = 0;
-        while (a[i] != CharType()) i++;
+        while (a && a[i] != CharType()) i++;
         return i;
     }
 

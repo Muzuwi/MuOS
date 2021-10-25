@@ -7,7 +7,7 @@ export PREFIX
 
 if [ ! -d gcc ]; then
     echo "Extracted GCC sources not found!"
-    exit -1
+    exit 1
 fi
 
 if [ ! -d build-gcc ]; then

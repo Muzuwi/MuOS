@@ -17,24 +17,24 @@ BINUTILS_ARCHIVE_PATH="./binutils-$BINUTILS_VER.tar.xz"
 BINUTILS_TARGET_DIR="./binutils"
 
 
-#echo "Downloading GCC sources.."
-#curl --request GET -L \
-#     --url "$GCC_ARCHIVE_URL" \
-#     --output "$GCC_ARCHIVE_PATH"
-#if [ $? -ne 0 ]; then
-#    echo "Failed downloading GCC archive: curl returned $?"
-#    exit 1
-#fi
-#
-#
-#echo "Downloading binutils sources.."
-#curl --request GET -L \
-#     --url "$BINUTILS_ARCHIVE_URL" \
-#     --output "$BINUTILS_ARCHIVE_PATH"
-#if [ $? -ne 0 ]; then
-#    echo "Failed downloading binutils archive: curl returned $?"
-#    exit 1
-#fi
+echo "Downloading GCC sources.."
+curl --request GET -L \
+     --url "$GCC_ARCHIVE_URL" \
+     --output "$GCC_ARCHIVE_PATH"
+if [ $? -ne 0 ]; then
+    echo "Failed downloading GCC archive: curl returned $?"
+    exit 1
+fi
+
+
+echo "Downloading binutils sources.."
+curl --request GET -L \
+     --url "$BINUTILS_ARCHIVE_URL" \
+     --output "$BINUTILS_ARCHIVE_PATH"
+if [ $? -ne 0 ]; then
+    echo "Failed downloading binutils archive: curl returned $?"
+    exit 1
+fi
 
 if [ -d "$GCC_TARGET_DIR" ]; then
   echo "Removing previous GCC source folder"

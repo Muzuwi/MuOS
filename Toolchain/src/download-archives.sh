@@ -1,12 +1,7 @@
 #!/bin/bash
 
-if [ $# != 2 ]; then
-  echo "Usage: download-archives.sh <gcc-version> <binutils-version>"
-  exit 1
-fi
-
-GCC_VER=$1
-BINUTILS_VER=$2
+GCC_VER="11.2.0"
+BINUTILS_VER="2.37"
 
 GCC_ARCHIVE_URL="https://ftp.gnu.org/gnu/gcc/gcc-$GCC_VER/gcc-$GCC_VER.tar.xz"
 GCC_ARCHIVE_PATH="./gcc-$GCC_VER.tar.xz"

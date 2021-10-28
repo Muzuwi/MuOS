@@ -3,6 +3,7 @@ set -e
 
 PREFIX="/usr/local/muOS"
 PATH=$PATH:$PREFIX
+JOBCOUNT=$(nproc --all)
 export PREFIX
 
 if [ ! -d gcc ]; then
@@ -23,7 +24,7 @@ cd build-gcc
 				 --enable-languages=c,c++ \
 				 --enable-shared
 
-make all-gcc -j12
-make all-target-libgcc -j12 CFLAGS_FOR_TARGET='-mcmodel=large -mno-red-zone'
+make all-gcc -j"$JOBCOUNT"
+make all-target-libgcc -j"$JOBCOUNT" CFLAGS_FOR_TARGET='-mcmodel=large -mno-red-zone'
 make install-gcc
 make install-target-libgcc

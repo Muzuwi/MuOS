@@ -2,6 +2,7 @@
 set -e
 
 PREFIX="/usr/local/muOS/"
+JOBCOUNT=$(nproc --all)
 
 mkdir build-binutils
 cd build-binutils
@@ -11,5 +12,5 @@ cd build-binutils
                       --disable-nls \
                       --disable-werror \
                       --enable-shared
-make -j12
+make -j"$JOBCOUNT"
 make install

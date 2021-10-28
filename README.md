@@ -17,7 +17,8 @@ Ensure this location is present and writeable by the current user.
 **Alternatively**, change the prefix to the one you wish to use. However this needs to be done in all CMakeLists and 
 the build scripts for binutils/GCC, which is a bit of a hassle.. 
 3. Compile binutils - run `make-binutils.sh`
-4. Compile GCC - run `make-gcc.sh`
+4. **Before compiling GCC:** copy over LibC headers folder to `$PREFIX/usr/include`  
+5. Compile GCC - run `make-gcc.sh`
 
 The compile scripts automatically install binutils/GCC to the selected prefix.
 

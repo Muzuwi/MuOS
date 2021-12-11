@@ -6,7 +6,7 @@
 #include <Arch/i386/GDT.hpp>
 #include <Arch/i386/IDT.hpp>
 
-#include <Arch/i386/PIT.hpp>
+#include <Kernel/Device/PIT.hpp>
 #include <Arch/i386/CPU.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Syscalls/Syscall.hpp>

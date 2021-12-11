@@ -1,4 +1,4 @@
-#include <Arch/i386/PIT.hpp>
+#include <Kernel/Device/PIT.hpp>
 #include <Arch/i386/PtraceRegs.hpp>
 #include <Arch/i386/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>

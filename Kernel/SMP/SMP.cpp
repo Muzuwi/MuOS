@@ -1,4 +1,4 @@
-#include <Arch/i386/CPU.hpp>
+#include <Arch/x86_64/CPU.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/Vector.hpp>
 #include <Kernel/APIC/APIC.hpp>

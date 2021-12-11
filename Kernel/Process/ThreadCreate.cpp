@@ -1,7 +1,7 @@
 #include <string.h>
-#include <Arch/i386/CPU.hpp>
-#include <Arch/i386/GDT.hpp>
-#include <Arch/i386/InactiveTaskFrame.hpp>
+#include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/GDT.hpp>
+#include <Arch/x86_64/InactiveTaskFrame.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Process/Thread.hpp>
 #include <Kernel/Process/PidAllocator.hpp>

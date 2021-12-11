@@ -1,4 +1,4 @@
-#include <Arch/i386/GDT.hpp>
+#include <Arch/x86_64/GDT.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 
 static uint8_t TSS[104];

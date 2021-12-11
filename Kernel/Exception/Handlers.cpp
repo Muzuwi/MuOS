@@ -1,4 +1,4 @@
-#include <Arch/i386/CPU.hpp>
+#include <Arch/x86_64/CPU.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Exception/Exception.hpp>
 #include <Kernel/Process/Process.hpp>

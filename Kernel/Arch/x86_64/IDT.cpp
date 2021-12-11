@@ -1,7 +1,7 @@
-#include <Arch/i386/IDT.hpp>
-#include <Arch/i386/PortIO.hpp>
+#include <Arch/x86_64/IDT.hpp>
+#include <Arch/x86_64/PortIO.hpp>
 #include <Kernel/Debug/kdebugf.hpp>
-#include <Arch/i386/GDT.hpp>
+#include <Arch/x86_64/GDT.hpp>
 
 static IDT_Entry interrupt_descr_table[IDT_INTS_COUNT] = {};
 

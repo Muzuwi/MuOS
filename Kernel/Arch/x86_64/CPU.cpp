@@ -3,10 +3,10 @@
 #include <Kernel/SystemTypes.hpp>
 #include <Kernel/Syscalls/Syscall.hpp>
 #include <Kernel/Process/Process.hpp>
-#include <Arch/i386/CPU.hpp>
-#include <Arch/i386/CPUID.hpp>
-#include <Arch/i386/GDT.hpp>
-#include <Arch/i386/PortIO.hpp>
+#include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/CPUID.hpp>
+#include <Arch/x86_64/GDT.hpp>
+#include <Arch/x86_64/PortIO.hpp>
 
 void CPU::initialize_features() {
 	uint32_t new_efer {0x500}; //  Long-Mode enable + Long-mode active

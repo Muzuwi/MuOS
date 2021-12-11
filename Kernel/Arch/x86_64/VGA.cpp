@@ -1,6 +1,6 @@
 #include <stddef.h>
 #include <string.h>
-#include <Arch/i386/VGA.hpp>
+#include <Arch/x86_64/VGA.hpp>
 #include <Kernel/Memory/Ptr.hpp>
 
 static uint8_t vga_console_position_x = 0, vga_console_position_y = 0;

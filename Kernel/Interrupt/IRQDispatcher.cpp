@@ -1,5 +1,5 @@
-#include <Arch/i386/PortIO.hpp>
-#include <Arch/i386/PtraceRegs.hpp>
+#include <Arch/x86_64/PortIO.hpp>
+#include <Arch/x86_64/PtraceRegs.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
 #include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/SMP/SMP.hpp>

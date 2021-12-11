@@ -4,10 +4,10 @@ include(../Toolchain/CMakeLists.txt)
 #  CRT objects, required by the compiler
 #
 add_custom_target(CRTi
-                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/i386/crti.S
+                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/x86_64/crti.S
                   BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o)
 add_custom_target(CRTn
-                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/i386/crtn.S
+                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/x86_64/crtn.S
                   BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o)
 add_custom_target(CRTbegin
                   COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtbegin.o` ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o
@@ -47,13 +47,13 @@ add_executable(KernelELF
     Debug/kpanic.cpp
     Debug/kassert.cpp
     Debug/TTY.cpp
-    Arch/i386/PortIO.cpp
-    Arch/i386/VGA.cpp
+    Arch/x86_64/PortIO.cpp
+    Arch/x86_64/VGA.cpp
 
-    Arch/i386/GDT.cpp
-    Arch/i386/asm/LGDT.asm
+    Arch/x86_64/GDT.cpp
+    Arch/x86_64/asm/LGDT.asm
 
-    Arch/i386/IDT.cpp
+    Arch/x86_64/IDT.cpp
     Exception/asm/ExceptionEntrypoint.asm
     Interrupt/asm/IRQEntrypoint.asm
 
@@ -61,12 +61,12 @@ add_executable(KernelELF
 
     Memory/PMM.cpp
     Memory/VMM.cpp
-    Arch/i386/Paging/PTE.cpp
-    Arch/i386/Paging/PDE.cpp
-    Arch/i386/Paging/PDPTE.cpp
-    Arch/i386/Paging/PML4E.cpp
+    Arch/x86_64/Paging/PTE.cpp
+    Arch/x86_64/Paging/PDE.cpp
+    Arch/x86_64/Paging/PDPTE.cpp
+    Arch/x86_64/Paging/PML4E.cpp
 
-    Arch/i386/CPUID.cpp
+    Arch/x86_64/CPUID.cpp
 
     Memory/KHeap.cpp
     Memory/Allocators/SlabAllocator.cpp
@@ -78,10 +78,10 @@ add_executable(KernelELF
     Device/PIT.cpp
     Kernel/ksleep.cpp
 
-    Arch/i386/CPU.cpp
+    Arch/x86_64/CPU.cpp
     Process/Process.cpp
     Process/PidAllocator.cpp
-    Arch/i386/asm/SwitchTo.asm
+    Arch/x86_64/asm/SwitchTo.asm
     Scheduler/Scheduler.cpp
     Scheduler/RunQueue.cpp
 

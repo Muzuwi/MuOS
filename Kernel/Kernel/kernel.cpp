@@ -3,11 +3,11 @@
 #include <Kernel/Memory/KHeap.hpp>
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Multiboot/MultibootInfo.hpp>
-#include <Arch/i386/GDT.hpp>
-#include <Arch/i386/IDT.hpp>
+#include <Arch/x86_64/GDT.hpp>
+#include <Arch/x86_64/IDT.hpp>
 
 #include <Kernel/Device/PIT.hpp>
-#include <Arch/i386/CPU.hpp>
+#include <Arch/x86_64/CPU.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Syscalls/Syscall.hpp>
 

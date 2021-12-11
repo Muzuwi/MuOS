@@ -1,6 +1,6 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
-#include <Arch/i386/PtraceRegs.hpp>
+#include <Arch/x86_64/PtraceRegs.hpp>
 
 enum class ExceptionType {
 	DivZero         = 0,

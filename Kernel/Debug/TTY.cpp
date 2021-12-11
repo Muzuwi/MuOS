@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <Kernel/Debug/TTY.hpp>
-#include <Arch/i386/VGA.hpp>
+#include <Arch/x86_64/VGA.hpp>
 #include <Kernel/Locks/KMutex.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/SMP/SMP.hpp>

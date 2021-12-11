@@ -1,5 +1,5 @@
-#include <Arch/i386/CPU.hpp>
-#include <Arch/i386/GDT.hpp>
+#include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/GDT.hpp>
 #include <Kernel/Scheduler/RunQueue.hpp>
 #include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/Process/Thread.hpp>

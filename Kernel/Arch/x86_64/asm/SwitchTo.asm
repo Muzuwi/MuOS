@@ -1,4 +1,4 @@
-%include "Arch/i386/asm/SaveRegs.asm"
+%include "Arch/x86_64/asm/SaveRegs.asm"
 
 section .text
 

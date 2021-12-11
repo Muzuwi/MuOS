@@ -1,8 +1,8 @@
 #pragma once
-#include <Arch/i386/Paging/PTE.hpp>
-#include <Arch/i386/Paging/PDE.hpp>
-#include <Arch/i386/Paging/PDPTE.hpp>
-#include <Arch/i386/Paging/PML4E.hpp>
+#include <Arch/x86_64/Paging/PTE.hpp>
+#include <Arch/x86_64/Paging/PDE.hpp>
+#include <Arch/x86_64/Paging/PDPTE.hpp>
+#include <Arch/x86_64/Paging/PML4E.hpp>
 
 static inline uint64_t index_pml4e(void* value) {
 	return (reinterpret_cast<uint64_t>(value) >> 39u) & (0x1ffu);

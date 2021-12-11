@@ -1,6 +1,6 @@
-#include <Arch/i386/CPUID.hpp>
-#include <Arch/i386/GDT.hpp>
-#include <Arch/i386/InactiveTaskFrame.hpp>
+#include <Arch/x86_64/CPUID.hpp>
+#include <Arch/x86_64/GDT.hpp>
+#include <Arch/x86_64/InactiveTaskFrame.hpp>
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Memory/Units.hpp>

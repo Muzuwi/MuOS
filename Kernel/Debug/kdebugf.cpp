@@ -1,7 +1,7 @@
 #include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/TTY.hpp>
 #include <Kernel/Device/Serial.hpp>
-#include <Arch/i386/PortIO.hpp>
+#include <Arch/x86_64/PortIO.hpp>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>

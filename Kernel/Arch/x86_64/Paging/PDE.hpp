@@ -1,5 +1,5 @@
 #pragma once
-#include <Arch/i386/Paging/PTE.hpp>
+#include <Arch/x86_64/Paging/PTE.hpp>
 
 enum class FlagPDE : uint64_t {
 	ExecuteDisable = 1ul << 63u,

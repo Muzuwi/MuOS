@@ -1,5 +1,5 @@
 #include <Kernel/Debug/kdebugf.hpp>
-#include <Arch/i386/TrapFrame.hpp>
+#include <Arch/x86_64/TrapFrame.hpp>
 #include <Kernel/Process/Scheduler.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Syscalls/SyscallList.hpp>

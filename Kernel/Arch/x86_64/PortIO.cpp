@@ -1,4 +1,4 @@
-#include <Arch/i386/PortIO.hpp>
+#include <Arch/x86_64/PortIO.hpp>
 
 void wrmsr(uint32_t ecx, uint64_t value) {
 	uint32_t eax = value&0xffffffffu,

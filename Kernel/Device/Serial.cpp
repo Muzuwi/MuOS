@@ -1,4 +1,4 @@
-#include <Arch/i386/PortIO.hpp>
+#include <Arch/x86_64/PortIO.hpp>
 #include <string.h>
 #include <Kernel/Device/Serial.hpp>
 #include <Kernel/Debug/kdebugf.hpp>

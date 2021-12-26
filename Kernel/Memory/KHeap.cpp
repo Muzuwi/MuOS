@@ -99,7 +99,7 @@ void KHeap::init() {
 	//  TODO: Heap base address randomization
 	s_last_heap_virtual = &_ukernel_heap_start;
 	for(unsigned i = 0; i < 2; ++i) {
-		for(unsigned object_size = 4; object_size <= 256; object_size <<= 1) {
+		for(unsigned object_size = 8; object_size <= 256; object_size <<= 1) {
 			grow_heap(object_size);
 		}
 	}

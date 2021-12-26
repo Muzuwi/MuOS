@@ -90,7 +90,7 @@ add_executable(KernelELF
     Locks/KMutex.cpp
     Process/ProcSyscalls.cpp
     Memory/UserPtr/UserPtrGeneric.cpp
-    Memory/UserPtr/UserPtrString.cpp
+    Memory/UserPtr/UserString.cpp
 
     ACPI/ACPI.cpp
     APIC/APIC.cpp

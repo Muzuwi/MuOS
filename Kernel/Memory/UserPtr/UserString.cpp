@@ -3,8 +3,7 @@
 #include <Kernel/Process/Thread.hpp>
 #define S(a) (uintptr_t)a>>32u, (uintptr_t)a&0xffffffffu
 
-template<>
-gen::SharedPtr<typename UserPtr<const char>::type> UserPtr<const char>::copy_to_kernel() {
+KBox<const char> UserString::copy_to_kernel() {
 	//  FIXME: Make sure a different thread cannot modify the address space while we're in here
 	auto* user_ptr = (uint8_t*)m_ptr;
 	auto& vmm = Thread::current()->parent()->vmm();
@@ -15,13 +14,13 @@ gen::SharedPtr<typename UserPtr<const char>::type> UserPtr<const char>::copy_to_
 		auto region = vmm.find_vmapping(user_ptr + size);
 		if(!region.has_value()) {
 			kerrorf("Thread[tid=%i] - tried copying string from unaccessible memory", Thread::current()->tid());
-			return gen::SharedPtr<type>{nullptr};
+			return KBox<const char>{};
 		}
 
 		auto page = region.unwrap()->page_for(user_ptr + size);
 		if(!page.has_value()) {
 			kerrorf("Thread[tid=%i] - tried reading from unmapped memory", Thread::current()->tid());
-			return gen::SharedPtr<type>{nullptr};
+			return KBox<const char>{};
 		}
 
 		auto byte = page.unwrap();
@@ -33,13 +32,13 @@ gen::SharedPtr<typename UserPtr<const char>::type> UserPtr<const char>::copy_to_
 		size++;
 		if(size == str_max_size) {
 			kerrorf("Thread[tid=%i] - max string size exceeded during copy", Thread::current()->tid());
-			return gen::SharedPtr<type>{nullptr};
+			return KBox<const char>{};
 		}
 	}
 
 	auto* buf = (uint8_t*)KHeap::allocate(size+1);
 	if(!buf) {
-		return gen::SharedPtr<type>{nullptr};
+		return KBox<const char>{};
 	}
 
 	//  Copy from user memory to kernel buffer, byte by byte
@@ -55,5 +54,5 @@ gen::SharedPtr<typename UserPtr<const char>::type> UserPtr<const char>::copy_to_
 		buf[i] = *phys_ptr;
 	}
 
-	return gen::SharedPtr<type>{reinterpret_cast<type*>(buf)};
+	return KBox<const char>{buf, size + 1};
 }

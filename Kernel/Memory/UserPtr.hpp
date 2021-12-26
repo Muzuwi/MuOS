@@ -1,6 +1,7 @@
 #pragma once
 #include <LibGeneric/Move.hpp>
 #include <LibGeneric/SharedPtr.hpp>
+#include <Kernel/Memory/KBox.hpp>
 
 template<class T>
 class UserPtr {
@@ -12,3 +13,11 @@ public:
 	bool copy_to_user(type*);
 };
 
+class UserString {
+	void* m_ptr;
+public:
+	explicit UserString(void* user_ptr) noexcept
+	: m_ptr(user_ptr) {}
+
+	KBox<const char> copy_to_kernel();
+};

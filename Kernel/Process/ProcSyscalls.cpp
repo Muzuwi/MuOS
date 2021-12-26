@@ -11,7 +11,7 @@ pid_t Process::getpid() {
 /*
  *  FIXME: Simple debugging utility - should be removed
  */
-void Process::klog(UserPtr<const char> str) {
+void Process::klog(UserString str) {
 	auto kernel_str = str.copy_to_kernel();
 	if(!kernel_str)
 		return;

@@ -6,7 +6,8 @@
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Debug/kassert.hpp>
 #include <Kernel/SMP/SMP.hpp>
-
+#include <Arch/x86_64/PortIO.hpp>
+#include <Kernel/Interrupt/IRQDispatcher.hpp>
 
 [[noreturn]] void _kernel_idle_task() {
 	while(true)
@@ -17,6 +18,15 @@
 	while(true) {
 		kdebugf("test thread2, pid=%i, tid=%i\n", Thread::current()->parent()->pid(), Thread::current()->tid());
 		Thread::current()->msleep(2000);
+	}
+}
+
+[[noreturn]] void _kbd() {
+	while (true) {
+		auto ch = Ports::in(0x60);
+		kdebugf("running under thread[%i]: %x\n", Thread::current()->tid(), (uint32)ch);
+		Thread::current()->set_state(TaskState::Blocking);
+		SMP::ctb().scheduler().schedule();
 	}
 }
 
@@ -144,6 +154,12 @@ void Scheduler::bootstrap() {
 		auto new_process = Process::kerneld();
 		auto new_thread = Thread::create_in_process(new_process, _kernel_test_task_2);
 		add_thread_to_rq(new_thread.get());
+	}
+
+	{
+		auto keyboard_thread = Thread::create_in_process(Process::kerneld(), _kbd);
+		add_thread_to_rq(keyboard_thread.get());
+		IRQDispatcher::register_threadirq(1, keyboard_thread.get());
 	}
 
 	uint8 _dummy_val[sizeof(Thread)] = {};

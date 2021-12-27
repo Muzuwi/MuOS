@@ -37,7 +37,7 @@ void Serial::initialize(Serial::Port port) {
 	register_write(port, Register::IrqId, 0xc7);        //  FIFO enabled and cleared
 	register_write(port, Register::ModemControl, 0x0f); //  Normal operation mode
 	register_write(port, Register::IrqEn, 0x0B);        //  No interrupts, RTS/DTS
-	IRQDispatcher::register_handler(4, _serial_irq_handler);
+	IRQDispatcher::register_microtask(4, _serial_irq_handler);
 
 	//  Clear any pending data
 	for(unsigned i = 0; i < 10; ++i)

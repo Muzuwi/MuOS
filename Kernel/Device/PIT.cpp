@@ -49,7 +49,7 @@ void _pit_irq0_handler(PtraceRegs*) {
 
 PIT::PIT() noexcept
 : m_divider(1193), m_ticks(0) { //  ~1000.15 Hz
-	IRQDispatcher::register_handler(0, _pit_irq0_handler);
+	IRQDispatcher::register_microtask(0, _pit_irq0_handler);
 	Ports::out(PIT::port_command(), 0b00110100);
 	update_timer_reload(m_divider);
 	kdebugf("[PIT] Timer at %i Hz\n", PIT::base_frequency() / m_divider);

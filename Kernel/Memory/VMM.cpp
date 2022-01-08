@@ -376,44 +376,11 @@ KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
  *  Maps a given VMapping in the target process
  */
 bool VMM::map(VMapping const& mapping) {
-	PhysPtr<PML4> pml4 = m_pml4;
-
 	auto virtual_addr = (uint8_t*) mapping.addr();
 	for (auto& page : mapping.pages()) {
 		auto phys = page.base();
 		for (unsigned i = 0; i < (1u << page.order()); ++i) {
-			auto& pml4e = (*pml4)[virtual_addr];
-			auto* pdpte = ensure_pdpt(virtual_addr, LeakAllocatedPage::No);
-			auto* pde = ensure_pd(virtual_addr, LeakAllocatedPage::No);
-			auto* pte = ensure_pt(virtual_addr, LeakAllocatedPage::No);
-			if(!pdpte || !pde || !pte) {
-				kerrorf("[VMM] VMapping map failed - PDPTE/PDE/PTE allocation failed.\n");
-				return false;
-			}
-
-			//  For top-level structures (above PTEs), set the most permissive flags
-			//  (also set proper user/supervisor flags based on virtual address, not the mapping flags)
-			const auto flags = mapping.flags();
-			const bool is_user_mem = index_pml4e(virtual_addr) < index_pml4e(&_ukernel_virtual_start);
-
-			pml4e.set(FlagPML4E::Present, true);
-			pml4e.set(FlagPML4E::User, is_user_mem);
-			pml4e.set(FlagPML4E::RW, true);
-
-			pdpte->set(FlagPDPTE::Present, true);
-			pdpte->set(FlagPDPTE::User, is_user_mem);
-			pdpte->set(FlagPDPTE::RW, true);
-
-			pde->set(FlagPDE::Present, true);
-			pde->set(FlagPDE::User, is_user_mem);
-			pde->set(FlagPDE::RW, true);
-
-			pte->set(FlagPTE::Present, flags & VM_READ);
-			pte->set(FlagPTE::User, !(flags & VM_KERNEL));
-			pte->set(FlagPTE::RW, flags & VM_WRITE);
-			pte->set(FlagPTE::ExecuteDisable, !(flags & VM_EXEC));
-			pte->set_page(phys);
-
+			addrmap(virtual_addr, phys, static_cast<VMappingFlags>(mapping.flags()));
 			virtual_addr += 0x1000;
 			phys += 0x1000;
 		}
@@ -426,35 +393,83 @@ bool VMM::map(VMapping const& mapping) {
  *  Unmaps the given VMapping from the target process
  */
 bool VMM::unmap(VMapping const& mapping) {
-	PhysPtr<PML4> pml4 = m_pml4;
-
 	auto virtual_addr = (uint8_t*) mapping.addr();
 	for (auto& page : mapping.pages()) {
 		auto phys = page.base();
 		for (unsigned i = 0; i < (1u << page.order()); ++i) {
-			auto& pml4e = (*pml4)[virtual_addr];
-			if(!pml4e.get(FlagPML4E::Present)) {
-				kerrorf("[VMM] VMapping corruption or double free detected\n");
-				kpanic();
-			}
-			auto& pdpte = (*pml4e.directory())[virtual_addr];
-			if(!pdpte.get(FlagPDPTE::Present)) {
-				kerrorf("[VMM] VMapping corruption or double free detected\n");
-				kpanic();
-			}
-			auto& pde = (*pdpte.directory())[virtual_addr];
-			if(!pde.get(FlagPDE::Present)) {
-				kerrorf("[VMM] VMapping corruption or double free detected\n");
-				kpanic();
-			}
-			auto& pte = (*pde.table())[virtual_addr];
-
-			pte.set(FlagPTE::Present, false);
-
+			addrunmap(virtual_addr);
 			virtual_addr += 0x1000;
 			phys += 0x1000;
 		}
 	}
+	return true;
+}
+
+
+/*
+ *  Map a virtual address to a physical address
+ */
+bool VMM::addrmap(void* vaddr, PhysAddr paddr, VMappingFlags flags) {
+	PhysPtr<PML4> pml4 = m_pml4;
+
+	auto& pml4e = (*pml4)[vaddr];
+	auto* pdpte = ensure_pdpt(vaddr, LeakAllocatedPage::No);
+	auto* pde = ensure_pd(vaddr, LeakAllocatedPage::No);
+	auto* pte = ensure_pt(vaddr, LeakAllocatedPage::No);
+	if(!pdpte || !pde || !pte) {
+		kerrorf("[VMM] VMapping map failed - PDPTE/PDE/PTE allocation failed.\n");
+		return false;
+	}
+
+	//  For top-level structures (above PTEs), set the most permissive flags
+	//  (also set proper user/supervisor flags based on virtual address, not the mapping flags)
+	const bool is_user_mem = index_pml4e(vaddr) < index_pml4e(&_ukernel_virtual_start);
+
+	pml4e.set(FlagPML4E::Present, true);
+	pml4e.set(FlagPML4E::User, is_user_mem);
+	pml4e.set(FlagPML4E::RW, true);
+
+	pdpte->set(FlagPDPTE::Present, true);
+	pdpte->set(FlagPDPTE::User, is_user_mem);
+	pdpte->set(FlagPDPTE::RW, true);
+
+	pde->set(FlagPDE::Present, true);
+	pde->set(FlagPDE::User, is_user_mem);
+	pde->set(FlagPDE::RW, true);
+
+	pte->set(FlagPTE::Present, flags & VM_READ);
+	pte->set(FlagPTE::User, !(flags & VM_KERNEL));
+	pte->set(FlagPTE::RW, flags & VM_WRITE);
+	pte->set(FlagPTE::ExecuteDisable, !(flags & VM_EXEC));
+	pte->set_page(paddr);
+
+	return false;
+}
+
+
+/*
+ *  Unmap the page with the specified virtual address
+ */
+bool VMM::addrunmap(void* vaddr) {
+	PhysPtr<PML4> pml4 = m_pml4;
+	auto& pml4e = (*pml4)[vaddr];
+	if(!pml4e.get(FlagPML4E::Present)) {
+		kerrorf("[VMM] VMapping corruption or double free detected\n");
+		kpanic();
+	}
+	auto& pdpte = (*pml4e.directory())[vaddr];
+	if(!pdpte.get(FlagPDPTE::Present)) {
+		kerrorf("[VMM] VMapping corruption or double free detected\n");
+		kpanic();
+	}
+	auto& pde = (*pdpte.directory())[vaddr];
+	if(!pde.get(FlagPDE::Present)) {
+		kerrorf("[VMM] VMapping corruption or double free detected\n");
+		kpanic();
+	}
+	auto& pte = (*pde.table())[vaddr];
+	pte.set(FlagPTE::Present, false);
+
 	return true;
 }
 

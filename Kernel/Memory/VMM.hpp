@@ -37,9 +37,8 @@ class VMM {
 	PDE*   ensure_pd(void* addr, LeakAllocatedPage);
 	PTE*   ensure_pt(void* addr, LeakAllocatedPage);
 
-	//  -----------
-	//   VMappings
-	//  -----------
+	bool addrmap(void* vaddr, PhysAddr, VMappingFlags flags);
+	bool addrunmap(void* vaddr);
 	bool map(VMapping const&);
 	bool unmap(VMapping const&);
 public:

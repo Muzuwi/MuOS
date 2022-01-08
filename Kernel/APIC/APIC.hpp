@@ -6,8 +6,20 @@ enum class LAPICReg : unsigned {
 	APICID = 0x020,
 	APICVer = 0x030,
 
+	EOI = 0x0B0,
+	SIV = 0x0F0,
+
+	LVTCMCI = 0x2F0,
+
 	ICRLow = 0x300,
 	ICRHi  = 0x310,
+
+	LVTTimer = 0x320,
+	LVTThermal = 0x330,
+	LVTPerformance = 0x340,
+	LVTLINT0 = 0x350,
+	LVTLINT1 = 0x360,
+	LVTError = 0x370
 };
 
 namespace APIC {

@@ -88,26 +88,45 @@ void APIC::find_local_base() {
 				}
 
 				s_ap_ids.push_back(apic_id);
-				kdebugf("[APIC] Entry: Processor %i, APIC_ID=%i, Flags=%x\n", acpi_processor_id, apic_id, flags);
+				kdebugf("[APIC] Processor %i, APIC_ID=%i, Flags=%x\n", acpi_processor_id, apic_id, flags);
 				break;
 			}
 			case 1: {
 				auto ioapic_id = *(madt + offset + 2).as<uint8>();
 				auto ioapic_addr = *(madt + offset + 4).as<uint32>();
 				auto global_irq_base = *(madt + offset + 8).as<uint32>();
-				kdebugf("[APIC] Entry: I/O APIC ID=%i, addr=%x, irq_base=%x\n", ioapic_id, ioapic_addr, global_irq_base);
+				kdebugf("[APIC] I/O APIC ID=%i, addr=%x, irq_base=%x\n", ioapic_id, ioapic_addr, global_irq_base);
 				break;
 			}
 			case 2: {
-				kdebugf("[APIC] Entry: Type 2\n");
+				auto bus_source = *(madt + offset + 2).as<uint8>();
+				auto irq_source = *(madt + offset + 3).as<uint8>();
+				auto global_system_irq = *(madt + offset + 4).as<uint32>();
+				auto flags = *(madt + offset + 8).as<uint16>();
+				kdebugf("[APIC] IO/APIC Override: sourcebus=%i, sourceirq=%i, irq=%i, flags=%x\n",
+						bus_source, irq_source, global_system_irq, flags);
+				break;
+			}
+			case 3: {
+				auto nmi_source = *(madt + offset + 2).as<uint8>();
+				auto flags = *(madt + offset + 4).as<uint16>();
+				auto global_system_irq = *(madt + offset + 6).as<uint32>();
+				kdebugf("[APIC] IO/APIC NMI: source=%i, flags=%x, irq=%i\n",
+				        nmi_source, flags, global_system_irq);
 				break;
 			}
 			case 4: {
-				kdebugf("[APIC] Entry: Type 4\n");
+				auto proc_id = *(madt + offset + 2).as<uint8>();
+				auto flags = *(madt + offset + 3).as<uint16>();
+				auto lint = *(madt + offset + 5).as<uint8>();
+				kdebugf("[APIC] Local APIC NMI: processor=%x, flags=%x, LINT=%i\n",
+						proc_id, flags, lint);
 				break;
 			}
 			case 5: {
-				kdebugf("[APIC] Entry: Type 5\n");
+				auto addr = *(madt + offset + 4).as<uint64>();
+				kdebugf("[APIC] Local APIC address override: %x%x",
+						addr>>32u, addr & 0xFFFFFFFFu);
 				break;
 			}
 			default: break;

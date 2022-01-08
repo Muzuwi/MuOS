@@ -10,6 +10,10 @@ class MultibootInfo;
 
 namespace PMM {
 	[[nodiscard]] KOptional<PAllocation> allocate(size_t count_order = 0);
+
+	[[nodiscard]] KOptional<PhysAddr> allocate_lowmem();
+	void free_lowmem(PhysAddr);
+
 	void free_allocation(const PAllocation& allocation);
 	void handle_multiboot_memmap(PhysPtr<MultibootInfo>);
 	void initialize_deferred_regions();

@@ -11,6 +11,7 @@ using gen::Vector;
 using Units::MiB;
 
 static Vector<PRegion, KMalloc::BootstrapAllocator> s_available_regions {};
+static Vector<PRegion, KMalloc::BootstrapAllocator> s_lowmem_regions {};
 static Vector<PRegion, KMalloc::BootstrapAllocator> s_defered_regions {};
 
 static void pmm_handle_new_region(PhysAddr base_address, size_t region_size) {
@@ -47,9 +48,11 @@ void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 				kdebugf("usable, pages: %i, buf: %i\n", pages, required_bitmap_pages);
 				memory_amount += range;
 
-				//  Avoid low RAM, to not trample over the bootstrap memory
-				if (end < 1 * MiB)
+				//  Add lowram as a separate allocator type
+				if (end < 1 * MiB) {
+					s_lowmem_regions.push_back(PRegion{PhysAddr{(void*)start}, range});
 					break;
+				}
 
 				auto kernel_phys_start = (uint64_t)&_ukernel_preloader_physical;
 				auto kernel_phys_end   = (uint64_t)&_ukernel_elf_end-(uint64_t)&_ukernel_virtual_offset;
@@ -134,8 +137,36 @@ void PMM::initialize_deferred_regions() {
 	}
 
 	kdebugf("[PMM] Regions initialized:\n");
+	for(auto& reg : s_lowmem_regions) {
+		auto start = (uint64_t)reg.base().get();
+		kdebugf("  - PRegion[low]: start %x%x, size %i\n", start >> 32u, start & 0xffffffffu, reg.size());
+	}
 	for(auto& reg : s_available_regions) {
 		auto start = (uint64_t)reg.base().get();
 		kdebugf("  - PRegion: start %x%x, size %i\n", start >> 32u, start & 0xffffffffu, reg.size());
 	}
+}
+
+KOptional<PhysAddr> PMM::allocate_lowmem() {
+	for(auto& region : s_lowmem_regions) {
+		auto ret = region.allocator().allocate(0);
+		if(ret.has_value()) {
+			auto page = ret.unwrap();
+			return KOptional<PhysAddr>{page};
+		}
+	}
+
+	kerrorf("[PMM] Allocation failure for lowmem!\n");
+	return KOptional<PhysAddr>{};
+}
+
+void PMM::free_lowmem(PhysAddr addr) {
+	for(auto& region : s_lowmem_regions) {
+		if(region.contains(addr)) {
+			region.allocator().free(addr, 0);
+			return;
+		}
+	}
+
+	kerrorf("[PMM] Failed freeing lowmem at %x%x\n", (uintptr_t)addr.get()>>32u, (uintptr_t)addr.get()&0xffffffffu);
 }

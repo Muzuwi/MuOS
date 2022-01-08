@@ -43,6 +43,11 @@ class VMM {
 	bool map(VMapping const&);
 	bool unmap(VMapping const&);
 public:
+	explicit VMM(Process& proc) noexcept
+	: m_process(proc), m_pml4(), m_next_kernel_stack_at(&_ukernel_virt_kstack_start), m_next_anon_vm_at(&_userspace_heap_start) {}
+
+	PhysPtr<PML4> pml4() const { return m_pml4; }
+
 	KOptional<SharedPtr<VMapping>> find_vmapping(void* vaddr) const;
 	[[nodiscard]] bool insert_vmapping(SharedPtr<VMapping>&&);
 
@@ -50,21 +55,8 @@ public:
 	VMapping* allocate_kernel_stack(uint64 stack_size);
 
 	void* allocate_user_heap(size_t region_size);
-public:
-	VMM(Process& proc)
-	: m_process(proc), m_pml4(), m_next_kernel_stack_at(&_ukernel_virt_kstack_start), m_next_anon_vm_at(&_userspace_heap_start) {}
 
 	static void initialize_kernel_vm();
-
-	PhysPtr<PML4> pml4() const {
-		return m_pml4;
-	}
-
-	static constexpr unsigned kernel_stack_size() {
-		return 0x4000;
-	}
-
-	static constexpr unsigned user_stack_size() {
-		return 0x4000;
-	}
+	static constexpr unsigned kernel_stack_size() { return 0x4000; }
+	static constexpr unsigned user_stack_size() { return 0x4000; }
 };

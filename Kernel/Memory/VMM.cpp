@@ -189,59 +189,6 @@ void VMM::_map_kernel_prealloc_pml4() {
 }
 
 
-/*
- *  Maps a given VMapping in the target process
- */
-bool VMM::map(VMapping const& mapping) {
-	PhysPtr<PML4> pml4 = m_pml4;
-
-	auto virtual_addr = (uint8_t*) mapping.addr();
-	for (auto& page : mapping.pages()) {
-		auto phys = page.base();
-		for (unsigned i = 0; i < (1u << page.order()); ++i) {
-			auto& pml4e = (*pml4)[virtual_addr];
-			auto* pdpte = ensure_pdpt(virtual_addr, LeakAllocatedPage::No);
-			auto* pde = ensure_pd(virtual_addr, LeakAllocatedPage::No);
-			auto* pte = ensure_pt(virtual_addr, LeakAllocatedPage::No);
-			if(!pdpte || !pde || !pte) {
-				kerrorf("[VMM] VMapping map failed - PDPTE/PDE/PTE allocation failed.\n");
-				return false;
-			}
-
-			auto flags = mapping.flags();
-			//  FIXME: Weird flag combinations
-			pml4e.set(FlagPML4E::Present, true);
-			pml4e.set(FlagPML4E::User, !(flags & VM_KERNEL));
-			pml4e.set(FlagPML4E::RW, flags & VM_WRITE);
-
-			pdpte->set(FlagPDPTE::Present, true);
-			pdpte->set(FlagPDPTE::User, !(flags & VM_KERNEL));
-			pdpte->set(FlagPDPTE::RW, flags & VM_WRITE);
-
-			pde->set(FlagPDE::Present, true);
-			pde->set(FlagPDE::User, !(flags & VM_KERNEL));
-			pde->set(FlagPDE::RW, flags & VM_WRITE);
-
-			pte->set(FlagPTE::Present, flags & VM_READ);
-			pte->set(FlagPTE::User, !(flags & VM_KERNEL));
-			pte->set(FlagPTE::RW, (flags & VM_READ) && (flags & VM_WRITE));
-			pte->set(FlagPTE::ExecuteDisable, !(flags & VM_EXEC));
-			pte->set_page(phys);
-
-			virtual_addr += 0x1000;
-			phys += 0x1000;
-		}
-	}
-	return true;
-}
-
-
-bool VMM::unmap(VMapping const&) {
-	//  TODO:
-	return false;
-}
-
-
 PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
 	PML4E& pml4e = (*m_pml4)[addr];
 
@@ -269,7 +216,6 @@ PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
 
 	return &(*pml4e.directory())[addr];
 }
-
 
 PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
 	auto* pdpte = ensure_pdpt(addr, leak);
@@ -300,7 +246,6 @@ PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
 	return &(*pdpte->directory())[addr];
 }
 
-
 PTE* VMM::ensure_pt(void* addr, LeakAllocatedPage leak) {
 	auto* pde = ensure_pd(addr, leak);
 	if(!pde) return nullptr;
@@ -328,6 +273,189 @@ PTE* VMM::ensure_pt(void* addr, LeakAllocatedPage leak) {
 	}
 
 	return &(*pde->table())[addr];
+}
+
+KOptional<PhysPtr<PML4>> VMM::clone_pml4(PhysPtr<PML4> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pml4 = page.unwrap().as<PML4>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pml4.get_mapped(), source.get_mapped(), 0x1000);
+
+	for(unsigned i = 0; i < 512; ++i) {
+		//  Kernel shared memory should be copied as-is
+		if(i >= index_pml4e(&_ukernel_shared_start) && i <= index_pml4e(&_ukernel_shared_end)) {
+			pml4->m_entries[i] = source->m_entries[i];
+			continue;
+		}
+
+		//  Clone only present entries
+		if(pml4->m_entries[i].get(FlagPML4E::Present)) {
+			auto pdpt = clone_pdpt(pml4->m_entries[i].directory());
+			if(!pdpt.has_value())
+				return {};
+
+			pml4->m_entries[i].set_directory(pdpt.unwrap());
+		}
+	}
+
+	return pml4;
+}
+
+KOptional<PhysPtr<PDPT>> VMM::clone_pdpt(PhysPtr<PDPT> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pdpt = page.unwrap().as<PDPT>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pdpt.get_mapped(), source.get_mapped(), 0x1000);
+
+	for(unsigned i = 0; i < 512; ++i) {
+		//  Skip entries marked as huge page - these do not contain any paging structures but physical addresses
+		if(pdpt->m_entries[i].get(FlagPDPTE::HugePage))
+			continue;
+
+		//  Clone only present entries
+		if(pdpt->m_entries[i].get(FlagPDPTE::Present)) {
+			auto pd = clone_pd(pdpt->m_entries[i].directory());
+			if(!pd.has_value())
+				return {};
+
+			pdpt->m_entries[i].set_directory(pd.unwrap());
+		}
+	}
+
+	return pdpt;
+
+}
+
+KOptional<PhysPtr<PD>> VMM::clone_pd(PhysPtr<PD> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pd = page.unwrap().as<PD>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pd.get_mapped(), source.get_mapped(), 0x1000);
+
+	for(unsigned i = 0; i < 512; ++i) {
+		//  Skip entries marked as large page - these do not contain any paging structures but physical addresses
+		if(pd->m_entries[i].get(FlagPDE::LargePage))
+			continue;
+
+		//  Clone only present entries
+		if(pd->m_entries[i].get(FlagPDE::Present)) {
+			auto pt = clone_pt(pd->m_entries[i].table());
+			if(!pt.has_value())
+				return {};
+
+			pd->m_entries[i].set_table(pt.unwrap());
+		}
+	}
+
+	return pd;
+}
+
+KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
+	auto page = _allocate_kernel_page(0);
+	if(!page.has_value())
+		return {};
+
+	auto pt = page.unwrap().as<PT>();
+	//  Clone flags, dirs should be overwritten
+	memcpy(pt.get_mapped(), source.get_mapped(), 0x1000);
+
+	return {pt};
+}
+
+
+/*
+ *  Maps a given VMapping in the target process
+ */
+bool VMM::map(VMapping const& mapping) {
+	PhysPtr<PML4> pml4 = m_pml4;
+
+	auto virtual_addr = (uint8_t*) mapping.addr();
+	for (auto& page : mapping.pages()) {
+		auto phys = page.base();
+		for (unsigned i = 0; i < (1u << page.order()); ++i) {
+			auto& pml4e = (*pml4)[virtual_addr];
+			auto* pdpte = ensure_pdpt(virtual_addr, LeakAllocatedPage::No);
+			auto* pde = ensure_pd(virtual_addr, LeakAllocatedPage::No);
+			auto* pte = ensure_pt(virtual_addr, LeakAllocatedPage::No);
+			if(!pdpte || !pde || !pte) {
+				kerrorf("[VMM] VMapping map failed - PDPTE/PDE/PTE allocation failed.\n");
+				return false;
+			}
+
+			//  For top-level structures (above PTEs), set the most permissive flags
+			//  (also set proper user/supervisor flags based on virtual address, not the mapping flags)
+			const auto flags = mapping.flags();
+			const bool is_user_mem = index_pml4e(virtual_addr) < index_pml4e(&_ukernel_virtual_start);
+
+			pml4e.set(FlagPML4E::Present, true);
+			pml4e.set(FlagPML4E::User, is_user_mem);
+			pml4e.set(FlagPML4E::RW, true);
+
+			pdpte->set(FlagPDPTE::Present, true);
+			pdpte->set(FlagPDPTE::User, is_user_mem);
+			pdpte->set(FlagPDPTE::RW, true);
+
+			pde->set(FlagPDE::Present, true);
+			pde->set(FlagPDE::User, is_user_mem);
+			pde->set(FlagPDE::RW, true);
+
+			pte->set(FlagPTE::Present, flags & VM_READ);
+			pte->set(FlagPTE::User, !(flags & VM_KERNEL));
+			pte->set(FlagPTE::RW, flags & VM_WRITE);
+			pte->set(FlagPTE::ExecuteDisable, !(flags & VM_EXEC));
+			pte->set_page(phys);
+
+			virtual_addr += 0x1000;
+			phys += 0x1000;
+		}
+	}
+	return true;
+}
+
+
+/*
+ *  Unmaps the given VMapping from the target process
+ */
+bool VMM::unmap(VMapping const& mapping) {
+	PhysPtr<PML4> pml4 = m_pml4;
+
+	auto virtual_addr = (uint8_t*) mapping.addr();
+	for (auto& page : mapping.pages()) {
+		auto phys = page.base();
+		for (unsigned i = 0; i < (1u << page.order()); ++i) {
+			auto& pml4e = (*pml4)[virtual_addr];
+			if(!pml4e.get(FlagPML4E::Present)) {
+				kerrorf("[VMM] VMapping corruption or double free detected\n");
+				kpanic();
+			}
+			auto& pdpte = (*pml4e.directory())[virtual_addr];
+			if(!pdpte.get(FlagPDPTE::Present)) {
+				kerrorf("[VMM] VMapping corruption or double free detected\n");
+				kpanic();
+			}
+			auto& pde = (*pdpte.directory())[virtual_addr];
+			if(!pde.get(FlagPDE::Present)) {
+				kerrorf("[VMM] VMapping corruption or double free detected\n");
+				kpanic();
+			}
+			auto& pte = (*pde.table())[virtual_addr];
+
+			pte.set(FlagPTE::Present, false);
+
+			virtual_addr += 0x1000;
+			phys += 0x1000;
+		}
+	}
+	return true;
 }
 
 
@@ -436,105 +564,6 @@ VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
 	return mapping_ptr;
 }
 
-
-KOptional<PhysPtr<PML4>> VMM::clone_pml4(PhysPtr<PML4> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value())
-		return {};
-
-	auto pml4 = page.unwrap().as<PML4>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pml4.get_mapped(), source.get_mapped(), 0x1000);
-
-	for(unsigned i = 0; i < 512; ++i) {
-		//  Kernel shared memory should be copied as-is
-		if(i >= index_pml4e(&_ukernel_shared_start) && i <= index_pml4e(&_ukernel_shared_end)) {
-			pml4->m_entries[i] = source->m_entries[i];
-			continue;
-		}
-
-		//  Clone only present entries
-		if(pml4->m_entries[i].get(FlagPML4E::Present)) {
-			auto pdpt = clone_pdpt(pml4->m_entries[i].directory());
-			if(!pdpt.has_value())
-				return {};
-
-			pml4->m_entries[i].set_directory(pdpt.unwrap());
-		}
-	}
-
-	return pml4;
-}
-
-
-KOptional<PhysPtr<PDPT>> VMM::clone_pdpt(PhysPtr<PDPT> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value())
-		return {};
-
-	auto pdpt = page.unwrap().as<PDPT>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pdpt.get_mapped(), source.get_mapped(), 0x1000);
-
-	for(unsigned i = 0; i < 512; ++i) {
-		//  Skip entries marked as huge page - these do not contain any paging structures but physical addresses
-		if(pdpt->m_entries[i].get(FlagPDPTE::HugePage))
-			continue;
-
-		//  Clone only present entries
-		if(pdpt->m_entries[i].get(FlagPDPTE::Present)) {
-			auto pd = clone_pd(pdpt->m_entries[i].directory());
-			if(!pd.has_value())
-				return {};
-
-			pdpt->m_entries[i].set_directory(pd.unwrap());
-		}
-	}
-
-	return pdpt;
-
-}
-
-
-KOptional<PhysPtr<PD>> VMM::clone_pd(PhysPtr<PD> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value())
-		return {};
-
-	auto pd = page.unwrap().as<PD>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pd.get_mapped(), source.get_mapped(), 0x1000);
-
-	for(unsigned i = 0; i < 512; ++i) {
-		//  Skip entries marked as large page - these do not contain any paging structures but physical addresses
-		if(pd->m_entries[i].get(FlagPDE::LargePage))
-			continue;
-
-		//  Clone only present entries
-		if(pd->m_entries[i].get(FlagPDE::Present)) {
-			auto pt = clone_pt(pd->m_entries[i].table());
-			if(!pt.has_value())
-				return {};
-
-			pd->m_entries[i].set_table(pt.unwrap());
-		}
-	}
-
-	return pd;
-}
-
-
-KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value())
-		return {};
-
-	auto pt = page.unwrap().as<PT>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pt.get_mapped(), source.get_mapped(), 0x1000);
-
-	return {pt};
-}
 
 void* VMM::allocate_user_heap(size_t region_size) {
 	size_t size_rounded = region_size & ~(0x1000 - 1);

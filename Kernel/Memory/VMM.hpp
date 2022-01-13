@@ -7,6 +7,7 @@
 using gen::List;
 
 class VMM {
+	friend class V86;
 	friend class SlabAllocator;
 	friend class Scheduler;
 

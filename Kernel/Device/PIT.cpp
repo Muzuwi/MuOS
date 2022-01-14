@@ -52,7 +52,7 @@ PIT::PIT() noexcept
 	IRQDispatcher::register_microtask(0, _pit_irq0_handler);
 	Ports::out(PIT::port_command(), 0b00110100);
 	update_timer_reload(m_divider);
-	kdebugf("[PIT] Timer at %i Hz\n", PIT::base_frequency() / m_divider);
+//	kdebugf("[PIT] Timer at %i Hz\n", PIT::base_frequency() / m_divider);
 }
 
 void PIT::tick() {

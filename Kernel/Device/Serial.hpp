@@ -5,7 +5,10 @@
 class Serial {
 public:
 	enum class Port {
-		COM0 = 0
+		COM0 = 0,
+		COM1 = 1,
+		COM2 = 2,
+		COM3 = 3
 	};
 
 	enum class Register {
@@ -21,10 +24,10 @@ public:
 
 	static void init();
 	static void write_str(Port, const char*);
+	static void write_debugger_str(const char*);
 private:
 	static void _serial_irq_handler(PtraceRegs*);
-	static bool probe(Port port);
-	static void initialize(Port port);
+	static bool try_initialize(Port port);
 	static uint16 io_port(Port port);
 
 	static void register_write(Port port, Register reg, uint8 val);

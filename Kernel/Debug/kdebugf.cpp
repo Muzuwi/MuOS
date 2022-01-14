@@ -18,9 +18,9 @@ int kdebugf(const char* format, ...){
 
 	va_end(args);
 
-	Serial::write_str(Serial::Port::COM0, "\u001b[32m");
-	Serial::write_str(Serial::Port::COM0, buffer);
-	Serial::write_str(Serial::Port::COM0, "\u001b[0m");
+	Serial::write_debugger_str("\u001b[32m");
+	Serial::write_debugger_str(buffer);
+	Serial::write_debugger_str("\u001b[0m");
 
 	TTY::prints(buffer);
 
@@ -37,9 +37,9 @@ int kerrorf(const char* format, ...){
 
 	va_end(args);
 
-	Serial::write_str(Serial::Port::COM0, "\u001b[1;91m");
-	Serial::write_str(Serial::Port::COM0, buffer);
-	Serial::write_str(Serial::Port::COM0, "\u001b[0m");
+	Serial::write_debugger_str("\u001b[1;91m");
+	Serial::write_debugger_str(buffer);
+	Serial::write_debugger_str("\u001b[0m");
 
 	TTY::prints(buffer);
 

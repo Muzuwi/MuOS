@@ -50,6 +50,12 @@ void PMM::handle_multiboot_memmap(PhysPtr<MultibootInfo> multiboot_info) {
 
 				//  Add lowram as a separate allocator type
 				if (end < 1 * MiB) {
+					//  Push back the start for zero page, as it contains the BIOS IVT,
+					//  which is used in V86 mode
+					if(start == 0x0) {
+						start = 0x1000;
+						range -= 0x1000;
+					}
 					s_lowmem_regions.push_back(PRegion{PhysAddr{(void*)start}, range});
 					break;
 				}

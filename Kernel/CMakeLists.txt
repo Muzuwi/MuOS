@@ -102,7 +102,9 @@ add_executable(KernelELF
     Exception/Handlers.cpp
 
     Arch/x86_64/asm/V86.asm
-    Arch/x86_64/V86.cpp)
+    Arch/x86_64/V86.cpp
+    SMP/APBoot.asm
+    )
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>

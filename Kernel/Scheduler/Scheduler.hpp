@@ -11,6 +11,8 @@ class Scheduler {
 	static unsigned pri_to_quants(uint8_t priority);
 	Thread* create_idle_task();
 	void add_thread_to_rq(Thread*);
+
+	[[noreturn]] static void bootstrap_ap_task();
 public:
 	void bootstrap();
 	void tick();

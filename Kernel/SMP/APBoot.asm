@@ -1,0 +1,123 @@
+%include "Bootstage/BootDefines.mac"
+
+bits 64
+section .text
+
+struc APBootstrap
+.state_flag resq 1
+.cr3        resq 1
+.rsp        resq 1
+.fsbase     resq 1
+.gsbase     resq 1
+.kgsbase    resq 1
+.real_gdt        resq 3
+.real_gdtr_size  resw 1
+.real_gdtr_off   resd 1
+.compat_gdt        resq 3
+.compat_gdtr_size  resw 1
+.compat_gdtr_off   resq 1
+.long_gdt        resq 3
+.long_gdtr_size  resw 1
+.long_gdtr_off   resq 1
+.kernel_idtr_size   resw 1
+.kernel_idtr_off    resq 1
+endstruc
+
+align 4096
+bits 16
+global ap_bootstrap_start
+ap_bootstrap_start:
+%define OFFSETOF(a) (a - ap_bootstrap_start)
+    cli
+    mov di, 0x5555  ;  This is patched by the kernel to contain the data page,
+                    ;  it's not actually 0x5555
+                    ;  DO NOT MOVE THIS AROUND!
+
+    ;  Signal to the BSP that we're up
+    mov ax, 0x1
+    mov [edi], ax
+
+    ;  Enable protection
+    mov eax, cr0
+    or eax, (1 << 0)
+    mov cr0, eax
+    ;  Load 16-bit protected mode GDTR
+    lea eax, [edi + APBootstrap.real_gdtr_size]
+    lgdt [eax]
+    ;  Use data page as stack
+    lea eax, [edi + 0x1000]
+    mov esp, eax
+    mov ebp, esp
+
+    mov si, cs
+    shl si, 4   ;  cs * 16 = address of code page
+    lea eax, [esi + OFFSETOF(ap_prot16)]
+
+    push dword 0x8
+    push eax
+    o32 retf
+ap_prot16:
+    ;  Load proper selectors
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    ;  Load 32-bit mode GDTR
+    lea eax, [edi + APBootstrap.compat_gdtr_size]
+    lgdt [eax]
+    ;  Far jump to 32-bit mode
+    lea eax, [esi + OFFSETOF(ap_prot32)]
+    push dword 0x8
+    push eax
+    o32 retf
+bits 32
+ap_prot32:
+    ;  Enable PAE/PGE
+    mov eax, CR4_PAE|CR4_PGE|CR4_PSE
+    mov cr4, eax
+    ;  Load target CR3
+    lea eax, [edi + APBootstrap.cr3]
+    mov eax, [eax]
+    mov cr3, eax
+    ;  Enable long mode support in EFER
+    mov ecx, 0xc0000080
+    rdmsr
+    or eax, EFER_LM
+    wrmsr
+    ;  Enable PE/PG
+    mov eax, cr0
+    or eax, CR0_PE|CR0_PG
+    mov cr0, eax
+    ;  Load long-mode GDT
+    lea eax, [edi + APBootstrap.long_gdtr_size]
+    lgdt [eax]
+    ;  Far ret into long mode
+    lea eax, [esi + OFFSETOF(ap_long)]
+    push dword 0x8
+    push eax
+    retf
+bits 64
+ap_long:
+    ;  Far ret into kernel address space
+    mov rax, ap_long_entry
+    push rax
+    ret
+global ap_bootstrap_end
+ap_bootstrap_end:
+
+bits 64
+global ap_long_entry
+ap_long_entry:
+    ;  Signal the BSP that we're out of bootstrap
+    lea rax, [edi + APBootstrap.state_flag]
+    mov rbx, 2
+    mov [rax], rbx
+.halt:
+    hlt
+    jmp .halt
+
+%if (ap_bootstrap_end-ap_bootstrap_start) > 4096
+%error "AP bootstrap code size is larger than one page!"
+%endif

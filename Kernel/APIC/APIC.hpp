@@ -9,6 +9,7 @@ enum class LAPICReg : unsigned {
 	EOI = 0x0B0,
 	SIV = 0x0F0,
 
+	ESR     = 0x280,
 	LVTCMCI = 0x2F0,
 
 	ICRLow = 0x300,

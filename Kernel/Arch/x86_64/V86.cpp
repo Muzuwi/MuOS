@@ -12,8 +12,8 @@ void V86::run_irq(uint8 irq, V86Regs& regs) {
 	auto* thread = SMP::ctb().current_thread();
 	auto const& process = thread->parent();
 
-	auto maybe_code_page = PMM::allocate_lowmem();
-	auto maybe_stack_page = PMM::allocate_lowmem();
+	auto maybe_code_page = PMM::instance().allocate_lowmem();
+	auto maybe_stack_page = PMM::instance().allocate_lowmem();
 	kassert(maybe_code_page.has_value());
 	kassert(maybe_stack_page.has_value());
 
@@ -27,10 +27,10 @@ void V86::run_irq(uint8 irq, V86Regs& regs) {
 	                       stack_page,
 	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_KERNEL ));
 
-	vm86_irq(PhysAddr {code_page.get()}, PhysAddr {stack_page.get()}, irq, regs);
+	vm86_irq(PhysAddr { code_page.get() }, PhysAddr { stack_page.get() }, irq, regs);
 
 	process->vmm().addrunmap(code_page.get());
 	process->vmm().addrunmap(stack_page.get());
-	PMM::free_lowmem(code_page);
-	PMM::free_lowmem(stack_page);
+	PMM::instance().free_lowmem(code_page);
+	PMM::instance().free_lowmem(stack_page);
 }

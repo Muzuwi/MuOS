@@ -2,6 +2,7 @@
 #include <string.h>
 #include <Kernel/KOptional.hpp>
 #include <Kernel/Memory/Ptr.hpp>
+#include <Kernel/Memory/Units.hpp>
 
 //  Page-backed bitmap allocator for pages
 class PageBitmapAllocator {
@@ -154,7 +155,7 @@ class PageBitmapAllocator {
 		m_deferred_initialization = false;
 	}
 
-	friend void PMM::initialize_deferred_regions();
+	friend class PMM;
 public:
 	PageBitmapAllocator(PhysAddr base, size_t region_size)
 	: m_base(base), m_region_size(region_size) {

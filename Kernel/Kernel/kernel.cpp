@@ -32,9 +32,9 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 	SMP::bootstrap_ctb();
 	CPU::irq_enable();
 
-	PMM::handle_multiboot_memmap(multiboot_info);
+	PMM::instance().init_regions(multiboot_info);
 	VMM::initialize_kernel_vm();
-	PMM::initialize_deferred_regions();
+	PMM::instance().init_deferred_allocators();
 
 	KHeap::init();
 

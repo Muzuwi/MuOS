@@ -16,19 +16,19 @@ SlabAllocator::SlabAllocator(size_t object_size, size_t alloc_pool_order) {
 void SlabAllocator::initialize(void* virtual_base) {
 	m_virtual_start = virtual_base;
 
-	auto alloc = PMM::allocate();
+	auto alloc = PMM::instance().allocate();
 	if(!alloc.has_value()) {
 		kerrorf("Failed allocating page for SlabAllocator bitmap!\n");
 		kpanic();
 	}
-	m_allocation_bitmap = PhysBitmap{alloc.unwrap().base(), object_capacity()};
+	m_allocation_bitmap = PhysBitmap { alloc.unwrap().base(), object_capacity() };
 
-	auto pool = PMM::allocate(m_pool_order);
+	auto pool = PMM::instance().allocate(m_pool_order);
 	if(!pool.has_value()) {
 		kerrorf("Failed allocating pool for SlabAllocator(%i)!\n", m_object_size);
 		kpanic();
 	}
-    m_pool_base = pool.unwrap().base();
+	m_pool_base = pool.unwrap().base();
 	memset(m_pool_base.get_mapped(), 0, 0x1000 << m_pool_order);
 
 //	SMP::ctb().current_thread()->parent()->vmm()._map_pallocation(pool.unwrap(), m_virtual_start);
@@ -46,15 +46,16 @@ void* SlabAllocator::allocate() {
 }
 
 void SlabAllocator::free(void* addr) {
-	if(!contains_address(addr))
+	if(!contains_address(addr)) {
 		return;
+	}
 	auto idx = virtual_to_idx(addr);
 	m_allocation_bitmap.free(idx, 1);
 }
 
 bool SlabAllocator::contains_address(void* addr) const {
 	return addr >= m_virtual_start &&
-			(uintptr_t)addr < (uintptr_t)m_virtual_start + virtual_size();
+	       (uintptr_t)addr < (uintptr_t)m_virtual_start + virtual_size();
 }
 
 void* SlabAllocator::idx_to_virtual(size_t idx) const {

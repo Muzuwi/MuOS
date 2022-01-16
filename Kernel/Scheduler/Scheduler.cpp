@@ -15,7 +15,7 @@
 
 [[noreturn]] void _kernel_idle_task() {
 	while(true)
-		asm volatile("hlt");
+			asm volatile("hlt");
 }
 
 [[noreturn]] void _kernel_test_task_2() {
@@ -26,7 +26,7 @@
 }
 
 [[noreturn]] void _kbd() {
-	while (true) {
+	while(true) {
 		auto ch = Ports::in(0x60);
 		kdebugf("running under thread[%i]: %x\n", Thread::current()->tid(), (uint32)ch);
 		Thread::current()->set_state(TaskState::Blocking);
@@ -42,13 +42,14 @@ extern uint8 ap_bootstrap_end;
 	auto* thread = SMP::ctb().current_thread();
 	auto const& process = thread->parent();
 
-	auto maybe_code_page = PMM::allocate_lowmem();
+	auto maybe_code_page = PMM::instance().allocate_lowmem();
 	if(!maybe_code_page.has_value()) {
 		kdebugf("[Startup(%i)]: Lowmem alloc for code failed\n", thread->tid());
 		Thread::current()->set_state(TaskState::Blocking);
 		SMP::ctb().scheduler().schedule();
-		ASSERT_NOT_REACHED();	}
-	auto maybe_data_page = PMM::allocate_lowmem();
+		ASSERT_NOT_REACHED();
+	}
+	auto maybe_data_page = PMM::instance().allocate_lowmem();
 	if(!maybe_data_page.has_value()) {
 		kdebugf("[Startup(%i)]: Lowmem alloc for data failed\n", thread->tid());
 		Thread::current()->set_state(TaskState::Blocking);
@@ -69,16 +70,16 @@ extern uint8 ap_bootstrap_end;
 
 
 	for(auto& ap_id : APIC::ap_list()) {
-		if (ap_id == APIC::ap_bootstrap_id()) {
+		if(ap_id == APIC::ap_bootstrap_id()) {
 			continue;
 		}
 		kdebugf("[Startup(%i)]: Booting up AP %i\n", thread->tid(), ap_id);
 
 		memcpy(code_page.get_mapped(),
-			   static_cast<void const*>(&ap_bootstrap_start),
-			   &ap_bootstrap_end - &ap_bootstrap_start);
+		       static_cast<void const*>(&ap_bootstrap_start),
+		       &ap_bootstrap_end - &ap_bootstrap_start);
 		//  Pass the data page address
-		*(code_page.as<uint16>()+1) = (uintptr_t)data_page.get();
+		*(code_page.as<uint16>() + 1) = (uintptr_t)data_page.get();
 
 		auto idle_task = SMP::ctb().scheduler().create_idle_task();
 		APBoostrap bootstrap_struct {};
@@ -89,8 +90,8 @@ extern uint8 ap_bootstrap_end;
 
 		//  Copy over the boot struct
 		memcpy(data_page.get_mapped(),
-			   &bootstrap_struct,
-			   sizeof(APBoostrap));
+		       &bootstrap_struct,
+		       sizeof(APBoostrap));
 
 		//  Try booting up the AP
 		const uint32 id_msg = (uint32)ap_id << 24u;
@@ -101,10 +102,10 @@ extern uint8 ap_bootstrap_end;
 		APIC::lapic_write(LAPICReg::ESR, 0x0);
 		APIC::lapic_write(LAPICReg::ICRHi, id_msg);
 		APIC::lapic_write(LAPICReg::ICRLow, lo_init);
-		while (APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
+		while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
 			;
 		APIC::lapic_write(LAPICReg::ICRLow, lo_deassert_init);
-		while (APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
+		while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
 			;
 
 		ksleep(10);
@@ -114,16 +115,14 @@ extern uint8 ap_bootstrap_end;
 			APIC::lapic_write(LAPICReg::ICRHi, id_msg);
 			APIC::lapic_write(LAPICReg::ICRLow, 0x600 | ipi_vector);
 			ksleep(1);
-			while (APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
+			while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
 				;
 		}
 		thread->preempt_enable();
 
-		while (*data_page.as<uint64>() == 0)
-			;
+		while(*data_page.as<uint64>() == 0);
 		kdebugf("[Startup(%i)]: AP %i started - waiting for long mode\n", thread->tid(), ap_id);
-		while (*data_page.as<uint64>() != 2)
-			;
+		while(*data_page.as<uint64>() != 2);
 		kdebugf("[Startup(%i)]: AP %i initialized\n", thread->tid(), ap_id);
 //		break;
 	}
@@ -133,8 +132,8 @@ extern uint8 ap_bootstrap_end;
 	process->vmm().addrunmap(code_page.get());
 	process->vmm().addrunmap(data_page.get());
 
-	PMM::free_lowmem(code_page);
-	PMM::free_lowmem(data_page);
+	PMM::instance().free_lowmem(code_page);
+	PMM::instance().free_lowmem(data_page);
 
 	Thread::current()->set_state(TaskState::Blocking);
 	SMP::ctb().scheduler().schedule();
@@ -144,15 +143,17 @@ extern uint8 ap_bootstrap_end;
 
 void Scheduler::tick() {
 	auto* thread = SMP::ctb().current_thread();
-	if(!thread)
+	if(!thread) {
 		return;
+	}
 
 	if(thread == m_ap_idle) {
 		//  Force reschedule when at least one thread becomes runnable
-		if(m_rq.find_runnable() != nullptr)
+		if(m_rq.find_runnable() != nullptr) {
 			thread->reschedule();
-		else
+		} else {
 			thread->clear_reschedule();
+		}
 		return;
 	}
 
@@ -181,8 +182,9 @@ void Scheduler::schedule() {
 
 	//  Find next runnable task
 	auto* next_thread = m_rq.find_runnable();
-	if(!next_thread)
+	if(!next_thread) {
 		next_thread = m_ap_idle;
+	}
 
 	CPU::switch_to(thread, next_thread);
 	thread->preempt_enable();
@@ -191,10 +193,12 @@ void Scheduler::schedule() {
 
 void Scheduler::interrupt_return_common() {
 	auto* current = SMP::ctb().current_thread();
-	if(!current)
+	if(!current) {
 		return;
-	if(!current->needs_reschedule())
+	}
+	if(!current->needs_reschedule()) {
 		return;
+	}
 
 	current->clear_reschedule();
 	schedule();
@@ -202,14 +206,15 @@ void Scheduler::interrupt_return_common() {
 
 
 void Scheduler::wake_up(Thread* thread) {
-	if(!thread) return;
+	if(!thread) { return; }
 
 	assert(thread->state() != TaskState::Running);
 	thread->set_state(TaskState::Ready);
 
 	auto* current = SMP::ctb().current_thread();
-	if(thread->priority() < current->priority())
+	if(thread->priority() < current->priority()) {
 		current->reschedule();
+	}
 }
 
 
@@ -232,17 +237,30 @@ void Scheduler::bootstrap() {
 		auto new_process = Process::init();
 		new_process->vmm().m_pml4 = new_process->vmm().clone_pml4(Process::kerneld()->vmm().m_pml4).unwrap();
 
-		auto new_thread = Thread::create_in_process(new_process, []{
+		auto new_thread = Thread::create_in_process(new_process, [] {
 			auto* current = Thread::current();
 
 			//  Create a userland stack for the thread
 			void* user_stack = current->parent()->vmm().allocate_user_stack(VMM::user_stack_size());
 
-			const uint8 bytes[] = { 0x48, 0xB8, 0x6F, 0x72, 0x6C, 0x64, 0x21, 0x00, 0x00, 0x00, 0x50, 0x48, 0xB8, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x2C, 0x20, 0x77, 0x50, 0x48, 0x89, 0xE7, 0x48, 0xC7, 0xC0, 0xFF, 0x00, 0x00, 0x00, 0x0F, 0x05, 0x48, 0xC7, 0xC0, 0x64, 0x00, 0x00, 0x00, 0x48, 0xC7, 0xC7, 0x00, 0x40, 0x00, 0x00, 0x0F, 0x05, 0x48, 0xC7, 0xC3, 0xFF, 0xFF, 0xFF, 0xFF, 0x48, 0xC7, 0xC1, 0x00, 0x40, 0x00, 0x00, 0x48, 0x89, 0x18, 0x48, 0x83, 0xC0, 0x08, 0x48, 0x83, 0xE9, 0x08, 0x48, 0x83, 0xF9, 0x00, 0x75, 0xEF, 0x48, 0xC7, 0xC3, 0x0A, 0x00, 0x00, 0x00, 0x48, 0xC7, 0xC7, 0xE8, 0x03, 0x00, 0x00, 0x48, 0xC7, 0xC0, 0xFE, 0x00, 0x00, 0x00, 0x0F, 0x05, 0x48, 0xFF, 0xCB, 0x48, 0x83, 0xFB, 0x00, 0x75, 0xE7, 0x48, 0xC7, 0xC0, 0x64, 0x00, 0x00, 0x00, 0x48, 0xC7, 0xC7, 0x00, 0x10, 0x00, 0x00, 0x0F, 0x05, 0x48, 0xC7, 0xC3, 0xFF, 0xFF, 0xFF, 0xFF, 0x48, 0xC7, 0xC1, 0x00, 0x10, 0x00, 0x00, 0x48, 0x89, 0x18, 0x48, 0x83, 0xC0, 0x08, 0x48, 0x83, 0xE9, 0x08, 0x48, 0x83, 0xF9, 0x00, 0x75, 0xEF, 0x48, 0xC7, 0xC7, 0xE8, 0x03, 0x00, 0x00, 0x48, 0xC7, 0xC0, 0xFE, 0x00, 0x00, 0x00, 0x0F, 0x05, 0xEB, 0xEE };
+			const uint8 bytes[] = { 0x48, 0xB8, 0x6F, 0x72, 0x6C, 0x64, 0x21, 0x00, 0x00, 0x00, 0x50, 0x48, 0xB8, 0x48,
+			                        0x65, 0x6C, 0x6C, 0x6F, 0x2C, 0x20, 0x77, 0x50, 0x48, 0x89, 0xE7, 0x48, 0xC7, 0xC0,
+			                        0xFF, 0x00, 0x00, 0x00, 0x0F, 0x05, 0x48, 0xC7, 0xC0, 0x64, 0x00, 0x00, 0x00, 0x48,
+			                        0xC7, 0xC7, 0x00, 0x40, 0x00, 0x00, 0x0F, 0x05, 0x48, 0xC7, 0xC3, 0xFF, 0xFF, 0xFF,
+			                        0xFF, 0x48, 0xC7, 0xC1, 0x00, 0x40, 0x00, 0x00, 0x48, 0x89, 0x18, 0x48, 0x83, 0xC0,
+			                        0x08, 0x48, 0x83, 0xE9, 0x08, 0x48, 0x83, 0xF9, 0x00, 0x75, 0xEF, 0x48, 0xC7, 0xC3,
+			                        0x0A, 0x00, 0x00, 0x00, 0x48, 0xC7, 0xC7, 0xE8, 0x03, 0x00, 0x00, 0x48, 0xC7, 0xC0,
+			                        0xFE, 0x00, 0x00, 0x00, 0x0F, 0x05, 0x48, 0xFF, 0xCB, 0x48, 0x83, 0xFB, 0x00, 0x75,
+			                        0xE7, 0x48, 0xC7, 0xC0, 0x64, 0x00, 0x00, 0x00, 0x48, 0xC7, 0xC7, 0x00, 0x10, 0x00,
+			                        0x00, 0x0F, 0x05, 0x48, 0xC7, 0xC3, 0xFF, 0xFF, 0xFF, 0xFF, 0x48, 0xC7, 0xC1, 0x00,
+			                        0x10, 0x00, 0x00, 0x48, 0x89, 0x18, 0x48, 0x83, 0xC0, 0x08, 0x48, 0x83, 0xE9, 0x08,
+			                        0x48, 0x83, 0xF9, 0x00, 0x75, 0xEF, 0x48, 0xC7, 0xC7, 0xE8, 0x03, 0x00, 0x00, 0x48,
+			                        0xC7, 0xC0, 0xFE, 0x00, 0x00, 0x00, 0x0F, 0x05, 0xEB, 0xEE };
 			auto* shellcode_location = (uint8*)0x100000;
 
 			kdebugf("Thread(%i): mapping shellcode\n", current->tid());
-			auto mapping = VMapping::create((void*)shellcode_location, 0x1000, VM_READ | VM_WRITE | VM_EXEC, MAP_SHARED);
+			auto mapping = VMapping::create((void*)shellcode_location, 0x1000, VM_READ | VM_WRITE | VM_EXEC,
+			                                MAP_SHARED);
 			kassert(current->parent()->vmm().insert_vmapping(gen::move(mapping)));
 
 			kdebugf("Thread(%i): copying shellcode\n", current->tid());
@@ -287,10 +305,11 @@ void Scheduler::bootstrap() {
 unsigned Scheduler::pri_to_quants(uint8_t priority) {
 	kassert(priority <= 140);
 
-	if(priority < 120)
+	if(priority < 120) {
 		return (140 - priority) * 20;
-	else
+	} else {
 		return (140 - priority) * 5;
+	}
 }
 
 void Scheduler::add_thread_to_rq(Thread* thread) {

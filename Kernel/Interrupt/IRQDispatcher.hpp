@@ -5,6 +5,8 @@ class Thread;
 
 extern "C" void  _kernel_irq_dispatch(uint8_t, PtraceRegs*);
 
+#define DEFINE_MICROTASK(funcname) void funcname(PtraceRegs*)
+
 class IRQDispatcher {
 	friend void  _kernel_irq_dispatch(uint8_t, PtraceRegs*);
 	static void dispatch_irq(uint8_t irq, PtraceRegs*);

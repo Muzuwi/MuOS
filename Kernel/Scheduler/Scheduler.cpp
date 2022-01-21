@@ -12,6 +12,7 @@
 #include <Kernel/SMP/APBootstrap.hpp>
 #include <string.h>
 #include "ksleep.hpp"
+#include <Kernel/Structs/StaticRing.hpp>
 
 [[noreturn]] void _kernel_idle_task() {
 	while(true)
@@ -25,10 +26,21 @@
 	}
 }
 
+static StaticRing<uint8, 1024> s_keyboard_buffer {};
+
+DEFINE_MICROTASK(_kbd_microtask) {
+	while(Ports::in(0x64) & 1u) {
+		auto ch = Ports::in(0x60);
+		s_keyboard_buffer.try_push(ch);
+	}
+}
+
 [[noreturn]] void _kbd() {
 	while(true) {
-		auto ch = Ports::in(0x60);
-		kdebugf("running under thread[%i]: %x\n", Thread::current()->tid(), (uint32)ch);
+		while(!s_keyboard_buffer.empty()) {
+			auto byte = s_keyboard_buffer.try_pop();
+			kdebugf("kbd(%i): byte %x\n", Thread::current()->tid(), byte.unwrap());
+		}
 		Thread::current()->set_state(TaskState::Blocking);
 		SMP::ctb().scheduler().schedule();
 	}
@@ -288,6 +300,7 @@ void Scheduler::bootstrap() {
 	{
 		auto keyboard_thread = Thread::create_in_process(Process::kerneld(), _kbd);
 		add_thread_to_rq(keyboard_thread.get());
+		IRQDispatcher::register_microtask(1, _kbd_microtask);
 		IRQDispatcher::register_threadirq(1, keyboard_thread.get());
 	}
 

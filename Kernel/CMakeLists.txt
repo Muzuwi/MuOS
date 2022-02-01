@@ -104,7 +104,13 @@ add_executable(KernelELF
     Arch/x86_64/asm/V86.asm
     Arch/x86_64/V86.cpp
     SMP/APBoot.asm
-    Structs/KAtomic.cpp)
+    Structs/KAtomic.cpp
+    Locks/KSemaphore.cpp
+    Daemons/SysDbg/SysDbg.cpp
+    Daemons/Kbd/Kbd.cpp
+    Daemons/BootAP/BootAP.cpp
+    Daemons/Idle/Idle.cpp
+    Daemons/Testd/Testd.cpp)
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>

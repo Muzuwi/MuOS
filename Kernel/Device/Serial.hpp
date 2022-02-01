@@ -1,6 +1,8 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
+#include <Kernel/Structs/StaticRing.hpp>
+#include <Kernel/Locks/KSemaphore.hpp>
 
 class Serial {
 public:
@@ -25,10 +27,14 @@ public:
 	static void init();
 	static void write_str(Port, const char*);
 	static void write_debugger_str(const char*);
+	static void set_debugger_port(Port);
+	static KSemaphore& debugger_semaphore();
+	static StaticRing<uint8, 4096>& buffer();
 private:
 	static void _serial_irq_handler(PtraceRegs*);
 	static bool try_initialize(Port port);
 	static uint16 io_port(Port port);
+	static uint8 irq(Port port);
 
 	static void register_write(Port port, Register reg, uint8 val);
 	static uint8 register_read(Port port, Register reg);

@@ -3,10 +3,14 @@
 #include <Kernel/KOptional.hpp>
 #include <Kernel/Memory/VMapping.hpp>
 #include <Kernel/Process/Thread.hpp>
+#include <Daemons/SysDbg/SysDbg.hpp>
+#include <Daemons/BootAP/BootAP.hpp>
 
 using gen::List;
 
 class VMM {
+	friend void SysDbg::sysdbg_thread();
+	friend void BootAP::boot_ap_thread();
 	friend class V86;
 	friend class SlabAllocator;
 	friend class Scheduler;

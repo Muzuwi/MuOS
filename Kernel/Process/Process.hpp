@@ -5,6 +5,7 @@
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Process/Thread.hpp>
 #include <Kernel/SystemTypes.hpp>
+#include <Daemons/SysDbg/SysDbg.hpp>
 
 enum ProcPriv {
 	User,
@@ -22,6 +23,7 @@ using gen::List;
 using gen::SharedPtr;
 
 class Process {
+	friend void SysDbg::sysdbg_thread();
 	friend class Scheduler;
 	friend class Thread;
 

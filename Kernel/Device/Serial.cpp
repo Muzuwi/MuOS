@@ -7,17 +7,32 @@
 //  FIXME: Only support COM0 for now
 
 static KOptional<Serial::Port> s_kernel_debugger_port {};
+static KSemaphore s_debugger_semaphore {};
+static StaticRing<uint8, 4096> s_buffer;
 
-static void set_debugger_port(Serial::Port port) {
+void Serial::set_debugger_port(Serial::Port port) {
 	if(s_kernel_debugger_port.has_value()) {
 		return;
 	}
 
 	s_kernel_debugger_port = KOptional {port};
+	//  Enable IRQs for the kernel debugger - data inbound
+	register_write(port, Register::IrqEn, 0x1);
+	//  Register microtask
+	IRQDispatcher::register_microtask(irq(port), _serial_irq_handler);
 }
 
 void Serial::_serial_irq_handler(PtraceRegs*) {
-
+	const auto port = s_kernel_debugger_port.unwrap();
+	bool data_received = false;
+	while(data_pending(port)) {
+		auto data = register_read(port, Register::Data);
+		s_buffer.try_push(data);
+		data_received = true;
+	}
+	if(data_received) {
+		s_debugger_semaphore.signal();
+	}
 }
 
 bool Serial::try_initialize(Serial::Port port) {
@@ -99,4 +114,17 @@ void Serial::write_debugger_str(char const* str) {
 	}
 
 	write_str(s_kernel_debugger_port.unwrap(), str);
+}
+
+StaticRing<uint8, 4096>& Serial::buffer() {
+	return s_buffer;
+}
+
+uint8 Serial::irq(Serial::Port port) {
+	static constexpr const uint16 io_address_for_port[4] = { 4, 3, 4, 3 };
+	return io_address_for_port[static_cast<size_t>(port)%4];
+}
+
+KSemaphore& Serial::debugger_semaphore() {
+	return s_debugger_semaphore;
 }

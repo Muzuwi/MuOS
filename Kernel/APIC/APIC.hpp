@@ -1,6 +1,7 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
 #include <Kernel/KOptional.hpp>
+#include <LibGeneric/List.hpp>
 
 enum class LAPICReg : unsigned {
 	APICID = 0x020,

@@ -113,7 +113,7 @@ add_executable(KernelELF
     Daemons/Testd/Testd.cpp)
 
 target_compile_options(KernelELF
-                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>
+                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-O2 -g -Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-mno-red-zone>
                        PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>

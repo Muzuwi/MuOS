@@ -7,8 +7,8 @@ namespace Ports {
 		             "mov %%dx, %1\n"
 		             "out %%dx, %%al\t\n"
 		:
-		:""(value), ""(port)
-		: "eax");
+		:"r"(value), "r"(port)
+		: "eax", "edx");
 	}
 
 	inline void outw(uint16 port, uint16 value) {
@@ -16,9 +16,8 @@ namespace Ports {
 		             "mov %%dx, %1\n"
 		             "out %%dx, %%ax\t\n"
 		:
-		:""(value), ""(port)
-		: "eax");
-
+		:"r"(value), "r"(port)
+		: "eax", "edx");
 	}
 
 	inline void outd(uint16 port, uint32 value) {
@@ -26,8 +25,8 @@ namespace Ports {
 		             "mov %%dx, %1\n"
 		             "out %%dx, %%eax\t\n"
 		:
-		:""(value), ""(port)
-		: "eax");
+		:"r"(value), "r"(port)
+		: "eax", "edx");
 	}
 
 	inline uint8 in(uint16 port) {
@@ -36,9 +35,8 @@ namespace Ports {
 		             "in %%al, %%dx\n"
 		             "mov %0, %%eax\t\n"
 		: "=r"(data)
-		: ""(port)
-		: "eax"
-		);
+		: "r"(port)
+		: "eax", "edx");
 		return data;
 	}
 
@@ -48,9 +46,8 @@ namespace Ports {
 		             "in %%ax, %%dx\n"
 		             "mov %0, %%ax\t\n"
 		: "=r"(data)
-		: ""(port)
-		: "memory"
-		);
+		: "r"(port)
+		: "eax", "edx", "memory");
 		return data;
 	}
 
@@ -60,9 +57,8 @@ namespace Ports {
 		             "in %%eax, %%dx\n"
 		             "mov %0, %%eax\t\n"
 		: "=r"(data)
-		: ""(port)
-		: "memory"
-		);
+		: "r"(port)
+		: "eax", "edx", "memory");
 		return data;
 
 	}

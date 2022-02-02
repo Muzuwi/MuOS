@@ -22,7 +22,7 @@ inline void lidt(void* idtr) {
 	            "mov %%rax, %0\n"
 	            "lidt [%%rax]\n"
 	            :
-	            : ""((uintptr_t)idtr)
+	            : "r"((uintptr_t)idtr)
 	            : "rax"
 	            );
 }

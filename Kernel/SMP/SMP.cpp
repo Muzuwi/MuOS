@@ -1,9 +1,9 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/Vector.hpp>
-#include <Kernel/APIC/APIC.hpp>
-#include <Kernel/Memory/KHeap.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <APIC/APIC.hpp>
+#include <Memory/KHeap.hpp>
+#include <SMP/SMP.hpp>
 
 //  FIXME: Don't store these, but initialize the APs with the control blocks as we initialize them
 static gen::Vector<ControlBlock*> s_control_blocks {};

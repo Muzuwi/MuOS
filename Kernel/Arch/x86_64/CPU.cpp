@@ -1,7 +1,7 @@
-#include <Kernel/Debug/kpanic.hpp>
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Syscalls/Syscall.hpp>
-#include <Kernel/Process/Process.hpp>
+#include <Debug/kpanic.hpp>
+#include <SystemTypes.hpp>
+#include <Syscalls/Syscall.hpp>
+#include <Process/Process.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/CPUID.hpp>
 #include <Arch/x86_64/GDT.hpp>

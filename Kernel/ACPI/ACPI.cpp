@@ -1,7 +1,7 @@
 #include <LibGeneric/List.hpp>
-#include <Kernel/ACPI/ACPI.hpp>
-#include <Kernel/Memory/Ptr.hpp>
-#include <Kernel/KOptional.hpp>
+#include <ACPI/ACPI.hpp>
+#include <Memory/Ptr.hpp>
+#include <Structs/KOptional.hpp>
 #include <Debug/klogf.hpp>
 
 //  FIXME: ACPI/Validate checksums for tables

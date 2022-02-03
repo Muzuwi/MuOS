@@ -1,7 +1,7 @@
-#include <Kernel/Device/PIT.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <Device/PIT.hpp>
+#include <Process/Thread.hpp>
+#include <Process/Process.hpp>
+#include <SMP/SMP.hpp>
 
 Thread::Thread(SharedPtr<Process> parent, tid_t tid) {
 	m_tid = tid;

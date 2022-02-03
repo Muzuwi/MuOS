@@ -4,7 +4,7 @@
 #include <LibGeneric/Allocator.hpp>
 
 #ifdef __is_kernel_build__
-#include <Kernel/Debug/kassert.hpp>
+#include <Debug/kassert.hpp>
 #endif
 
 namespace gen {

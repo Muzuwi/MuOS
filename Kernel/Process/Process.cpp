@@ -1,4 +1,4 @@
-#include <Kernel/Process/Process.hpp>
+#include <Process/Process.hpp>
 
 Process::Process(pid_t pid, ProcFlags flags)
 : m_pid(pid), m_flags(flags), m_vmm(*this), m_children(), m_threads()

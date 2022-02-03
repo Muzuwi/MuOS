@@ -1,13 +1,13 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include <Kernel/KOptional.hpp>
-#include <Kernel/Memory/PAllocation.hpp>
-#include <Kernel/Memory/Ptr.hpp>
+#include <Structs/KOptional.hpp>
+#include <Memory/PAllocation.hpp>
+#include <Memory/Ptr.hpp>
 #include <LibGeneric/StaticVector.hpp>
-#include <Kernel/Memory/PRegion.hpp>
+#include <Memory/PRegion.hpp>
 #include <LibGeneric/Vector.hpp>
-#include <Kernel/Memory/kmalloc.hpp>
+#include <Memory/kmalloc.hpp>
 
 class MultibootInfo;
 

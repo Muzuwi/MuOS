@@ -1,5 +1,5 @@
 #ifdef __is_kernel_build
-#include <Kernel/Debug/kassert.hpp>
+#include <Debug/kassert.hpp>
 #endif
 
 #include <LibGeneric/ELFParser.hpp>

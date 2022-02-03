@@ -1,6 +1,6 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/KOptional.hpp>
+#include <SystemTypes.hpp>
+#include <Structs/KOptional.hpp>
 #include <LibGeneric/List.hpp>
 
 enum class LAPICReg : unsigned {

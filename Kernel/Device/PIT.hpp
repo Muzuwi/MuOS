@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 
 class PtraceRegs;
 

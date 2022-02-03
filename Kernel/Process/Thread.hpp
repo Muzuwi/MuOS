@@ -1,7 +1,7 @@
 #pragma once
 #include <Arch/x86_64/Paging.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 
 enum class TaskState {

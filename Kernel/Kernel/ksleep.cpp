@@ -1,4 +1,4 @@
-#include <Kernel/Device/PIT.hpp>
+#include <Device/PIT.hpp>
 #include <Kernel/ksleep.hpp>
 
 void ksleep(uint64_t milliseconds) {

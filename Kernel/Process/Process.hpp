@@ -2,9 +2,9 @@
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 #include <LibGeneric/Spinlock.hpp>
-#include <Kernel/Memory/VMM.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/SystemTypes.hpp>
+#include <Memory/VMM.hpp>
+#include <Process/Thread.hpp>
+#include <SystemTypes.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 
 enum ProcPriv {

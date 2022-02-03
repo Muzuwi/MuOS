@@ -1,10 +1,10 @@
 #include <Debug/klogf.hpp>
-#include <Kernel/Memory/KHeap.hpp>
-#include <Kernel/Memory/kmalloc.hpp>
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/PRegion.hpp>
-#include <Kernel/Multiboot/MultibootInfo.hpp>
-#include <Kernel/Symbols.hpp>
+#include <Memory/KHeap.hpp>
+#include <Memory/kmalloc.hpp>
+#include <Memory/PMM.hpp>
+#include <Memory/PRegion.hpp>
+#include <Multiboot/MultibootInfo.hpp>
+#include <Symbols.hpp>
 
 PMM PMM::s_instance {};
 

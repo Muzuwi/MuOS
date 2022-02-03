@@ -1,8 +1,8 @@
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/Memory/UserPtr.hpp>
-#include <Kernel/Memory/VMM.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <Memory/UserPtr.hpp>
+#include <Memory/VMM.hpp>
+#include <SMP/SMP.hpp>
 #include <Debug/klogf.hpp>
 
 pid_t Process::getpid() {

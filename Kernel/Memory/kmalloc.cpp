@@ -1,8 +1,8 @@
 #include <string.h>
-#include <Kernel/Memory/kmalloc.hpp>
+#include <Memory/kmalloc.hpp>
 #include <Debug/klogf.hpp>
-#include <Kernel/Debug/kpanic.hpp>
-#include <Kernel/Symbols.hpp>
+#include <Debug/kpanic.hpp>
+#include <Symbols.hpp>
 #include <LibGeneric/BitMap.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>

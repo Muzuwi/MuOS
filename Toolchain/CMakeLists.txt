@@ -10,7 +10,6 @@ set(MU_CXXFLAGS_DEFAULT "${MU_CFLAGS_DEFAULT} -std=c++20 -fno-rtti -fno-exceptio
 set(MU_LINKER_FLAGS "-nostdlib -T ${CMAKE_SOURCE_DIR}/Kernel/Arch/x86_64/Linkscript_x64.ld -z max-page-size=0x1000")
 
 #  Include dirs
-include_directories(${CMAKE_SOURCE_DIR}/)
 include_directories(${CMAKE_SOURCE_DIR}/Library)
 include_directories(${CMAKE_SOURCE_DIR}/LibC/include)
 include_directories(${CMAKE_SOURCE_DIR}/Kernel/)

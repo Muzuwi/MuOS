@@ -1,4 +1,4 @@
-#include "Idle.hpp"
+#include <Daemons/Idle/Idle.hpp>
 
 void Idle::idle_thread() {
 	while(true) {

@@ -1,8 +1,8 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
-#include <Kernel/Locks/KSemaphore.hpp>
+#include <Locks/KSemaphore.hpp>
 #include <LibGeneric/LockGuard.hpp>
-#include <Kernel/SMP/SMP.hpp>
-#include <Kernel/Process/Thread.hpp>
+#include <SMP/SMP.hpp>
+#include <Process/Thread.hpp>
 
 KSemaphore::KSemaphore(uint64 initial_value)
 		: m_lock(), m_value(initial_value), m_queue() {

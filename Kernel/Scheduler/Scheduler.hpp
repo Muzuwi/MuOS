@@ -1,7 +1,7 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Scheduler/RunQueue.hpp>
-#include "Daemons/BootAP/BootAP.hpp"
+#include <SystemTypes.hpp>
+#include <Scheduler/RunQueue.hpp>
+#include <Daemons/BootAP/BootAP.hpp>
 
 class Thread;
 

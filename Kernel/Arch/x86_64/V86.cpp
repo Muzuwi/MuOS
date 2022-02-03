@@ -1,10 +1,10 @@
 #include <Arch/x86_64/V86.hpp>
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/Ptr.hpp>
-#include <Kernel/Memory/VMM.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <Memory/PMM.hpp>
+#include <Memory/Ptr.hpp>
+#include <Memory/VMM.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <SMP/SMP.hpp>
 
 extern "C" void vm86_irq(PhysAddr, PhysAddr, uint64 irq, V86Regs&);
 

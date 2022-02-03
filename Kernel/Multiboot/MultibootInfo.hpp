@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include <Kernel/Memory/Ptr.hpp>
+#include <Memory/Ptr.hpp>
 
 class MultibootMMap {
 public:

@@ -1,6 +1,6 @@
 #pragma once
 #include <Arch/x86_64/PtraceRegs.hpp>
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 #include <asm/unistd.h>
 
 extern "C" void _ukernel_syscall_entry();

@@ -1,7 +1,5 @@
 #pragma once
-#ifdef __is_kernel_build__
-#include <Kernel/Debug/kassert.hpp>
-#endif
+#include <Debug/kassert.hpp>
 
 //  FIXME:  Hacky hack
 

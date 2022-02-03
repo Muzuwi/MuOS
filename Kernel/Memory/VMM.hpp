@@ -1,8 +1,8 @@
 #pragma once
 #include <LibGeneric/List.hpp>
-#include <Kernel/KOptional.hpp>
-#include <Kernel/Memory/VMapping.hpp>
-#include <Kernel/Process/Thread.hpp>
+#include <Structs/KOptional.hpp>
+#include <Memory/VMapping.hpp>
+#include <Process/Thread.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
 

@@ -1,10 +1,10 @@
 #include <Arch/x86_64/CPUID.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/VMM.hpp>
-#include <Kernel/Memory/Units.hpp>
-#include <Kernel/Process/Process.hpp>
+#include <Memory/PMM.hpp>
+#include <Memory/VMM.hpp>
+#include <Memory/Units.hpp>
+#include <Process/Process.hpp>
 #include <Debug/klogf.hpp>
 #include <string.h>
 

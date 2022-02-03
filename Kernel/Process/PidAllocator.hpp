@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 
 namespace PidAllocator {
 	pid_t next();

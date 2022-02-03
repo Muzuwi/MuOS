@@ -1,14 +1,14 @@
-#include "APIC/APIC.hpp"
-#include "BootAP.hpp"
-#include "Debug/kassert.hpp"
-#include "Memory/PMM.hpp"
-#include "Process/Process.hpp"
-#include "Process/Thread.hpp"
-#include "SMP/APBootstrap.hpp"
-#include "SMP/SMP.hpp"
-#include "Scheduler/Scheduler.hpp"
-#include "SystemTypes.hpp"
-#include "ksleep.hpp"
+#include <APIC/APIC.hpp>
+#include <Daemons/BootAP/BootAP.hpp>
+#include <Debug/kassert.hpp>
+#include <Memory/PMM.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <SMP/APBootstrap.hpp>
+#include <SMP/SMP.hpp>
+#include <Scheduler/Scheduler.hpp>
+#include <SystemTypes.hpp>
+#include <Kernel/ksleep.hpp>
 #include <Debug/klogf.hpp>
 
 extern uint8 ap_bootstrap_start;

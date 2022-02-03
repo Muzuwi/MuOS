@@ -1,8 +1,8 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Interrupt/IRQDispatcher.hpp>
-#include <Kernel/Structs/StaticRing.hpp>
-#include <Kernel/Locks/KSemaphore.hpp>
+#include <SystemTypes.hpp>
+#include <Interrupt/IRQDispatcher.hpp>
+#include <Structs/StaticRing.hpp>
+#include <Locks/KSemaphore.hpp>
 
 class Serial {
 public:

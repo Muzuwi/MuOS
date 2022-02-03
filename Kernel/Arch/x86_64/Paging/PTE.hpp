@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/Memory/Ptr.hpp>
+#include <Memory/Ptr.hpp>
 
 enum class FlagPTE : uint64_t {
 	ExecuteDisable = 1ul << 63u,

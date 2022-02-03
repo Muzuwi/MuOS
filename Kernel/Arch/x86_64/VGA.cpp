@@ -1,7 +1,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <Arch/x86_64/VGA.hpp>
-#include <Kernel/Memory/Ptr.hpp>
+#include <Memory/Ptr.hpp>
 
 static uint8_t vga_console_position_x = 0, vga_console_position_y = 0;
 static uint8_t vga_color = 0;

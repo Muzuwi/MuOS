@@ -1,6 +1,6 @@
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
-#include <Kernel/Process/PidAllocator.hpp>
+#include <Process/PidAllocator.hpp>
 
 using gen::Spinlock;
 using gen::LockGuard;

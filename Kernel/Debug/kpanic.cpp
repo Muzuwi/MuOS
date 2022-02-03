@@ -1,4 +1,4 @@
-#include <Kernel/Debug/kpanic.hpp>
+#include <Debug/kpanic.hpp>
 #include <Debug/klogf.hpp>
 
 [[noreturn]] void _kpanic_internal(const char* file, int line){

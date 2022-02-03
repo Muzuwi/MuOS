@@ -1,7 +1,7 @@
 #include <Arch/x86_64/PortIO.hpp>
 #include <string.h>
-#include <Kernel/Device/Serial.hpp>
-#include <Kernel/KOptional.hpp>
+#include <Device/Serial.hpp>
+#include <Structs/KOptional.hpp>
 #include <Debug/klogf.hpp>
 
 //  FIXME: Only support COM0 for now

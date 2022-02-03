@@ -1,14 +1,14 @@
-#include <Kernel/Device/PIT.hpp>
+#include <Device/PIT.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
 #include <Arch/x86_64/PortIO.hpp>
-#include <Kernel/Interrupt/IRQDispatcher.hpp>
-#include <Kernel/Scheduler/Scheduler.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Process/Thread.hpp>
+#include <Interrupt/IRQDispatcher.hpp>
+#include <Scheduler/Scheduler.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <SMP/SMP.hpp>
 
 struct Alarm {
 	Thread* m_thread;

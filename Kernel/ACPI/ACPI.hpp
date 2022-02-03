@@ -1,7 +1,7 @@
 #pragma once
-#include <Kernel/Memory/Ptr.hpp>
-#include <Kernel/KOptional.hpp>
-#include <Kernel/SystemTypes.hpp>
+#include <Memory/Ptr.hpp>
+#include <Structs/KOptional.hpp>
+#include <SystemTypes.hpp>
 
 struct RSDPDescriptor {
 	char m_signature[8];

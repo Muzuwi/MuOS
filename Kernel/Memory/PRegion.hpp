@@ -1,6 +1,6 @@
 #pragma once
-#include <Kernel/Memory/Ptr.hpp>
-#include <Kernel/Memory/PageBitmapAllocator.hpp>
+#include <Memory/Ptr.hpp>
+#include <Memory/PageBitmapAllocator.hpp>
 
 class PRegion {
 	PhysAddr m_region_base;

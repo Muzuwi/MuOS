@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
 
 enum class ExceptionType {

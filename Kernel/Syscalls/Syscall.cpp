@@ -1,6 +1,6 @@
 #include <Debug/klogf.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Syscalls/Syscall.hpp>
+#include <Process/Process.hpp>
+#include <Syscalls/Syscall.hpp>
 
 template<typename... Args>
 static uint64_t call(void* ptr, Args... args) {

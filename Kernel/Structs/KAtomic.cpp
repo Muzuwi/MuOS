@@ -1,5 +1,5 @@
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Structs/KAtomic.hpp>
+#include <SystemTypes.hpp>
+#include <Structs/KAtomic.hpp>
 
 template<typename T>
 T KAtomic<T>::load(MemoryOrdering ordering) {

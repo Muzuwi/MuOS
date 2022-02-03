@@ -1,20 +1,20 @@
-#include <Kernel/Debug/TTY.hpp>
-#include <Kernel/Memory/KHeap.hpp>
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Multiboot/MultibootInfo.hpp>
+#include <Debug/TTY.hpp>
+#include <Memory/KHeap.hpp>
+#include <Memory/PMM.hpp>
+#include <Multiboot/MultibootInfo.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/IDT.hpp>
 
-#include <Kernel/Device/PIT.hpp>
+#include <Device/PIT.hpp>
 #include <Arch/x86_64/CPU.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Syscalls/Syscall.hpp>
+#include <Process/Process.hpp>
+#include <Syscalls/Syscall.hpp>
 
-#include <Kernel/APIC/APIC.hpp>
-#include <Kernel/ACPI/ACPI.hpp>
+#include <APIC/APIC.hpp>
+#include <ACPI/ACPI.hpp>
 
-#include <Kernel/Device/Serial.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <Device/Serial.hpp>
+#include <SMP/SMP.hpp>
 #include <Debug/klogf.hpp>
 
 /*

@@ -1,9 +1,9 @@
 #pragma once
 #include <stdint.h>
 #include <stddef.h>
-#include <Kernel/Symbols.hpp>
+#include <Symbols.hpp>
 #include <Debug/klogf.hpp>
-//#include <Kernel/Memory/PageToken.hpp>
+//#include <Memory/PageToken.hpp>
 
 template<class T>
 class PhysPtr {

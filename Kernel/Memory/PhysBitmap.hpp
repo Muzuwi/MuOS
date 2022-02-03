@@ -1,8 +1,8 @@
 #pragma once
 #include <string.h>
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Memory/Ptr.hpp>
-#include <Kernel/KOptional.hpp>
+#include <SystemTypes.hpp>
+#include <Memory/Ptr.hpp>
+#include <Structs/KOptional.hpp>
 #include <Debug/klogf.hpp>
 
 class PhysBitmap {

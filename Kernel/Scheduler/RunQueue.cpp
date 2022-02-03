@@ -1,6 +1,6 @@
 #include <LibGeneric/Algorithm.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Scheduler/RunQueue.hpp>
+#include <Process/Process.hpp>
+#include <Scheduler/RunQueue.hpp>
 
 Thread* RunQueue::find_runnable() const {
 	for(auto& list : m_queues) {

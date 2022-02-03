@@ -1,8 +1,8 @@
-#include "Arch/x86_64/CPU.hpp"
-#include "Process/Process.hpp"
-#include "Process/Thread.hpp"
-#include "Testd.hpp"
-#include "Debug/klogf.hpp"
+#include <Daemons/Testd/Testd.hpp>
+#include <Arch/x86_64/CPU.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <Debug/klogf.hpp>
 
 void Testd::test_kernel_thread() {
 	while(true) {

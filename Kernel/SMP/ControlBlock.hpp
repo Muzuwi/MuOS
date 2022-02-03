@@ -1,6 +1,6 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Scheduler/Scheduler.hpp>
+#include <SystemTypes.hpp>
+#include <Scheduler/Scheduler.hpp>
 
 class Thread;
 

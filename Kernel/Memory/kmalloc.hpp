@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Memory/Units.hpp>
+#include <SystemTypes.hpp>
+#include <Memory/Units.hpp>
 
 class KMalloc {
 	KMalloc();

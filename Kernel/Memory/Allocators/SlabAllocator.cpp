@@ -1,11 +1,11 @@
 #include <string.h>
-#include <Kernel/Debug/kpanic.hpp>
-#include <Kernel/Memory/Allocators/SlabAllocator.hpp>
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/VMM.hpp>
-//#include <Kernel/SMP/SMP.hpp>
-//#include <Kernel/Process/Thread.hpp>
-#include <Kernel/Process/Process.hpp>
+#include <Debug/kpanic.hpp>
+#include <Memory/Allocators/SlabAllocator.hpp>
+#include <Memory/PMM.hpp>
+#include <Memory/VMM.hpp>
+//#include <SMP/SMP.hpp>
+//#include <Process/Thread.hpp>
+#include <Process/Process.hpp>
 #include <Debug/klogf.hpp>
 
 SlabAllocator::SlabAllocator(size_t object_size, size_t alloc_pool_order) {

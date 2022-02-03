@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stddef.h>
-#include <Kernel/KOptional.hpp>
-#include <Kernel/Structs/KAtomic.hpp>
+#include <Structs/KOptional.hpp>
+#include <Structs/KAtomic.hpp>
 
 /*
  *  Implements a single-producer, single-consumer lock-free ring buffer

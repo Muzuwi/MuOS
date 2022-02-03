@@ -1,10 +1,10 @@
 #pragma once
 
 #include <LibGeneric/List.hpp>
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/VMM.hpp>
-#include <Kernel/Memory/PAllocation.hpp>
-#include <Kernel/Memory/UserPtr.hpp>
+#include <Memory/PMM.hpp>
+#include <Memory/VMM.hpp>
+#include <Memory/PAllocation.hpp>
+#include <Memory/UserPtr.hpp>
 
 enum VMappingFlags
 		: uint32_t {

@@ -1,10 +1,9 @@
 #include <string.h>
 #include <LibGeneric/List.hpp>
-#include <Kernel/APIC/APIC.hpp>
-#include <Kernel/ACPI/ACPI.hpp>
+#include <APIC/APIC.hpp>
+#include <ACPI/ACPI.hpp>
 #include <Debug/klogf.hpp>
-#include <Kernel/Memory/Ptr.hpp>
-#include <Kernel/ksleep.hpp>
+#include <Memory/Ptr.hpp>
 
 static PhysAddr s_local_apic_base;
 static gen::List<uint8_t> s_ap_ids;

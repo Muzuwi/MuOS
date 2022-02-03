@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 
 /*  Enter - real mode, 16 bit
  *      - cli

@@ -1,17 +1,17 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/GDT.hpp>
-#include <Kernel/Scheduler/Scheduler.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Debug/kassert.hpp>
-#include <Kernel/SMP/SMP.hpp>
-#include <Kernel/Interrupt/IRQDispatcher.hpp>
+#include <Scheduler/Scheduler.hpp>
+#include <Process/Thread.hpp>
+#include <Process/Process.hpp>
+#include <Debug/kassert.hpp>
+#include <SMP/SMP.hpp>
+#include <Interrupt/IRQDispatcher.hpp>
 #include <Debug/klogf.hpp>
-#include "Daemons/BootAP/BootAP.hpp"
-#include "Daemons/Idle/Idle.hpp"
-#include "Daemons/Kbd/Kbd.hpp"
-#include "Daemons/SysDbg/SysDbg.hpp"
-#include "Daemons/Testd/Testd.hpp"
+#include <Daemons/BootAP/BootAP.hpp>
+#include <Daemons/Idle/Idle.hpp>
+#include <Daemons/Kbd/Kbd.hpp>
+#include <Daemons/SysDbg/SysDbg.hpp>
+#include <Daemons/Testd/Testd.hpp>
 
 void Scheduler::tick() {
 	auto* thread = SMP::ctb().current_thread();

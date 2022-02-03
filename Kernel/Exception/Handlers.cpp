@@ -1,9 +1,9 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Debug/klogf.hpp>
-#include <Kernel/Exception/Exception.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <Exception/Exception.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <SMP/SMP.hpp>
 
 static void dump_registers(PtraceRegs* pt) {
 	kerrorf_static("rax={x} rbx={x} rcx={x} rdx={x}\n", pt->rax, pt->rbx, pt->rcx, pt->rdx);

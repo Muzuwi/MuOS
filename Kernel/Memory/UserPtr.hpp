@@ -1,7 +1,7 @@
 #pragma once
 #include <LibGeneric/Move.hpp>
 #include <LibGeneric/SharedPtr.hpp>
-#include <Kernel/Memory/KBox.hpp>
+#include <Memory/KBox.hpp>
 
 template<class T>
 class UserPtr {

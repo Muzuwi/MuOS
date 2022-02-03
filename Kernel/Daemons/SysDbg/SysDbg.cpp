@@ -1,9 +1,9 @@
-#include "SysDbg.hpp"
-#include "Library/LibGeneric/String.hpp"
-#include "Kernel/Process/Process.hpp"
-#include "Kernel/Process/Thread.hpp"
-#include "Kernel/Device/Serial.hpp"
-#include "Kernel/SMP/SMP.hpp"
+#include <Daemons/SysDbg/SysDbg.hpp>
+#include <LibGeneric/String.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <Device/Serial.hpp>
+#include <SMP/SMP.hpp>
 #include <Debug/klogf.hpp>
 
 void SysDbg::sysdbg_thread() {

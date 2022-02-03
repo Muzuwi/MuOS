@@ -4,8 +4,8 @@
 #include <LibGeneric/Move.hpp>
 
 #ifdef __is_kernel_build__
-#include <Kernel/Debug/kpanic.hpp>
-#include <Kernel/Memory/KHeap.hpp>
+#include <Debug/kpanic.hpp>
+#include <Memory/KHeap.hpp>
 #endif
 
 /*

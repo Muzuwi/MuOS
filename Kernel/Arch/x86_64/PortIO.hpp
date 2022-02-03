@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 
 namespace Ports {
 	inline void out(uint16 port, uint8 value) {

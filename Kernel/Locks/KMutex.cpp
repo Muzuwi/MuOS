@@ -1,8 +1,8 @@
-#include <Kernel/Locks/KMutex.hpp>
-#include <Kernel/Scheduler/Scheduler.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/SMP/SMP.hpp>
-#include <Kernel/Debug/kassert.hpp>
+#include <Locks/KMutex.hpp>
+#include <Scheduler/Scheduler.hpp>
+#include <Process/Thread.hpp>
+#include <SMP/SMP.hpp>
+#include <Debug/kassert.hpp>
 
 KMutex::KMutex() noexcept
 : m_owner(nullptr), m_spinlock(), m_waiters() {

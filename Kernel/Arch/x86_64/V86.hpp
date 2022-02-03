@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 
 //  This structure must be kept in sync with the one in V86.asm
 struct V86Regs {

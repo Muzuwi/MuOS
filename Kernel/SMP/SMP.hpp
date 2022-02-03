@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/SMP/ControlBlock.hpp>
+#include <SMP/ControlBlock.hpp>
 
 class SMP {
 public:

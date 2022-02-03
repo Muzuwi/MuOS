@@ -1,6 +1,6 @@
 #include <cpuid.h>
 #include <Arch/x86_64/CPUID.hpp>
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 
 bool CPUID::has_huge_pages() {
 	unsigned int eax, _unused, edx;

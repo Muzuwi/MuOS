@@ -1,7 +1,7 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
+#include <SystemTypes.hpp>
 #include <Debug/klogf.hpp>
-#include <Kernel/Memory/KHeap.hpp>
+#include <Memory/KHeap.hpp>
 
 /*
  *  RAII-wrapper class for kernel heap allocations of a specific type

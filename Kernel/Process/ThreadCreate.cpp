@@ -2,10 +2,10 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Process/Thread.hpp>
-#include <Kernel/Process/PidAllocator.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <Process/PidAllocator.hpp>
+#include <SMP/SMP.hpp>
 
 
 SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void(*kernel_exec)()) {

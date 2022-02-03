@@ -1,6 +1,6 @@
-#include <Kernel/Process/Process.hpp>
-#include <Kernel/Process/PidAllocator.hpp>
-#include <Kernel/Memory/KHeap.hpp>
+#include <Process/Process.hpp>
+#include <Process/PidAllocator.hpp>
+#include <Memory/KHeap.hpp>
 
 SharedPtr<Process> Process::create(ProcFlags flags) {
 	return SharedPtr {

@@ -1,7 +1,7 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Memory/PhysBitmap.hpp>
-#include <Kernel/Memory/Units.hpp>
+#include <SystemTypes.hpp>
+#include <Memory/PhysBitmap.hpp>
+#include <Memory/Units.hpp>
 
 class SlabAllocator {
 	PhysBitmap m_allocation_bitmap;

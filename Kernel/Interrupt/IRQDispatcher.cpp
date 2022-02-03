@@ -2,9 +2,9 @@
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
-#include <Kernel/Interrupt/IRQDispatcher.hpp>
-#include <Kernel/Scheduler/Scheduler.hpp>
-#include <Kernel/SMP/SMP.hpp>
+#include <Interrupt/IRQDispatcher.hpp>
+#include <Scheduler/Scheduler.hpp>
+#include <SMP/SMP.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Algorithm.hpp>

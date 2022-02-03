@@ -1,5 +1,5 @@
 #pragma once
-#include <Kernel/Memory/Ptr.hpp>
+#include <Memory/Ptr.hpp>
 
 class PAllocation {
 	PhysAddr m_allocation_base;

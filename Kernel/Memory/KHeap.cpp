@@ -1,8 +1,8 @@
-#include <Kernel/Memory/Allocators/SlabAllocator.hpp>
-#include <Kernel/Memory/PMM.hpp>
-#include <Kernel/Memory/KHeap.hpp>
-#include <Kernel/Memory/kmalloc.hpp>
-#include <Kernel/Debug/kpanic.hpp>
+#include <Memory/Allocators/SlabAllocator.hpp>
+#include <Memory/PMM.hpp>
+#include <Memory/KHeap.hpp>
+#include <Memory/kmalloc.hpp>
+#include <Debug/kpanic.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>

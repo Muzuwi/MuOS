@@ -1,8 +1,8 @@
 #pragma once
 #include <string.h>
-#include <Kernel/KOptional.hpp>
-#include <Kernel/Memory/Ptr.hpp>
-#include <Kernel/Memory/Units.hpp>
+#include <Structs/KOptional.hpp>
+#include <Memory/Ptr.hpp>
+#include <Memory/Units.hpp>
 #include <Debug/kpanic.hpp>
 
 //  Page-backed bitmap allocator for pages

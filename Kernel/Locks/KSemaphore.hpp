@@ -1,6 +1,6 @@
 #pragma once
-#include <Kernel/SystemTypes.hpp>
-#include <Kernel/Structs/KAtomic.hpp>
+#include <SystemTypes.hpp>
+#include <Structs/KAtomic.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/List.hpp>
 

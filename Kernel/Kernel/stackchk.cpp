@@ -1,5 +1,5 @@
 #include <Debug/klogf.hpp>
-#include <Kernel/Debug/kpanic.hpp>
+#include <Debug/kpanic.hpp>
 
 unsigned long __stack_chk_guard;
 //  FIXME: Would be great if the canary was randomized

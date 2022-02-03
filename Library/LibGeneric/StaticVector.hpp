@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #ifdef __is_kernel_build__
-#include <Kernel/Debug/kassert.hpp>
+#include <Debug/kassert.hpp>
 #endif
 
 namespace gen {

@@ -42,7 +42,7 @@ gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {
 }
 
 template<class T>
-bool UserPtr<T>::copy_to_user(type* kernel_ptr) {
+bool UserPtr<T>::copy_to_user(type*) {
 	//  FIXME: TODO
 	return false;
 }

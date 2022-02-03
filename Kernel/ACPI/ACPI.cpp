@@ -36,7 +36,7 @@ void ACPI::parse_tables() {
 	        rsdp.m_oemid[0],rsdp.m_oemid[1],rsdp.m_oemid[2],rsdp.m_oemid[3],rsdp.m_oemid[4],rsdp.m_oemid[5],
 	        rsdp.m_rsdt_addr
 	);
-	s_rsdt = PhysPtr<ACPISDTHeader>{(ACPISDTHeader*)rsdp.m_rsdt_addr};
+	s_rsdt = PhysPtr<ACPISDTHeader>{(ACPISDTHeader*)static_cast<uintptr_t>(rsdp.m_rsdt_addr)};
 
 	auto const& rsdt = *s_rsdt;
 	klogf("[ACPI] RSDT: checksum={x}, length={}, revision={}, OEMID='{}{}{}{}{}{}'\n",
@@ -51,7 +51,7 @@ void ACPI::parse_tables() {
 
 	for(unsigned j = 0; j < entries; ++j) {
 		uint32_t table_address = *(entries_base+j);
-		auto table_ptr = PhysPtr<ACPISDTHeader>{(ACPISDTHeader*)table_address};
+		auto table_ptr = PhysPtr<ACPISDTHeader>{(ACPISDTHeader*)static_cast<uintptr_t>(table_address)};
 		auto const& table_header = *table_ptr;
 
 		klogf("[ACPI] Table {}{}{}{}: length={}, revision={}, checksum={x}, OEMID='{}{}{}{}{}{}'\n",

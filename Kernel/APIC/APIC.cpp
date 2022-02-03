@@ -134,7 +134,7 @@ void APIC::find_local_base() {
 	}
 
 	uint32 local_apic = *(madt + 0x24).as<uint32>();
-	s_local_apic_base = PhysAddr{(void*)local_apic};
+	s_local_apic_base = PhysAddr{(void*)static_cast<uintptr_t>(local_apic)};
 }
 
 gen::List<uint8> const& APIC::ap_list() {

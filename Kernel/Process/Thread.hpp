@@ -37,10 +37,10 @@ class Thread {
 
 	//  Layout of the following fields is important, as we're directly accessing
 	//  these from asm code
-	[[maybe_unused]] InactiveTaskFrame* m_interrupted_task_frame;   //  Offset 0x0
-	[[maybe_unused]] void* m_kernel_stack_bottom;                   //  Offset 0x8
-	[[maybe_unused]] uint64 m_kernel_gs_base;                       //  Offset 0x10
-	[[maybe_unused]] PhysPtr<PML4> m_pml4;                          //  Offset 0x18
+	InactiveTaskFrame* m_interrupted_task_frame;   //  Offset 0x0
+	void* m_kernel_stack_bottom;                   //  Offset 0x8
+	uint64 m_kernel_gs_base;                       //  Offset 0x10
+	PhysPtr<PML4> m_pml4;                          //  Offset 0x18
 	//  ==================
 
 	SharedPtr<Process> m_parent;

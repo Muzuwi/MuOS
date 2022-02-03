@@ -106,7 +106,7 @@ public:
 		       (uintptr_t)vaddr < (uintptr_t)m_addr + m_size;
 	}
 
-	bool overlaps(VMapping const& other) {
+	bool overlaps(VMapping const&) {
 		//  TODO:
 		return false;
 	}

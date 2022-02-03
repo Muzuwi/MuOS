@@ -54,7 +54,7 @@ class PhysBitmap {
 		return KOptional<size_t>{};
 	}
 
-	KOptional<size_t> find_many(size_t count) {
+	KOptional<size_t> find_many(size_t) {
 		ASSERT_NOT_REACHED();
 
 		return KOptional<size_t>{};

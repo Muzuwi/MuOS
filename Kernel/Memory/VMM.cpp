@@ -41,7 +41,7 @@ void VMM::initialize_kernel_vm() {
 	"mov %%rax, %0\n"
 	"mov cr3, %%rax\n"
 	:
-	:""(pml4.get())
+	:"r"(pml4.get())
 	:"rax"
 	);
 }
@@ -552,16 +552,17 @@ void* VMM::allocate_user_stack(uint64 stack_size) {
 
 	uint64_t stack_top;
 	if(m_process.flags().randomize_vm) {
+		//  FIXME: Use stack_size
 		stack_top = (uintptr_t)&_userspace_stack_start
 		            + VMM::user_stack_size() * random(0, 0x40000);
 	} else {
 		stack_top = (uintptr_t)&_userspace_stack_start;
 	}
 
-	auto stack_mapping = VMapping::create((void*)stack_top, VMM::user_stack_size(), VM_READ | VM_WRITE, MAP_PRIVATE);
+	auto stack_mapping = VMapping::create((void*)stack_top, stack_size, VM_READ | VM_WRITE, MAP_PRIVATE);
 	kassert(insert_vmapping(gen::move(stack_mapping)));
 
-	return (void*)(stack_top + VMM::user_stack_size());
+	return (void*)(stack_top + stack_size);
 }
 
 

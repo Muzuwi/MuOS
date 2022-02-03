@@ -43,7 +43,6 @@ set(CMAKE_CXX_LINK_EXECUTABLE
 add_executable(KernelELF
     Kernel/kernel.cpp
     Kernel/stackchk.cpp
-    Debug/kdebugf.cpp
     Debug/kpanic.cpp
     Debug/kassert.cpp
     Debug/TTY.cpp
@@ -110,7 +109,9 @@ add_executable(KernelELF
     Daemons/Kbd/Kbd.cpp
     Daemons/BootAP/BootAP.cpp
     Daemons/Idle/Idle.cpp
-    Daemons/Testd/Testd.cpp)
+    Daemons/Testd/Testd.cpp
+    Debug/DebugCon.cpp
+    )
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-O2 -g -Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>

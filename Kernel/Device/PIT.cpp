@@ -1,7 +1,6 @@
 #include <Kernel/Device/PIT.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
 #include <Arch/x86_64/PortIO.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
 #include <Kernel/Scheduler/Scheduler.hpp>
 #include <Kernel/Process/Process.hpp>

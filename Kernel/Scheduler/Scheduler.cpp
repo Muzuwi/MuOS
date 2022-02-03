@@ -6,6 +6,7 @@
 #include <Kernel/Debug/kassert.hpp>
 #include <Kernel/SMP/SMP.hpp>
 #include <Kernel/Interrupt/IRQDispatcher.hpp>
+#include <Debug/klogf.hpp>
 #include "Daemons/BootAP/BootAP.hpp"
 #include "Daemons/Idle/Idle.hpp"
 #include "Daemons/Kbd/Kbd.hpp"
@@ -100,7 +101,7 @@ Thread* Scheduler::create_idle_task() {
  */
 void Scheduler::bootstrap() {
 	CPU::irq_disable();
-	kdebugf("[Scheduler] Bootstrapping AP %i\n", SMP::ctb().current_ap());
+	klogf("[Scheduler] Bootstrapping AP {}\n", SMP::ctb().current_ap());
 
 	m_ap_idle = create_idle_task();
 

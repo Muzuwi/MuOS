@@ -3,6 +3,7 @@
 #include <Kernel/KOptional.hpp>
 #include <Kernel/Memory/Ptr.hpp>
 #include <Kernel/Memory/Units.hpp>
+#include <Debug/kpanic.hpp>
 
 //  Page-backed bitmap allocator for pages
 class PageBitmapAllocator {
@@ -90,7 +91,7 @@ class PageBitmapAllocator {
 			auto old = bit_get(i);
 
 			if(old == value) {
-				kerrorf("PageBitmapAllocator: Corrupted state or double free for idx=%i\n", i);
+				kpanic();
 				continue;
 			}
 
@@ -167,7 +168,6 @@ public:
 		//  if not.
 		if((uintptr_t)m_base.get() > 1024 * Units::MiB || (uintptr_t)(m_base+m_bitmap_size).get() > 1024 * Units::MiB) {
 			m_deferred_initialization = true;
-			kdebugf("Defering initialization of allocator - inaccessible bitmap area\n");
 		} else {
 			m_deferred_initialization = false;
 			initialize();

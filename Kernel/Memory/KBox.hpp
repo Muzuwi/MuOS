@@ -1,6 +1,6 @@
 #pragma once
 #include <Kernel/SystemTypes.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 #include <Kernel/Memory/KHeap.hpp>
 
 /*
@@ -33,7 +33,7 @@ public:
 
 	~KBox()
 	{
-		kdebugf("dbg: freeing box ptr=%x%x of size=%i\n", (uint64_t)m_ptr >>32u, (uint64_t)m_ptr&0xffffffffu, m_size);
+		klogf("dbg: freeing box ptr={} of size={}\n", m_ptr, m_size);
 		KHeap::free(m_ptr, m_size);
 	}
 

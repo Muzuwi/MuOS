@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <Kernel/Symbols.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 //#include <Kernel/Memory/PageToken.hpp>
 
 template<class T>
@@ -111,7 +111,7 @@ public:
 	explicit PhysAddr(void* addr) noexcept
 	: m_ptr(addr) {
 		if((uint64_t)addr & 0xffff000000000000) {
-			kerrorf("Warning: PhysAddr constructed with a potentially virtual pointer [%x%x]\n", (uint64_t)addr>>32u, (uint64_t)addr&0xffffffffu);
+			kerrorf_static("Warning: PhysAddr constructed with a potentially virtual pointer [{}]\n", addr);
 		}
 	}
 

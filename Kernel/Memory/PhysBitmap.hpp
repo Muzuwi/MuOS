@@ -3,6 +3,7 @@
 #include <Kernel/SystemTypes.hpp>
 #include <Kernel/Memory/Ptr.hpp>
 #include <Kernel/KOptional.hpp>
+#include <Debug/klogf.hpp>
 
 class PhysBitmap {
 	PhysAddr m_base;
@@ -64,7 +65,7 @@ class PhysBitmap {
 			auto old = bit_get(i);
 
 			if(old == value) {
-				kerrorf("PageBitmapAllocator: Corrupted state or double free for idx=%i\n", i);
+				kerrorf_static("PageBitmapAllocator: Corrupted state or double free for idx={}\n", i);
 				continue;
 			}
 

@@ -1,4 +1,4 @@
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 
 unsigned long __stack_chk_guard;
@@ -8,6 +8,6 @@ extern "C" void __stack_chk_guard_setup(void) {
 }
 
 extern "C" void __stack_chk_fail(void) {
-	kerrorf("[uKernel] Stack corruption detected, panic!\n");
+	kerrorf_static("[uKernel] Stack corruption detected, panic!\n");
 	kpanic();
 }

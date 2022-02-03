@@ -1,5 +1,4 @@
 #include <Kernel/Debug/TTY.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Memory/KHeap.hpp>
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Multiboot/MultibootInfo.hpp>
@@ -16,14 +15,15 @@
 
 #include <Kernel/Device/Serial.hpp>
 #include <Kernel/SMP/SMP.hpp>
+#include <Debug/klogf.hpp>
 
 /*
 	Main kernel entrypoint
 */
-extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info){
+extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info) {
 	TTY::init();
 	Serial::init();
-	kdebugf("[uKernel64] Hello, world!\n");
+	klogf_static("[uKernel64] Hello, world!\n");
 
 	IDT::init();
 	GDT::init();
@@ -40,7 +40,7 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 
 	Syscall::init();
 
-	kdebugf("[uKernel] Init done, time passed: %ims\n", PIT::milliseconds());
+	klogf("[uKernel] Init done, time passed: {}ms\n", PIT::milliseconds());
 
 	ACPI::parse_tables();
 	APIC::discover();

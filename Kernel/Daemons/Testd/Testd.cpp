@@ -2,10 +2,11 @@
 #include "Process/Process.hpp"
 #include "Process/Thread.hpp"
 #include "Testd.hpp"
+#include "Debug/klogf.hpp"
 
 void Testd::test_kernel_thread() {
 	while(true) {
-		kdebugf("test thread2, pid=%i, tid=%i\n", Thread::current()->parent()->pid(), Thread::current()->tid());
+		klogf("Thread2(pid={}, tid={}) woke up\n", Thread::current()->parent()->pid(), Thread::current()->tid());
 		Thread::current()->msleep(2000);
 	}
 }
@@ -31,18 +32,18 @@ void Testd::userland_test_thread() {
 	                        0xC7, 0xC0, 0xFE, 0x00, 0x00, 0x00, 0x0F, 0x05, 0xEB, 0xEE };
 	auto* shellcode_location = (uint8*)0x100000;
 
-	kdebugf("Thread(%i): mapping shellcode\n", current->tid());
+	klogf("Thread({}): mapping shellcode\n", current->tid());
 	auto mapping = VMapping::create((void*)shellcode_location, 0x1000, VM_READ | VM_WRITE | VM_EXEC,
 	                                MAP_SHARED);
 	kassert(current->parent()->vmm().insert_vmapping(gen::move(mapping)));
 
-	kdebugf("Thread(%i): copying shellcode\n", current->tid());
+	klogf("Thread({}): copying shellcode\n", current->tid());
 	for(auto& b : bytes) {
 		*shellcode_location = b;
 		shellcode_location++;
 	}
 
-	kdebugf("Thread(%i): jumping to user\n", current->tid());
+	klogf("Thread({}): jumping to user\n", current->tid());
 	PtraceRegs regs = PtraceRegs::user_default();
 	regs.rip = 0x100000;
 	regs.rsp = (uint64)user_stack;

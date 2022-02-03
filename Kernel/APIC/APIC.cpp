@@ -2,7 +2,7 @@
 #include <LibGeneric/List.hpp>
 #include <Kernel/APIC/APIC.hpp>
 #include <Kernel/ACPI/ACPI.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 #include <Kernel/Memory/Ptr.hpp>
 #include <Kernel/ksleep.hpp>
 
@@ -23,7 +23,7 @@ void APIC::discover() {
 
 	uint32 la_id = lapic_read(LAPICReg::APICID);
 	uint32 la_version = lapic_read(LAPICReg::APICVer);
-	kdebugf("[APIC] BSP Local APIC ID=%i, version=%i\n", la_id, la_version);
+	klogf("[APIC] BSP Local APIC ID={}, version={}\n", la_id, la_version);
 
 	s_bootstrap_ap = la_id;
 
@@ -69,8 +69,8 @@ void APIC::find_local_base() {
 	PhysAddr madt = PhysAddr{(maybe_madt.unwrap()).get()};
 
 	auto const& madt_header = *maybe_madt.unwrap();
-	kdebugf("[APIC] MADT/APIC table length=%i\n", madt_header.m_length);
-	kdebugf("[APIC] Local APIC at %x, flags=%x\n", *(madt + 0x24).as<uint32>(), *(madt + 0x28).as<uint32>());
+	klogf("[APIC] MADT/APIC table length={}\n", madt_header.m_length);
+	klogf("[APIC] Local APIC at {x}, flags={x}\n", *(madt + 0x24).as<uint32>(), *(madt + 0x28).as<uint32>());
 
 	unsigned offset = 0x2c;
 	while(offset < madt_header.m_length) {
@@ -88,14 +88,14 @@ void APIC::find_local_base() {
 				}
 
 				s_ap_ids.push_back(apic_id);
-				kdebugf("[APIC] Processor %i, APIC_ID=%i, Flags=%x\n", acpi_processor_id, apic_id, flags);
+				klogf("[APIC] Processor {}, APIC_ID={}, Flags={x}\n", acpi_processor_id, apic_id, flags);
 				break;
 			}
 			case 1: {
 				auto ioapic_id = *(madt + offset + 2).as<uint8>();
 				auto ioapic_addr = *(madt + offset + 4).as<uint32>();
 				auto global_irq_base = *(madt + offset + 8).as<uint32>();
-				kdebugf("[APIC] I/O APIC ID=%i, addr=%x, irq_base=%x\n", ioapic_id, ioapic_addr, global_irq_base);
+				klogf("[APIC] I/O APIC ID={}, addr={x}, irq_base={}\n", ioapic_id, ioapic_addr, global_irq_base);
 				break;
 			}
 			case 2: {
@@ -103,7 +103,7 @@ void APIC::find_local_base() {
 				auto irq_source = *(madt + offset + 3).as<uint8>();
 				auto global_system_irq = *(madt + offset + 4).as<uint32>();
 				auto flags = *(madt + offset + 8).as<uint16>();
-				kdebugf("[APIC] IO/APIC Override: sourcebus=%i, sourceirq=%i, irq=%i, flags=%x\n",
+				klogf("[APIC] IO/APIC Override: sourcebus={}, sourceirq={}, irq={}, flags={x}\n",
 						bus_source, irq_source, global_system_irq, flags);
 				break;
 			}
@@ -111,7 +111,7 @@ void APIC::find_local_base() {
 				auto nmi_source = *(madt + offset + 2).as<uint8>();
 				auto flags = *(madt + offset + 4).as<uint16>();
 				auto global_system_irq = *(madt + offset + 6).as<uint32>();
-				kdebugf("[APIC] IO/APIC NMI: source=%i, flags=%x, irq=%i\n",
+				klogf("[APIC] IO/APIC NMI: source={} flags={}, irq={}\n",
 				        nmi_source, flags, global_system_irq);
 				break;
 			}
@@ -119,14 +119,13 @@ void APIC::find_local_base() {
 				auto proc_id = *(madt + offset + 2).as<uint8>();
 				auto flags = *(madt + offset + 3).as<uint16>();
 				auto lint = *(madt + offset + 5).as<uint8>();
-				kdebugf("[APIC] Local APIC NMI: processor=%x, flags=%x, LINT=%i\n",
+				klogf("[APIC] Local APIC NMI: processor={x}, flags={x}, LINT={}\n",
 						proc_id, flags, lint);
 				break;
 			}
 			case 5: {
 				auto addr = *(madt + offset + 4).as<uint64>();
-				kdebugf("[APIC] Local APIC address override: %x%x",
-						addr>>32u, addr & 0xFFFFFFFFu);
+				klogf("[APIC] Local APIC address override: {x}", addr);
 				break;
 			}
 			default: break;

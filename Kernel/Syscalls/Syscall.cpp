@@ -1,4 +1,4 @@
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Syscalls/Syscall.hpp>
 
@@ -32,11 +32,11 @@ void Syscall::init() {
 	auto id = (uint8_t)regs->rax;
 	auto& handler = s_syscall_functions[id];
 	if(!handler._ptr) {
-		kerrorf("[Syscall] Invalid syscall to nonexistent function ID=%i\n", id);
+		klogf("[Syscall] Invalid syscall to nonexistent function ID={}\n", id);
 		return;
 	}
 
-	kdebugf("Thread(%i): syscall=%i\n", Thread::current()->tid(), id);
+	klogf("Thread({}): syscall={}\n", Thread::current()->tid(), id);
 
 	auto argc = handler._argc;
 	auto ptr = handler._ptr;
@@ -51,7 +51,7 @@ void Syscall::init() {
 		case 4: { regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx, regs->r8); break; }
 		case 5: { regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx, regs->r8, regs->r9); break; }
 		default: {
-			kerrorf("[Syscall] Corrupted argc=%i for syscall_id=%i\n", argc, id);
+			kerrorf("[Syscall] Corrupted argc={} for syscall_id={}\n", argc, id);
 			return;
 		}
 	}

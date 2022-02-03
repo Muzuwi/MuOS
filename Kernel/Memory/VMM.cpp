@@ -5,6 +5,7 @@
 #include <Kernel/Memory/VMM.hpp>
 #include <Kernel/Memory/Units.hpp>
 #include <Kernel/Process/Process.hpp>
+#include <Debug/klogf.hpp>
 #include <string.h>
 
 using namespace Units;
@@ -15,11 +16,11 @@ using namespace Units;
 void VMM::initialize_kernel_vm() {
 	Process& kerneld = Process::_kerneld_ref();
 
-	kdebugf("[VMM] Initializing kerneld address space\n");
+	klogf_static("[VMM] Initializing kerneld address space\n");
 
 	auto res = PMM::instance().allocate();
 	if(!res.has_value()) {
-		kerrorf("[VMM] Failed allocating page for kerneld PML4! Out of memory?\n");
+		klogf_static("[VMM] Failed allocating page for kerneld PML4! Out of memory?\n");
 		kpanic();
 	}
 
@@ -27,13 +28,13 @@ void VMM::initialize_kernel_vm() {
 	memset(pml4.get_mapped(), 0, 0x1000);
 	kerneld.vmm().m_pml4 = res.unwrap().base().as<PML4>();
 
-	kdebugf("[VMM] Mapping kernel executable\n");
+	klogf_static("[VMM] Mapping kernel executable\n");
 	kerneld.vmm()._map_kernel_executable();
 
-	kdebugf("[VMM] Creating physical identity map\n");
+	klogf_static("[VMM] Creating physical identity map\n");
 	kerneld.vmm()._map_physical_identity();
 
-	kdebugf("[VMM] Preallocating kernel PML4E\n");
+	klogf_static("[VMM] Preallocating kernel PML4E\n");
 	kerneld.vmm()._map_kernel_prealloc_pml4();
 
 	asm volatile(
@@ -59,8 +60,8 @@ void VMM::_map_pallocation(PAllocation allocation, void* vaddr) {
 		auto* pte = ensure_pt(vaddr, LeakAllocatedPage::Yes);
 
 		if(!pdpte || !pde || !pte) {
-			kerrorf("[VMM] Failed mapping PAllocation for address %x%x! Page structure allocation failed.\n",
-			        (uintptr_t)vaddr >> 32u, (uintptr_t)vaddr & 0xffffffffu);
+			kerrorf_static("[VMM] Failed mapping PAllocation for address {}! Page structure allocation failed.\n",
+			               Format::ptr(vaddr));
 			kpanic();
 		}
 
@@ -94,7 +95,7 @@ void VMM::_map_kernel_executable() {
 		auto* pde = ensure_pd(addr, LeakAllocatedPage::Yes);
 		auto* pte = ensure_pt(addr, LeakAllocatedPage::Yes);
 		if(!pdpte || !pde || !pte) {
-			kerrorf("[VMM] PDPTE/PDE/PTE allocation failure during ELF mapping. Out of memory?\n");
+			kerrorf_static("[VMM] PDPTE/PDE/PTE allocation failure during ELF mapping. Out of memory?\n");
 			kpanic();
 		}
 
@@ -134,7 +135,7 @@ void VMM::_map_physical_identity() {
 			auto& pml4e = (*pml4)[addr];
 			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
 			if(!pdpte) {
-				kerrorf("[VMM] PDPTE allocation for physical identity map failed! Out of memory?\n");
+				kerrorf_static("[VMM] PDPTE allocation for physical identity map failed! Out of memory?\n");
 				kpanic();
 			}
 
@@ -153,7 +154,7 @@ void VMM::_map_physical_identity() {
 			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
 			auto* pde = ensure_pd(addr, LeakAllocatedPage::Yes);
 			if(!pdpte || !pde) {
-				kerrorf("[VMM] PDPTE/PDE allocation for physical identity map failed! Out of memory?\n");
+				kerrorf_static("[VMM] PDPTE/PDE allocation for physical identity map failed! Out of memory?\n");
 				kpanic();
 			}
 
@@ -196,14 +197,14 @@ PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
 		if(leak == LeakAllocatedPage::Yes) {
 			KOptional<PAllocation> alloc = PMM::instance().allocate(0);
 			if(!alloc.has_value()) {
-				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				kerrorf_static("[VMM] Failed to allocate page for PT!\n");
 				return nullptr;
 			}
 			phys = alloc.unwrap().base();
 		} else {
 			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
 			if(!alloc.has_value()) {
-				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				kerrorf_static("[VMM] Failed to allocate page for PT!\n");
 				return nullptr;
 			}
 			phys = alloc.unwrap();
@@ -225,14 +226,14 @@ PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
 		if(leak == LeakAllocatedPage::Yes) {
 			KOptional<PAllocation> alloc = PMM::instance().allocate(0);
 			if(!alloc.has_value()) {
-				kerrorf("[VMM] Failed to allocate page for PD!\n");
+				kerrorf_static("[VMM] Failed to allocate page for PD!\n");
 				return nullptr;
 			}
 			phys = alloc.unwrap().base();
 		} else {
 			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
 			if(!alloc.has_value()) {
-				kerrorf("[VMM] Failed to allocate page for PD!\n");
+				kerrorf_static("[VMM] Failed to allocate page for PD!\n");
 				return nullptr;
 			}
 			phys = alloc.unwrap();
@@ -254,14 +255,14 @@ PTE* VMM::ensure_pt(void* addr, LeakAllocatedPage leak) {
 		if(leak == LeakAllocatedPage::Yes) {
 			KOptional<PAllocation> alloc = PMM::instance().allocate(0);
 			if(!alloc.has_value()) {
-				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				kerrorf_static("[VMM] Failed to allocate page for PT!\n");
 				return nullptr;
 			}
 			phys = alloc.unwrap().base();
 		} else {
 			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
 			if(!alloc.has_value()) {
-				kerrorf("[VMM] Failed to allocate page for PT!\n");
+				kerrorf_static("[VMM] Failed to allocate page for PT!\n");
 				return nullptr;
 			}
 			phys = alloc.unwrap();
@@ -425,7 +426,7 @@ bool VMM::addrmap(void* vaddr, PhysAddr paddr, VMappingFlags flags) {
 	auto* pde = ensure_pd(vaddr, LeakAllocatedPage::No);
 	auto* pte = ensure_pt(vaddr, LeakAllocatedPage::No);
 	if(!pdpte || !pde || !pte) {
-		kerrorf("[VMM] VMapping map failed - PDPTE/PDE/PTE allocation failed.\n");
+		kerrorf_static("[VMM] VMapping map failed - PDPTE/PDE/PTE allocation failed.\n");
 		return false;
 	}
 
@@ -462,17 +463,17 @@ bool VMM::addrunmap(void* vaddr) {
 	PhysPtr<PML4> pml4 = m_pml4;
 	auto& pml4e = (*pml4)[vaddr];
 	if(!pml4e.get(FlagPML4E::Present)) {
-		kerrorf("[VMM] VMapping corruption or double free detected\n");
+		kerrorf_static("[VMM] VMapping corruption or double free detected\n");
 		kpanic();
 	}
 	auto& pdpte = (*pml4e.directory())[vaddr];
 	if(!pdpte.get(FlagPDPTE::Present)) {
-		kerrorf("[VMM] VMapping corruption or double free detected\n");
+		kerrorf_static("[VMM] VMapping corruption or double free detected\n");
 		kpanic();
 	}
 	auto& pde = (*pdpte.directory())[vaddr];
 	if(!pde.get(FlagPDE::Present)) {
-		kerrorf("[VMM] VMapping corruption or double free detected\n");
+		kerrorf_static("[VMM] VMapping corruption or double free detected\n");
 		kpanic();
 	}
 	auto& pte = (*pde.table())[vaddr];

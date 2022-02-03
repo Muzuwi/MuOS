@@ -1,6 +1,6 @@
 #include <string.h>
 #include <Kernel/Memory/kmalloc.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/Symbols.hpp>
 #include <LibGeneric/BitMap.hpp>
@@ -52,13 +52,15 @@ void KMalloc::mark_range(size_t start_chunk, size_t end_chunk, bool clear=false)
 
 		if(clear) {
 			if(!(m_mem_allocations[index] & (1 << (chunk % bits(Chunk))))) {
-				kerrorf("Tried clearing allocation bit when allocation is already clear (%i-%i)\n", start_chunk, end_chunk);
+				kerrorf_static("Tried clearing allocation bit when allocation is already clear ({}-{})\n", start_chunk,
+				               end_chunk);
 				kpanic();
 			}
 			m_mem_allocations[index] &= ~(1 << (chunk % bits(Chunk)));
 		} else {
 			if(m_mem_allocations[index] & (1 << (chunk % bits(Chunk)))) {
-				kerrorf("Tried setting allocation bit when allocation is already present (%i-%i)\n", start_chunk, end_chunk);
+				kerrorf_static("Tried setting allocation bit when allocation is already present ({}-{})\n", start_chunk,
+				               end_chunk);
 				kpanic();
 			}
 			m_mem_allocations[index] |= (1 << (chunk % bits(Chunk)));
@@ -144,7 +146,7 @@ void* KMalloc::kmalloc_alloc(size_t size, size_t align) {
 		chunk++;
 	}
 
-	kerrorf("[KMalloc] cannot find %i free chunks for %i allocation (out of memory?)\n", chunks, size);
+	kerrorf_static("[KMalloc] cannot find {} free chunks for {} allocation (out of memory?)\n", chunks, size);
 	kpanic();
 
 }

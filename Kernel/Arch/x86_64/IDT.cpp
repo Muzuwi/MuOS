@@ -1,7 +1,7 @@
 #include <Arch/x86_64/IDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
 #include <Arch/x86_64/GDT.hpp>
+#include <Debug/klogf.hpp>
 
 static IDT_Entry interrupt_descr_table[IDT_INTS_COUNT] = {};
 
@@ -86,5 +86,5 @@ void IDT::init(){
 	IDTR.base = reinterpret_cast<uint64_t>(interrupt_descr_table);
 	lidt(&IDTR);
 
-	kdebugf("[IDT] registered interrupt handlers\n");
+	klogf_static("[IDT] registered interrupt handlers\n");
 }

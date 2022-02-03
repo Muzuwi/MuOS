@@ -2,11 +2,11 @@
 #include <Kernel/Memory/PMM.hpp>
 #include <Kernel/Memory/KHeap.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/LockGuard.hpp>
+#include <Debug/klogf.hpp>
 
 using gen::List;
 
@@ -46,7 +46,7 @@ static SlabAllocator* grow_heap(size_t object_size) {
 	auto it = slabs.insert(slabs.end(), slab);
 	(*it).initialize(s_last_heap_virtual);
 
-	kdebugf("[KHeap] SlabAllocator(%i) at virtual %x%x, objects %i\n", object_size, (uintptr_t)s_last_heap_virtual>>32u, (uintptr_t)s_last_heap_virtual&0xffffffffu, slabs.back().objects_free());
+	klogf_static("[KHeap] SlabAllocator({}) at virtual {}, objects {}\n", object_size, s_last_heap_virtual, slabs.back().objects_free());
 
 	s_last_heap_virtual = (void*)(((uintptr_t)s_last_heap_virtual + slabs.back().virtual_size() + 0x1000) & ~(0x1000-1));
 
@@ -73,7 +73,7 @@ void* KHeap::allocate(size_t n) {
 		return ptr;
 	}
 
-	kerrorf("[KHeap] Allocation request failed for size=%i\n", n);
+	kerrorf_static("[KHeap] Allocation request failed for size={}\n", n);
 	return nullptr;
 }
 
@@ -90,11 +90,11 @@ void KHeap::free(void* p, size_t n) {
 		}
 	}
 
-	kerrorf("[KHeap] Request to free memory [%x%x] outside active heap range\n", (uintptr_t)p>>32u, (uintptr_t)p&0xffffffffu);
+	kerrorf_static("[KHeap] Request to free memory [{}] outside active heap range\n", Format::ptr(p));
 }
 
 void KHeap::init() {
-	kdebugf("[KHeap] Init slabs\n");
+	klogf_static("[KHeap] Init slabs\n");
 
 	//  TODO: Heap base address randomization
 	s_last_heap_virtual = &_ukernel_heap_start;
@@ -108,7 +108,7 @@ void KHeap::init() {
 void KHeap::dump_stats() {
 	for(auto& size_slabs : s_slab_allocators) {
 		for(auto& v : size_slabs) {
-			kdebugf("    size=%i, free=%i, used=%i\n", v.object_size(), v.objects_free(), v.objects_used());
+			klogf_static("    size={}, free={}, used={}\n", v.object_size(), v.objects_free(), v.objects_used());
 		}
 	}
 }

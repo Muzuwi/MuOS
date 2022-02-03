@@ -40,12 +40,12 @@ private:
 
 	VMapping(void* addr, size_t size, int flags, int type)
 			: m_pages(), m_addr(addr), m_size(size), m_flags(flags), m_type(type) {
-		if(size % 4096 != 0) {
-			kerrorf("[VMapping] Creating VMapping with unaligned size (%x)!\n", size);
-		}
-		if((uint64_t)addr % 4096 != 0) {
-			kerrorf("[VMapping] Creating VMapping with unaligned addr (%x)!\n", addr);
-		}
+//		if(size % 4096 != 0) {
+//			kerrorf("[VMapping] Creating VMapping with unaligned size (%x)!\n", size);
+//		}
+//		if((uint64_t)addr % 4096 != 0) {
+//			kerrorf("[VMapping] Creating VMapping with unaligned addr (%x)!\n", addr);
+//		}
 	}
 
 public:

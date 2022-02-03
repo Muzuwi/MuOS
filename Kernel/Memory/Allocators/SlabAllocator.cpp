@@ -6,6 +6,7 @@
 //#include <Kernel/SMP/SMP.hpp>
 //#include <Kernel/Process/Thread.hpp>
 #include <Kernel/Process/Process.hpp>
+#include <Debug/klogf.hpp>
 
 SlabAllocator::SlabAllocator(size_t object_size, size_t alloc_pool_order) {
 	m_object_size = object_size;
@@ -18,14 +19,14 @@ void SlabAllocator::initialize(void* virtual_base) {
 
 	auto alloc = PMM::instance().allocate();
 	if(!alloc.has_value()) {
-		kerrorf("Failed allocating page for SlabAllocator bitmap!\n");
+		klogf_static("Failed allocating page for SlabAllocator bitmap!\n");
 		kpanic();
 	}
 	m_allocation_bitmap = PhysBitmap { alloc.unwrap().base(), object_capacity() };
 
 	auto pool = PMM::instance().allocate(m_pool_order);
 	if(!pool.has_value()) {
-		kerrorf("Failed allocating pool for SlabAllocator(%i)!\n", m_object_size);
+		klogf_static("Failed allocating pool for SlabAllocator({})!\n", m_object_size);
 		kpanic();
 	}
 	m_pool_base = pool.unwrap().base();
@@ -38,7 +39,7 @@ void SlabAllocator::initialize(void* virtual_base) {
 void* SlabAllocator::allocate() {
 	auto idx = m_allocation_bitmap.allocate();
 	if(!idx.has_value()) {
-		kerrorf("SlabAllocator: Failed allocating memory for object of size %i\n", m_object_size);
+		klogf_static("SlabAllocator: Failed allocating memory for object of size {}\n", m_object_size);
 		return nullptr;
 	}
 

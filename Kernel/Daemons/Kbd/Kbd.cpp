@@ -5,6 +5,7 @@
 #include "Process/Thread.hpp"
 #include "Locks/KSemaphore.hpp"
 #include "Structs/StaticRing.hpp"
+#include "Debug/klogf.hpp"
 
 static StaticRing<uint8, 1024> s_keyboard_buffer {};
 static KSemaphore s_keyboard_semaphore;
@@ -14,7 +15,7 @@ void Kbd::kbd_thread() {
 		s_keyboard_semaphore.wait();
 		while(!s_keyboard_buffer.empty()) {
 			auto byte = s_keyboard_buffer.try_pop();
-			kdebugf("kbd(%i): byte %x\n", Thread::current()->tid(), byte.unwrap());
+			klogf("Kbd({}): Byte {x}\n", Thread::current()->tid(), byte.unwrap());
 		}
 	}
 }

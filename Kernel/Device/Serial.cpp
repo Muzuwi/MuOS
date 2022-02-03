@@ -1,8 +1,8 @@
 #include <Arch/x86_64/PortIO.hpp>
 #include <string.h>
 #include <Kernel/Device/Serial.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/KOptional.hpp>
+#include <Debug/klogf.hpp>
 
 //  FIXME: Only support COM0 for now
 
@@ -69,7 +69,7 @@ void Serial::init() {
 	auto do_init = [](Serial::Port port) {
 		if(try_initialize(port)) {
 			set_debugger_port(port);
-			kdebugf("[Serial] Initialized COM%i, speed 115200, 8N1, IRQ 4\n", (unsigned)port);
+			klogf_static("[Serial] Initialized COM{}, speed 115200, 8N1, IRQ 4\n", (unsigned)port);
 		}
 	};
 

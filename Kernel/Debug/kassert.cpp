@@ -1,11 +1,11 @@
 #include <Kernel/Debug/kassert.hpp>
 #include <Kernel/Debug/kpanic.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 
 void __kassert_internal(const char* file, int line, const char* expr_str, bool expression) {
 	if(!expression) {
-		kerrorf("Kernel assertion failed: %s\n", expr_str);
-		kerrorf("File: %s, line: %i\n", file, line);
+		klogf_static("Kernel assertion failed: {}\n", expr_str);
+		klogf_static("File: {}, line: {}\n", file, line);
 		kpanic();
 	}
 }

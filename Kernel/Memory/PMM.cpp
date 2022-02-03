@@ -1,4 +1,4 @@
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 #include <Kernel/Memory/KHeap.hpp>
 #include <Kernel/Memory/kmalloc.hpp>
 #include <Kernel/Memory/PMM.hpp>
@@ -9,7 +9,7 @@
 PMM PMM::s_instance {};
 
 void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
-	kdebugf("[PMM] Multiboot memory map:\n");
+	klogf_static("[PMM] Multiboot memory map:\n");
 
 	auto mmap_addr = multiboot_info->mmap();
 	auto mmap_end = multiboot_info->mmap_end();
@@ -23,13 +23,13 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 		auto range = pointer->range();
 		auto end = start + range;
 
-		kdebugf("[PMM] %x%x - %x%x: ", start >> 32u, start & 0xFFFFFFFFu, end >> 32u, end & 0xFFFFFFFFu);
+		klogf_static("[PMM] {x} - {x}: ", start, end);
 
 		switch(pointer->type()) {
 			case MultibootMMap::RegionType::USABLE: {
 				auto pages = range / 0x1000;
 				auto required_bitmap_pages = (pages / (0x1000 * 8));
-				kdebugf("usable, pages: %i, buf: %i\n", pages, required_bitmap_pages);
+				klogf_static("usable, pages: {}, buf: {}\n", pages, required_bitmap_pages);
 				memory_amount += range;
 
 				//  Add lowram as a separate allocator type
@@ -62,19 +62,19 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 				break;
 			}
 			case MultibootMMap::RegionType::HIBERN: {
-				kdebugf("to be preserved\n");
+				klogf_static("to be preserved\n");
 				break;
 			}
 			case MultibootMMap::RegionType::ACPI: {
-				kdebugf("acpi\n");
+				klogf_static("acpi\n");
 				break;
 			}
 			case MultibootMMap::RegionType::BAD: {
-				kdebugf("defective\n");
+				klogf_static("defective\n");
 				break;
 			}
 			default: {
-				kdebugf("reserved\n");
+				klogf_static("reserved\n");
 				reserved_amount += range;
 				break;
 			}
@@ -88,9 +88,9 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 
 	uint32_t mem_mib = memory_amount / 0x100000;
 
-	kdebugf("[PMM] Kernel-used memory: %i KiB\n", (kernel_end - kernel_start) / 0x1000);
-	kdebugf("[PMM] Total usable memory: %i MiB\n", mem_mib);
-	kdebugf("[PMM] Reserved memory: %i bytes\n", reserved_amount);
+	klogf_static("[PMM] Kernel-used memory: {} KiB\n", (kernel_end - kernel_start) / 0x1000);
+	klogf_static("[PMM] Total usable memory: {} MiB\n", mem_mib);
+	klogf_static("[PMM] Reserved memory: {} bytes\n", reserved_amount);
 }
 
 void PMM::init_deferred_allocators() {
@@ -100,14 +100,14 @@ void PMM::init_deferred_allocators() {
 		}
 	}
 
-	kdebugf("[PMM] Regions initialized:\n");
+	klogf_static("[PMM] Regions initialized:\n");
 	for(auto& reg : m_mem16_regions) {
 		auto start = (uint64_t)reg.base().get();
-		kdebugf("  - PRegion[low]: start %x%x, size %i\n", start >> 32u, start & 0xffffffffu, reg.size());
+		klogf_static("  - PRegion[low]: start {x}, size {}\n", start, reg.size());
 	}
 	for(auto& reg : m_normal_regions) {
 		auto start = (uint64_t)reg.base().get();
-		kdebugf("  - PRegion: start %x%x, size %i\n", start >> 32u, start & 0xffffffffu, reg.size());
+		klogf_static("  - PRegion: start {x}, size {}\n", start, reg.size());
 	}
 }
 
@@ -125,7 +125,7 @@ void PMM::init_deferred_allocators() {
 		}
 	}
 
-	kerrorf("[PMM] Allocation failure for order of page_count=%i\n", (1u << count_order));
+	klogf_static("[PMM] Allocation failure for order of page_count={}\n", (1u << count_order));
 	return KOptional<PAllocation> {};
 }
 
@@ -137,7 +137,7 @@ void PMM::free(PAllocation const& allocation) {
 		}
 	}
 
-	kerrorf("[PMM] Deallocation failure\n");
+	klogf_static("[PMM] Deallocation failure\n");
 }
 
 /*
@@ -163,6 +163,5 @@ void PMM::free_lowmem(PhysAddr addr) {
 		}
 	}
 
-	kerrorf("[PMM] Failed freeing lowmem at %x%x\n", (uintptr_t)addr.get() >> 32u,
-	        (uintptr_t)addr.get() & 0xffffffffu);
+	klogf_static("[PMM] Failed freeing lowmem at {}\n", Format::ptr(addr.get()));
 }

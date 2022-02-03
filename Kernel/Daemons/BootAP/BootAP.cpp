@@ -9,25 +9,26 @@
 #include "Scheduler/Scheduler.hpp"
 #include "SystemTypes.hpp"
 #include "ksleep.hpp"
+#include <Debug/klogf.hpp>
 
 extern uint8 ap_bootstrap_start;
 extern uint8 ap_bootstrap_end;
 
 void BootAP::boot_ap_thread() {
-	kdebugf("[Startup(%i)]: Booting up APs\n", Thread::current()->tid());
+	klogf("[Startup({})]: Booting up APs\n", Thread::current()->tid());
 	auto* thread = SMP::ctb().current_thread();
 	auto const& process = thread->parent();
 
 	auto maybe_code_page = PMM::instance().allocate_lowmem();
 	if(!maybe_code_page.has_value()) {
-		kdebugf("[Startup(%i)]: Lowmem alloc for code failed\n", thread->tid());
+		klogf("[Startup({})]: Lowmem alloc for code failed\n", thread->tid());
 		Thread::current()->set_state(TaskState::Blocking);
 		SMP::ctb().scheduler().schedule();
 		ASSERT_NOT_REACHED();
 	}
 	auto maybe_data_page = PMM::instance().allocate_lowmem();
 	if(!maybe_data_page.has_value()) {
-		kdebugf("[Startup(%i)]: Lowmem alloc for data failed\n", thread->tid());
+		klogf("[Startup({})]: Lowmem alloc for data failed\n", thread->tid());
 		Thread::current()->set_state(TaskState::Blocking);
 		SMP::ctb().scheduler().schedule();
 		ASSERT_NOT_REACHED();
@@ -39,7 +40,7 @@ void BootAP::boot_ap_thread() {
 	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
 	process->vmm().addrmap(data_page.get(), data_page,
 	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
-	kdebugf("[Startup(%i)]: Code at %x, data at %x\n", thread->tid(), code_page.get(), data_page.get());
+	klogf("[Startup({})]: Code at {}, data at {}\n", thread->tid(), code_page.get(), data_page.get());
 
 	const uint8 ipi_vector = (uintptr_t)code_page.get() / 0x1000;
 	kassert(ipi_vector < 0xA0 || ipi_vector > 0xBF);
@@ -49,7 +50,7 @@ void BootAP::boot_ap_thread() {
 		if(ap_id == APIC::ap_bootstrap_id()) {
 			continue;
 		}
-		kdebugf("[Startup(%i)]: Booting up AP %i\n", thread->tid(), ap_id);
+		klogf("[Startup({})]: Booting up AP {}\n", thread->tid(), ap_id);
 
 		memcpy(code_page.get_mapped(),
 		       static_cast<void const*>(&ap_bootstrap_start),
@@ -97,13 +98,13 @@ void BootAP::boot_ap_thread() {
 		thread->preempt_enable();
 
 		while(*data_page.as<uint64>() == 0);
-		kdebugf("[Startup(%i)]: AP %i started - waiting for long mode\n", thread->tid(), ap_id);
+		klogf("[Startup({})]: AP {} started - waiting for long mode\n", thread->tid(), ap_id);
 		while(*data_page.as<uint64>() != 2);
-		kdebugf("[Startup(%i)]: AP %i initialized\n", thread->tid(), ap_id);
+		klogf("[Startup({})]: AP {} initialized\n", thread->tid(), ap_id);
 //		break;
 	}
 
-	kdebugf("[Startup(%i)]: Initialization done\n", thread->tid());
+	klogf("[Startup({})]: Initialization done\n", thread->tid());
 
 	process->vmm().addrunmap(code_page.get());
 	process->vmm().addrunmap(data_page.get());

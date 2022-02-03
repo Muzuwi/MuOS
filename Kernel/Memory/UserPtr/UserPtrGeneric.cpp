@@ -1,6 +1,7 @@
 #include <Kernel/Memory/UserPtr.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Process/Thread.hpp>
+#include <Debug/klogf.hpp>
 
 template<class T>
 gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {
@@ -14,7 +15,7 @@ gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {
 	for(unsigned i = 0; i < size; ++i) {
 		auto region = vmm.find_vmapping(user_ptr + i);
 		if(!region.has_value()) {
-			kerrorf("Thread[tid=%i] - tried copying from unaccessible memory", Thread::current()->tid());
+			klogf("Thread[tid={}] - tried copying from unaccessible memory", Thread::current()->tid());
 			return gen::SharedPtr<type>{nullptr};
 		}
 	}

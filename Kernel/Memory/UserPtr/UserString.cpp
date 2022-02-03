@@ -1,7 +1,7 @@
 #include <Kernel/Memory/UserPtr.hpp>
 #include <Kernel/Process/Process.hpp>
 #include <Kernel/Process/Thread.hpp>
-#define S(a) (uintptr_t)a>>32u, (uintptr_t)a&0xffffffffu
+#include <Debug/klogf.hpp>
 
 KBox<const char> UserString::copy_to_kernel() {
 	//  FIXME: Make sure a different thread cannot modify the address space while we're in here
@@ -13,13 +13,13 @@ KBox<const char> UserString::copy_to_kernel() {
 	while(size < str_max_size) {
 		auto region = vmm.find_vmapping(user_ptr + size);
 		if(!region.has_value()) {
-			kerrorf("Thread[tid=%i] - tried copying string from unaccessible memory", Thread::current()->tid());
+			kerrorf("Thread[tid={}] - tried copying string from unaccessible memory", Thread::current()->tid());
 			return KBox<const char>{};
 		}
 
 		auto page = region.unwrap()->page_for(user_ptr + size);
 		if(!page.has_value()) {
-			kerrorf("Thread[tid=%i] - tried reading from unmapped memory", Thread::current()->tid());
+			kerrorf("Thread[tid={}] - tried reading from unmapped memory", Thread::current()->tid());
 			return KBox<const char>{};
 		}
 
@@ -31,7 +31,7 @@ KBox<const char> UserString::copy_to_kernel() {
 
 		size++;
 		if(size == str_max_size) {
-			kerrorf("Thread[tid=%i] - max string size exceeded during copy", Thread::current()->tid());
+			kerrorf("Thread[tid={}] - max string size exceeded during copy", Thread::current()->tid());
 			return KBox<const char>{};
 		}
 	}

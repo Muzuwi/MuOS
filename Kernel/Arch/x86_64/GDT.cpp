@@ -1,5 +1,5 @@
 #include <Arch/x86_64/GDT.hpp>
-#include <Kernel/Debug/kdebugf.hpp>
+#include <Debug/klogf.hpp>
 
 static uint8_t TSS[104];
 
@@ -51,7 +51,7 @@ void GDT::init() {
 			::"r"((uint16_t)TSS_sel)
 			);
 
-	kdebugf("[GDT] TSS setup complete\n");
+	klogf_static("[GDT] TSS setup complete\n");
 }
 
 void GDT::set_irq_stack(void* stack) {

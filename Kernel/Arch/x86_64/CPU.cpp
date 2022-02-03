@@ -1,4 +1,3 @@
-#include <Kernel/Debug/kdebugf.hpp>
 #include <Kernel/Debug/kpanic.hpp>
 #include <Kernel/SystemTypes.hpp>
 #include <Kernel/Syscalls/Syscall.hpp>
@@ -7,23 +6,24 @@
 #include <Arch/x86_64/CPUID.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
+#include <Debug/klogf.hpp>
 
 void CPU::initialize_features() {
 	uint32_t new_efer {0x500}; //  Long-Mode enable + Long-mode active
 
-	kdebugf("[CPU] Support ");
+	klogf_static("[CPU] Support ");
 	if(CPUID::has_NXE()) {
-		kdebugf("NXE ");
+		klogf_static("NXE ");
 		new_efer |= (1u << 11);
 	}
 	if(CPUID::has_SEP()) {
-		kdebugf("SEP ");
+		klogf_static("SEP ");
 		new_efer |= 1;
 	}
 	if(CPUID::has_LAPIC()) {
-		kdebugf("LAPIC ");
+		klogf_static("LAPIC ");
 	}
-	kdebugf("\n");
+	klogf_static("\n");
 
 	wrmsr(0xC0000080, (uint64_t)new_efer);
 

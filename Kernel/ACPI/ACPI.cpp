@@ -2,6 +2,7 @@
 #include <Kernel/ACPI/ACPI.hpp>
 #include <Kernel/Memory/Ptr.hpp>
 #include <Kernel/KOptional.hpp>
+#include <Debug/klogf.hpp>
 
 //  FIXME: ACPI/Validate checksums for tables
 
@@ -29,7 +30,7 @@ void ACPI::parse_tables() {
 	}
 
 	auto const& rsdp = *maybe_rsdp.unwrap();
-	kdebugf("[ACPI] RSDP: checksum=%i, revision=%i, OEMID='%c%c%c%c%c%c', RSDT=%x\n",
+	klogf("[ACPI] RSDP: checksum={}, revision={}, OEMID='{}{}{}{}{}{}', RSDT={x}\n",
 	        rsdp.m_checksum,
 	        rsdp.m_revision,
 	        rsdp.m_oemid[0],rsdp.m_oemid[1],rsdp.m_oemid[2],rsdp.m_oemid[3],rsdp.m_oemid[4],rsdp.m_oemid[5],
@@ -38,7 +39,7 @@ void ACPI::parse_tables() {
 	s_rsdt = PhysPtr<ACPISDTHeader>{(ACPISDTHeader*)rsdp.m_rsdt_addr};
 
 	auto const& rsdt = *s_rsdt;
-	kdebugf("[ACPI] RSDT: checksum=%i, length=%i, revision=%i, OEMID='%c%c%c%c%c%c'\n",
+	klogf("[ACPI] RSDT: checksum={x}, length={}, revision={}, OEMID='{}{}{}{}{}{}'\n",
 	        rsdt.m_checksum,
 	        rsdt.m_length,
 	        rsdt.m_revision,
@@ -53,7 +54,7 @@ void ACPI::parse_tables() {
 		auto table_ptr = PhysPtr<ACPISDTHeader>{(ACPISDTHeader*)table_address};
 		auto const& table_header = *table_ptr;
 
-		kdebugf("[ACPI] Table %c%c%c%c: length=%i, revision=%i, checksum=%i, OEMID='%c%c%c%c%c%c'\n",
+		klogf("[ACPI] Table {}{}{}{}: length={}, revision={}, checksum={x}, OEMID='{}{}{}{}{}{}'\n",
 		        table_header.m_signature[0],table_header.m_signature[1],table_header.m_signature[2],table_header.m_signature[3],
 		        table_header.m_length,
 		        table_header.m_revision,
@@ -64,7 +65,7 @@ void ACPI::parse_tables() {
 		s_tables.push_back(table_ptr);
 	}
 
-	kdebugf("[ACPI] Found %i tables\n", s_tables.size());
+	klogf("[ACPI] Found {} tables\n", s_tables.size());
 }
 
 KOptional<PhysPtr<ACPISDTHeader>> ACPI::find_table(uint32_t signature) {

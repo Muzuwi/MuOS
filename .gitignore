@@ -7,6 +7,7 @@
 .idea/*
 .stdir/*
 .gdb_history
+doxy/*
 docs/*
 Toolchain/src/archives
 Toolchain/src/binutils/

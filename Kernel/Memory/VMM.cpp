@@ -130,8 +130,10 @@ void VMM::_map_physical_identity() {
 	auto physical = PhysAddr { nullptr };
 	PhysPtr<PML4> pml4 = m_pml4;
 
+	const auto physical_end = PMM::instance().physical_end_addr().get();
+
 	if(CPUID::has_huge_pages()) {
-		for(auto addr = identity_start; addr < identity_start + 512 * GiB; addr += 1 * GiB) {
+		for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 1 * GiB) {
 			auto& pml4e = (*pml4)[addr];
 			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
 			if(!pdpte) {
@@ -149,7 +151,7 @@ void VMM::_map_physical_identity() {
 			physical += 1 * Units::GiB;
 		}
 	} else {
-		for(auto addr = identity_start; addr < identity_start + 512 * GiB; addr += 2 * MiB) {
+		for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 2 * MiB) {
 			auto& pml4e = (*pml4)[addr];
 			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
 			auto* pde = ensure_pd(addr, LeakAllocatedPage::Yes);

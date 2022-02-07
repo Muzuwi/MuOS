@@ -15,6 +15,7 @@ class PMM {
 	static PMM s_instance;
 	PMM() noexcept {}
 
+	PhysAddr m_physical_end;
 	gen::Vector<PRegion, KMalloc::BootstrapAllocator> m_mem16_regions;  //  "Lowmem" - accessible from 16-bit
 	gen::Vector<PRegion, KMalloc::BootstrapAllocator> m_normal_regions; //  Accessible from 32-bit
 public:
@@ -30,4 +31,6 @@ public:
 
 	void init_regions(PhysPtr<MultibootInfo>);
 	void init_deferred_allocators();
+
+	PhysAddr physical_end_addr();
 };

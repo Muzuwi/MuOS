@@ -25,6 +25,10 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 
 		klogf_static("[PMM] {x} - {x}: ", start, end);
 
+		if((uintptr_t)m_physical_end.get() < end) {
+			m_physical_end = PhysAddr{(void*)end};
+		}
+
 		switch(pointer->type()) {
 			case MultibootMMap::RegionType::USABLE: {
 				auto pages = range / 0x1000;
@@ -91,6 +95,7 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 	klogf_static("[PMM] Kernel-used memory: {} KiB\n", (kernel_end - kernel_start) / 0x1000);
 	klogf_static("[PMM] Total usable memory: {} MiB\n", mem_mib);
 	klogf_static("[PMM] Reserved memory: {} bytes\n", reserved_amount);
+	klogf_static("[PMM] Physical end: {}\n", m_physical_end.get());
 }
 
 void PMM::init_deferred_allocators() {
@@ -164,4 +169,8 @@ void PMM::free_lowmem(PhysAddr addr) {
 	}
 
 	klogf_static("[PMM] Failed freeing lowmem at {}\n", Format::ptr(addr.get()));
+}
+
+PhysAddr PMM::physical_end_addr() {
+	return m_physical_end;
 }

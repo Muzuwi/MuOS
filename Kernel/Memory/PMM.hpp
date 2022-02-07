@@ -2,12 +2,14 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <Structs/KOptional.hpp>
-#include <Memory/PAllocation.hpp>
+#include <Memory/Allocators/PAllocation.hpp>
 #include <Memory/Ptr.hpp>
 #include <LibGeneric/StaticVector.hpp>
-#include <Memory/PRegion.hpp>
+#include <Memory/Allocators/PRegion.hpp>
 #include <LibGeneric/Vector.hpp>
 #include <Memory/kmalloc.hpp>
+#include "Memory/Allocators/PageBitmapAllocator.hpp"
+
 
 class MultibootInfo;
 

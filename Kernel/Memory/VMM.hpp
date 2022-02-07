@@ -1,7 +1,7 @@
 #pragma once
 #include <LibGeneric/List.hpp>
 #include <Structs/KOptional.hpp>
-#include <Memory/VMapping.hpp>
+#include <Memory/Wrappers/VMapping.hpp>
 #include <Process/Thread.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
@@ -64,3 +64,4 @@ public:
 	static constexpr unsigned kernel_stack_size() { return 0x4000; }
 	static constexpr unsigned user_stack_size() { return 0x4000; }
 };
+

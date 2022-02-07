@@ -1,7 +1,8 @@
 #pragma once
+
 #include <LibGeneric/Move.hpp>
 #include <LibGeneric/SharedPtr.hpp>
-#include <Memory/KBox.hpp>
+#include <Memory/Wrappers/KBox.hpp>
 
 template<class T>
 class UserPtr {
@@ -9,7 +10,11 @@ class UserPtr {
 
 	typedef gen::remove_pointer<T> type;
 public:
+	explicit UserPtr(void* user_ptr) noexcept
+			: m_ptr(user_ptr) {}
+
 	gen::SharedPtr<type> copy_to_kernel();
+
 	bool copy_to_user(type*);
 };
 
@@ -17,7 +22,7 @@ class UserString {
 	void* m_ptr;
 public:
 	explicit UserString(void* user_ptr) noexcept
-	: m_ptr(user_ptr) {}
+			: m_ptr(user_ptr) {}
 
 	KBox<const char> copy_to_kernel();
 };

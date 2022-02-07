@@ -1,7 +1,6 @@
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <Memory/UserPtr.hpp>
-#include <Memory/VMM.hpp>
+#include <Memory/Wrappers/UserPtr.hpp>
 #include <SMP/SMP.hpp>
 #include <Debug/klogf.hpp>
 

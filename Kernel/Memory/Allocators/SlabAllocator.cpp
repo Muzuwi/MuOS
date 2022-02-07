@@ -2,9 +2,6 @@
 #include <Debug/kpanic.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
 #include <Memory/PMM.hpp>
-#include <Memory/VMM.hpp>
-//#include <SMP/SMP.hpp>
-//#include <Process/Thread.hpp>
 #include <Process/Process.hpp>
 #include <Debug/klogf.hpp>
 

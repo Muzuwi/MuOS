@@ -88,8 +88,8 @@ add_executable(KernelELF
     Syscalls/Syscall.cpp
     Locks/KMutex.cpp
     Process/ProcSyscalls.cpp
-    Memory/UserPtr/UserPtrGeneric.cpp
-    Memory/UserPtr/UserString.cpp
+    Memory/Wrappers/UserPtr/UserPtrGeneric.cpp
+    Memory/Wrappers/UserPtr/UserString.cpp
 
     ACPI/ACPI.cpp
     APIC/APIC.cpp
@@ -111,7 +111,7 @@ add_executable(KernelELF
     Daemons/Idle/Idle.cpp
     Daemons/Testd/Testd.cpp
     Debug/DebugCon.cpp
-    )
+    Memory/Wrappers/VMapping.cpp Memory/Allocators/PageBitmapAllocator.cpp Memory/Allocators/PhysBitmap.cpp)
 
 target_compile_options(KernelELF
                        PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-O2 -g -Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>

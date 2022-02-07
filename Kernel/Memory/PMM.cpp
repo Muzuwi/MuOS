@@ -2,7 +2,6 @@
 #include <Memory/KHeap.hpp>
 #include <Memory/kmalloc.hpp>
 #include <Memory/PMM.hpp>
-#include <Memory/PRegion.hpp>
 #include <Multiboot/MultibootInfo.hpp>
 #include <Symbols.hpp>
 

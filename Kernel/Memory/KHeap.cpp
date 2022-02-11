@@ -10,26 +10,27 @@
 
 using gen::List;
 
-static List<SlabAllocator,KMalloc::BootstrapAllocator> s_slab_allocators[7];
+static List<SlabAllocator, KMalloc::BootstrapAllocator> s_slab_allocators[7];
 static gen::Spinlock s_kheap_lock {};
 static void* s_last_heap_virtual {};
 
 
 static size_t index_for_size(size_t n) {
-	if(n <= 4)
+	if(n <= 4) {
 		return 0;
-	else if(n <= 8)
+	} else if(n <= 8) {
 		return 1;
-	else if(n <= 16)
+	} else if(n <= 16) {
 		return 2;
-	else if(n <= 32)
+	} else if(n <= 32) {
 		return 3;
-	else if(n <= 64)
+	} else if(n <= 64) {
 		return 4;
-	else if(n <= 128)
+	} else if(n <= 128) {
 		return 5;
-	else if(n <= 256)
+	} else if(n <= 256) {
 		return 6;
+	}
 	//  FIXME
 	kpanic();
 }
@@ -41,20 +42,23 @@ static size_t index_for_size(size_t n) {
 static SlabAllocator* grow_heap(size_t object_size) {
 	static constexpr const unsigned pool_order = 0;
 
-	SlabAllocator slab{object_size, pool_order};
+	const unsigned actual_object_size = 4 << index_for_size(object_size);
+	SlabAllocator slab { actual_object_size, pool_order };
 	auto& slabs = s_slab_allocators[index_for_size(object_size)];
 	auto it = slabs.insert(slabs.end(), slab);
 	(*it).initialize(s_last_heap_virtual);
 
-	klogf_static("[KHeap] SlabAllocator({}) at virtual {}, objects {}\n", object_size, s_last_heap_virtual, slabs.back().objects_free());
+	klogf_static("[KHeap] SlabAllocator({}) at virtual {}, objects {}\n", slabs.back().object_size(),
+	             s_last_heap_virtual, slabs.back().objects_free());
 
-	s_last_heap_virtual = (void*)(((uintptr_t)s_last_heap_virtual + slabs.back().virtual_size() + 0x1000) & ~(0x1000-1));
+	s_last_heap_virtual = (void*)(((uintptr_t)s_last_heap_virtual + slabs.back().virtual_size() + 0x1000) &
+	                              ~(0x1000 - 1));
 
 	return &*it;
 }
 
 void* KHeap::allocate(size_t n) {
-	gen::LockGuard<gen::Spinlock> lock {s_kheap_lock};
+	gen::LockGuard<gen::Spinlock> lock { s_kheap_lock };
 
 	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
@@ -78,9 +82,9 @@ void* KHeap::allocate(size_t n) {
 }
 
 void KHeap::free(void* p, size_t n) {
-	if(!p) return;
+	if(!p) { return; }
 
-	gen::LockGuard<gen::Spinlock> lock {s_kheap_lock};
+	gen::LockGuard<gen::Spinlock> lock { s_kheap_lock };
 	auto& slabs = s_slab_allocators[index_for_size(n)];
 	for(auto& allocator : slabs) {
 		if(allocator.contains_address(p)) {

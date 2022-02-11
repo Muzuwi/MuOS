@@ -182,6 +182,20 @@ namespace gen {
 			return !Traits::compare(_bufptr(), cstr, size());
 		}
 
+		BasicString& operator=(BasicString const& other) {
+			Vector<CharType, Alloc>::operator=(other);
+			return *this;
+		}
+
+		//  FIXME: Completely wrong but for now it'll work
+		char const* to_c_string() {
+			if(empty()) {
+				return "\0";
+			}
+
+			Vector<CharType, Alloc>::push_back('\0');
+			return &at(0);
+		}
 	};
 
 	template<class CharType, template<typename> class Alloc = gen::Allocator>

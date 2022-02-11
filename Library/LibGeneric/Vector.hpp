@@ -82,15 +82,25 @@ namespace gen {
 			_object_destroy(old_buf, m_item_count);
 			_buffer_free(old_buf, old_size);
 		}
+
+		void from_vector(Vector const& v) {
+			if(v.m_item_count == 0) {
+				m_data = nullptr;
+				m_buffer_size = 0;
+				m_item_count = 0;
+			} else {
+				m_data = _buffer_allocate(v.m_item_count);
+				m_buffer_size = v.m_item_count;
+				_construct_from(v.m_data, v.m_item_count);
+				m_item_count = v.m_item_count;
+			}
+		}
 	public:
 		Vector() noexcept
 		: m_data(nullptr), m_buffer_size(0), m_item_count(0) {}
 
-		Vector(const Vector& v) noexcept {
-			m_data = _buffer_allocate(v.m_item_count);
-			m_buffer_size = v.m_item_count;
-			_construct_from(v.m_data, v.m_item_count);
-			m_item_count = v.m_item_count;
+		Vector(Vector const& v) noexcept {
+			from_vector(v);
 		}
 
 		Vector(Vector&& v) noexcept
@@ -190,6 +200,14 @@ namespace gen {
 
 		const_iterator end() const {
 			return &m_data[m_item_count];
+		}
+
+		Vector& operator=(Vector const& v) {
+			if(&v == this) {
+				return *this;
+			}
+			from_vector(v);
+			return *this;
 		}
 
 	};

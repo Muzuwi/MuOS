@@ -50,5 +50,5 @@ struct APBoostrap
 	struct {
 		uint16 size;
 		uint64 offset;
-	} idtr;
+	} __attribute__((packed)) idtr;
 } __attribute__((packed));

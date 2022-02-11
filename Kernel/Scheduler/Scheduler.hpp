@@ -12,7 +12,7 @@ class Scheduler {
 	Thread* m_ap_idle;
 
 	static unsigned pri_to_quants(uint8_t priority);
-	Thread* create_idle_task();
+	Thread* create_idle_task(uint8 apic_id);
 	void add_thread_to_rq(Thread*);
 public:
 	void bootstrap();

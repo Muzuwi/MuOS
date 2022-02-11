@@ -89,12 +89,15 @@ void Scheduler::wake_up(Thread* thread) {
 	}
 }
 
-
-Thread* Scheduler::create_idle_task() {
-	auto thread = Thread::create_in_process(Process::kerneld(), Idle::idle_thread);
+/*
+ *  Creates an idle task for the AP with the specified APIC ID
+ */
+Thread* Scheduler::create_idle_task(uint8 apic_id) {
+	static char s_buffer[64] {};
+	Format::format("Idled[{}]", s_buffer, 256, apic_id);
+	auto thread = Process::create_with_main_thread({ s_buffer }, Process::kerneld(), Idle::idle_thread);
 	return thread.get();
 }
-
 
 /*
  *  Creates the idle task for the current AP and enters it, kickstarting the scheduler on the current AP
@@ -103,7 +106,12 @@ void Scheduler::bootstrap() {
 	CPU::irq_disable();
 	klogf("[Scheduler] Bootstrapping AP {}\n", SMP::ctb().current_ap());
 
-	m_ap_idle = create_idle_task();
+	m_ap_idle = create_idle_task(SMP::ctb().current_ap());
+	//  Update permanent process names
+	//  These process structs are actually contained within the kernel executable (but wrapped in a SharedPtr that
+	//  should hopefully never be deallocated). Because strings cause allocations, initializing them inline is impossible
+	Process::init()->m_simple_name = "Init";
+	Process::kerneld()->m_simple_name = "Kerneld";
 
 	{
 		auto new_process = Process::init();
@@ -115,24 +123,23 @@ void Scheduler::bootstrap() {
 	}
 
 	{
-		auto new_process = Process::kerneld();
-		auto new_thread = Thread::create_in_process(new_process, Testd::test_kernel_thread);
+		auto new_thread = Process::create_with_main_thread("Testd", Process::kerneld(), Testd::test_kernel_thread);
 		add_thread_to_rq(new_thread.get());
 	}
 
 	{
-		auto keyboard_thread = Thread::create_in_process(Process::kerneld(), Kbd::kbd_thread);
+		auto keyboard_thread = Process::create_with_main_thread("Kbd", Process::kerneld(), Kbd::kbd_thread);
 		add_thread_to_rq(keyboard_thread.get());
 		IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
 	}
 
 	{
-		auto ap_start_thread = Thread::create_in_process(Process::kerneld(), BootAP::boot_ap_thread);
+		auto ap_start_thread = Process::create_with_main_thread("BootAP", Process::kerneld(), BootAP::boot_ap_thread);
 		add_thread_to_rq(ap_start_thread.get());
 	}
 
 	{
-		auto debugger_thread = Thread::create_in_process(Process::kerneld(), SysDbg::sysdbg_thread);
+		auto debugger_thread = Process::create_with_main_thread("SysDbg", Process::kerneld(), SysDbg::sysdbg_thread);
 		add_thread_to_rq(debugger_thread.get());
 	}
 

@@ -36,15 +36,10 @@ void BootAP::boot_ap_thread() {
 
 	auto code_page = maybe_code_page.unwrap();
 	auto data_page = maybe_data_page.unwrap();
-	process->vmm().addrmap(code_page.get(), code_page,
-	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
-	process->vmm().addrmap(data_page.get(), data_page,
-	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
 	klogf("[BootAP({})]: Code at {}, data at {}\n", thread->tid(), code_page.get(), data_page.get());
 
 	const uint8 ipi_vector = (uintptr_t)code_page.get() / 0x1000;
 	kassert(ipi_vector < 0xA0 || ipi_vector > 0xBF);
-
 
 	for(auto& ap_id : APIC::ap_list()) {
 		if(ap_id == APIC::ap_bootstrap_id()) {
@@ -58,12 +53,18 @@ void BootAP::boot_ap_thread() {
 		//  Pass the data page address
 		*(code_page.as<uint16>() + 1) = (uintptr_t)data_page.get();
 
-		auto idle_task = SMP::ctb().scheduler().create_idle_task();
+		auto idle_task = SMP::ctb().scheduler().create_idle_task(ap_id);
 		APBoostrap bootstrap_struct {};
 		bootstrap_struct.real_gdtr_offset = (uintptr_t)data_page.get() + offsetof(APBoostrap, real_mode_gdt);
 		bootstrap_struct.compat_gdtr_offset = (uintptr_t)data_page.get() + offsetof(APBoostrap, compat_mode_gdt);
 		bootstrap_struct.long_gdtr_offset = (uintptr_t)data_page.get() + offsetof(APBoostrap, long_mode_gdt);
 		bootstrap_struct.cr3 = (uintptr_t)idle_task->parent()->vmm().pml4().get();
+
+		auto idled = idle_task->parent();
+		idled->vmm().addrmap(code_page.get(), code_page,
+		                     static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
+		idled->vmm().addrmap(data_page.get(), data_page,
+		                     static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
 
 		//  Copy over the boot struct
 		memcpy(data_page.get_mapped(),
@@ -101,13 +102,12 @@ void BootAP::boot_ap_thread() {
 		klogf("[BootAP({})]: AP {} started - waiting for long mode\n", thread->tid(), ap_id);
 		while(*data_page.as<uint64>() != 2);
 		klogf("[BootAP({})]: AP {} initialized\n", thread->tid(), ap_id);
-//		break;
+
+		idled->vmm().addrunmap(code_page.get());
+		idled->vmm().addrunmap(data_page.get());
 	}
 
 	klogf("[BootAP({})]: Initialization done\n", thread->tid());
-
-	process->vmm().addrunmap(code_page.get());
-	process->vmm().addrunmap(data_page.get());
 
 	PMM::instance().free_lowmem(code_page);
 	PMM::instance().free_lowmem(data_page);

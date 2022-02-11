@@ -115,7 +115,7 @@ void Scheduler::bootstrap() {
 
 	{
 		auto new_process = Process::init();
-		new_process->vmm().m_pml4 = new_process->vmm().clone_pml4(Process::kerneld()->vmm().m_pml4).unwrap();
+		kassert(new_process->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4()));
 
 		auto new_thread = Thread::create_in_process(new_process, Testd::userland_test_thread);
 		new_thread->sched_ctx().priority = 10;

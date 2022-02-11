@@ -13,7 +13,7 @@ class VMM {
 	friend void BootAP::boot_ap_thread();
 	friend class V86;
 	friend class SlabAllocator;
-	friend class Scheduler;
+	friend void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth);
 
 	Process& m_process;
 	PhysPtr<PML4> m_pml4;
@@ -59,6 +59,8 @@ public:
 	VMapping* allocate_kernel_stack(uint64 stack_size);
 
 	void* allocate_user_heap(size_t region_size);
+
+	bool clone_address_space_from(PhysPtr<PML4>);
 
 	static void initialize_kernel_vm();
 	static constexpr unsigned kernel_stack_size() { return 0x4000; }

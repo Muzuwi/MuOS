@@ -3,6 +3,7 @@
 #include <Arch/x86_64/PtraceRegs.hpp>
 #include <SystemTypes.hpp>
 #include <LibGeneric/SharedPtr.hpp>
+#include <Daemons/SysDbg/SysDbg.hpp>
 
 enum class TaskState {
 	New,
@@ -34,6 +35,7 @@ extern "C" void _task_enter_bootstrap();
 class Thread {
 	friend class Process;
 	friend class Scheduler;
+	friend void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth);
 
 	//  Layout of the following fields is important, as we're directly accessing
 	//  these from asm code
@@ -65,6 +67,7 @@ public:
 	TaskSchedCtx& sched_ctx() { return m_sched; }
 	uint8 priority() const { return m_sched.priority; }
 	InactiveTaskFrame* irq_task_frame() const { return m_interrupted_task_frame; }
+	PhysPtr<PML4> pml4() const { return m_pml4; }
 
 	void set_state(TaskState state) { m_state = state; }
 

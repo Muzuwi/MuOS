@@ -14,26 +14,20 @@ void SysDbg::sysdbg_thread() {
 			klogf("kdebugger({}): process vmapping dump\n", thread->tid());
 			for(auto& mapping : process->vmm().m_mappings) {
 				klogf("{} - {} [{}{}{}{}][{}]\n",
-				        Format::ptr(mapping->addr()),
-				        Format::ptr(mapping->end()),
-				        (mapping->flags() & VM_READ) ? 'R' : '-',
-				        (mapping->flags() & VM_WRITE) ? 'W' : '-',
-				        (mapping->flags() & VM_EXEC) ? 'X' : '-',
-				        (mapping->flags() & VM_KERNEL) ? 'K' : 'U',
-				        (mapping->type() == MAP_SHARED) ? 'S' : 'P'
-				       );
+				      Format::ptr(mapping->addr()),
+				      Format::ptr(mapping->end()),
+				      (mapping->flags() & VM_READ) ? 'R' : '-',
+				      (mapping->flags() & VM_WRITE) ? 'W' : '-',
+				      (mapping->flags() & VM_EXEC) ? 'X' : '-',
+				      (mapping->flags() & VM_KERNEL) ? 'K' : 'U',
+				      (mapping->type() == MAP_SHARED) ? 'S' : 'P'
+				     );
 			}
 		} else if(command == "dp") {
-			klogf("kdebugger({}): process info dump\n", thread->tid());
-			klogf("kdebugger({}): running under process pid={}\n", thread->tid(), process->pid());
-			klogf("kdebugger({}): process privilege={}\n", thread->tid(),
-			        process->m_flags.privilege == Kernel ? "kernel-mode" : "user-mode");
-			klogf("kdebugger({}): {} children\n", thread->tid(), process->m_children.size());
-			klogf("kdebugger({}): {} threads\n", thread->tid(), process->m_threads.size());
-			for(auto const& th : process->m_threads) {
-				klogf("kdebugger({}): - thread tid={}\n", thread->tid(), th->tid());
-			}
-
+			klogf("kdebugger({}): Kernel-mode process tree dump\n", thread->tid());
+			SysDbg::dump_process(Process::kerneld());
+			klogf("kdebugger({}): User-mode process tree dump\n", thread->tid());
+			SysDbg::dump_process(Process::init());
 		}
 	};
 
@@ -56,4 +50,72 @@ void SysDbg::sysdbg_thread() {
 			}
 		}
 	}
+}
+
+void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth) {
+	if(!process) {
+		return;
+	}
+
+	auto print_header = [depth, process] {
+		klogf("... ");
+		for(unsigned i = 0; i < depth; ++i) {
+			klogf("    ");
+		}
+		klogf("Process({}): ", process->pid());
+	};
+
+	print_header();
+	klogf("Name {{'{}'}}\n", process->m_simple_name.to_c_string());
+	print_header();
+	klogf("PML4 {{{}}}\n", Format::ptr(process->vmm().pml4().get()));
+	print_header();
+	klogf("Flags {{privilege({}), randomize_vm({})}}\n",
+	      process->flags().privilege == User ? "User" : "Kernel",
+	      process->flags().randomize_vm);
+	{
+		print_header();
+		klogf("VMM {{\n");
+		print_header();
+		klogf("... VMapping count {{{}}}\n", process->vmm().m_mappings.size());
+		print_header();
+		klogf("... Kernel-used pages {{{}}}\n", process->vmm().m_kernel_pages.size());
+		print_header();
+		klogf("}}\n");
+	}
+
+	auto state_str = [](TaskState state) -> char const* {
+		switch(state) {
+			case TaskState::New: return "New";
+			case TaskState::Ready: return "Ready";
+			case TaskState::Running: return "Running";
+			case TaskState::Blocking: return "Blocking";
+			case TaskState::Leaving: return "Leaving";
+			case TaskState::Sleeping: return "Sleeping";
+			default: return "Invalid";
+		}
+	};
+
+	print_header();
+	klogf("Threads {{\n");
+	for(auto& thread : process->m_threads) {
+		print_header();
+		klogf("... Thread({}), SP{{{}}}, PML4{{{}}}, State{{{}}}, PreemptCount{{{}}}\n",
+		      thread->tid(),
+		      Format::ptr(thread->m_kernel_stack_bottom),
+		      Format::ptr(thread->m_pml4.get()),
+		      state_str(thread->state()),
+		      thread->preempt_count()
+		     );
+	}
+	print_header();
+	klogf("}}\n");
+
+	print_header();
+	klogf("Children {{\n");
+	for(auto& child : process->m_children) {
+		dump_process(child, depth + 1);
+	}
+	print_header();
+	klogf("}}\n");
 }

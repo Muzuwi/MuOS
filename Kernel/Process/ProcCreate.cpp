@@ -19,7 +19,7 @@ SharedPtr<Thread> Process::create_with_main_thread(gen::String name, SharedPtr<P
 		return SharedPtr<Thread> { nullptr };
 	}
 	parent->add_child(process);
-	process->vmm().m_pml4 = process->vmm().clone_pml4(Process::kerneld()->vmm().pml4()).unwrap();
+	kassert(process->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4()));
 
 	auto thread = Thread::create_in_process(process, kernel_exec);
 	return thread;

@@ -610,3 +610,14 @@ void* VMM::allocate_user_heap(size_t region_size) {
 
 	return addr;
 }
+
+
+bool VMM::clone_address_space_from(PhysPtr<PML4> pml4) {
+	auto clone_or_error = clone_pml4(pml4);
+	if(!clone_or_error.has_value()) {
+		return false;
+	}
+
+	m_pml4 = clone_or_error.unwrap();
+	return true;
+}

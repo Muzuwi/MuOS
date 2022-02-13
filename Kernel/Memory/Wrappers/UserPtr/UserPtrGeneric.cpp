@@ -20,7 +20,7 @@ gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {
 		}
 	}
 
-	auto* buf = (uint8*)KHeap::allocate(size);
+	auto* buf = (uint8*)KHeap::instance().slab_alloc(size);
 	if(!buf) {
 		return gen::SharedPtr<type> { nullptr };
 	}

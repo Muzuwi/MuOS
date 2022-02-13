@@ -19,18 +19,6 @@ void SMP::init_control_blocks() {
 	const auto& aps = APIC::ap_list();
 	const uint8 bsp = APIC::ap_bootstrap_id();
 	s_bootstrap_ctl.set_ap(bsp);
-	return;
-
-	s_control_blocks.reserve(aps.size());
-	for(uint8 ap : aps) {
-		auto* control_block = new (KHeap::allocate(sizeof(ControlBlock))) ControlBlock(ap);
-		s_control_blocks.push_back(control_block);
-
-		//  FIXME: Initialize rest of the AP's control blocks, when SMP is actually ready to use
-		if(ap == bsp) {
-			CPU::set_gs_base(control_block);
-		}
-	}
 }
 
 

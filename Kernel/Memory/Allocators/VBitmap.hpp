@@ -1,11 +1,11 @@
 #pragma once
 
 #include <SystemTypes.hpp>
-#include <Memory/Ptr.hpp>
 #include <Structs/KOptional.hpp>
 
-class PhysBitmap {
-	PhysAddr m_base;
+class VBitmap {
+	void* m_base;
+	size_t m_buffer_size;
 	size_t m_entries;
 	size_t m_used;
 
@@ -14,23 +14,22 @@ class PhysBitmap {
 	}
 
 	inline bool bit_get(size_t idx) {
-		auto index = idx / 8;
-		auto offset = idx % 8;
-		auto& byte = *(m_base.as<uint8>() + index);
+		const auto index = idx / 8;
+		const auto offset = idx % 8;
+		auto const& byte = *(reinterpret_cast<uint8*>(m_base) + index);
 
 		return byte & (1u << offset);
 	}
 
 	inline void bit_set(size_t idx, bool value) {
-		auto index = idx / 8;
-		auto offset = idx % 8;
-		auto& byte = *(m_base.as<uint8>() + index);
+		const auto index = idx / 8;
+		const auto offset = idx % 8;
+		auto& byte = *(reinterpret_cast<uint8*>(m_base) + index);
 
 		byte &= ~(1u << offset);
 		byte |= (value ? 1 : 0) << offset;
 	}
 
-	//  Quick skip through full bytes
 	KOptional<size_t> find_one();
 
 	KOptional<size_t> find_many(size_t);
@@ -42,15 +41,15 @@ class PhysBitmap {
 	void free_impl(size_t idx, size_t count);
 
 public:
-	PhysBitmap();
+	VBitmap();
 
-	PhysBitmap(PhysAddr physical, size_t entries);
+	VBitmap(void* base, size_t entries);
 
 	size_t used() const { return m_used; }
 
 	size_t entries() const { return m_entries; }
 
-	size_t bitmap_size() const { return divround(m_entries, 8); }
+	size_t buffer_size() const { return m_buffer_size; }
 
 	KOptional<size_t> allocate(size_t count = 1) { return allocate_impl(count); }
 

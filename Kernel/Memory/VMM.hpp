@@ -5,6 +5,7 @@
 #include <Process/Thread.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
+#include <Memory/Allocators/BumpAllocator.hpp>
 
 using gen::List;
 
@@ -13,6 +14,7 @@ class VMM {
 	friend void BootAP::boot_ap_thread();
 	friend class V86;
 	friend class SlabAllocator;
+	friend class KHeap;
 	friend void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth);
 
 	Process& m_process;
@@ -26,6 +28,9 @@ class VMM {
 		No,
 		Yes
 	};
+
+	static BumpAllocator s_heap_break;
+	[[nodiscard]] static void* allocate_kernel_heap(size_t size);
 
 	void _map_pallocation(PAllocation, void*);
 	void _map_kernel_executable();

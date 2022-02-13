@@ -13,8 +13,8 @@ extern void* _ukernel_virtual_start;
 //  Start of physical identity map
 extern void* _ukernel_identity_start;
 
-//  Start of the kernel heap
 extern void* _ukernel_heap_start;
+extern void* _ukernel_heap_end;
 
 extern void* _ukernel_elf_start;
 extern void* _ukernel_elf_end;

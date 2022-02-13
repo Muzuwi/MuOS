@@ -6,6 +6,7 @@
 #include <Memory/Units.hpp>
 #include <Process/Process.hpp>
 #include <Debug/klogf.hpp>
+#include <Debug/kpanic.hpp>
 #include <string.h>
 
 using namespace Units;
@@ -620,4 +621,35 @@ bool VMM::clone_address_space_from(PhysPtr<PML4> pml4) {
 
 	m_pml4 = clone_or_error.unwrap();
 	return true;
+}
+
+BumpAllocator VMM::s_heap_break { &_ukernel_heap_start,
+                                  (size_t)((uint8*)&_ukernel_heap_end - (uint8*)&_ukernel_heap_start) };
+
+/*
+ *  Allocates a region of the specified size (rounded to integer amount of pages) in the kernel heap address space.
+ *  This will automatically allocate pages and map the region in the default kernel address space (kerneld).
+ *  This should only be used by low-level kernel allocators!
+ */
+void* VMM::allocate_kernel_heap(size_t size) {
+	kassert(size > 0);
+	auto size_rounded_to_page_size = ((size + 0x1000 - 1) & ~(0x1000 - 1));
+
+	auto* ptr = s_heap_break.allocate(size_rounded_to_page_size);
+
+	if(ptr == nullptr) {
+		return nullptr;
+	}
+
+	//  Map new pages for the allocated heap region
+	for(auto* current = (uint8*)ptr; current < (uint8*)ptr + size_rounded_to_page_size; current += 0x1000) {
+		auto page = PMM::instance().allocate();
+		if(!page.has_value()) {
+			return nullptr;
+		}
+
+		Process::_kerneld_ref().vmm()._map_pallocation(page.unwrap(), current);
+	}
+
+	return ptr;
 }

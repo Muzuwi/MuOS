@@ -4,7 +4,7 @@
 #include <Memory/KHeap.hpp>
 
 /*
- *  RAII-wrapper class for kernel heap allocations of a specific type
+ *  RAII-wrapper class for kernel heap chunk allocations of a specific type
  */
 template<class T>
 class KBox {
@@ -28,7 +28,7 @@ public:
 			: m_ptr(rawptr), m_size(size) {
 	}
 
-	~KBox() { KHeap::free(m_ptr, m_size); }
+	~KBox() { KHeap::instance().chunk_free(m_ptr); }
 
 	T* operator->() { return reinterpret_cast<T*>(m_ptr); }
 

@@ -28,13 +28,13 @@ private:
 template<typename... Args>
 constexpr void klogf(char const* format, Args... args) {
 	constexpr const size_t klogf_buffer_alloc_size = 256;
-	auto buffer = KHeap::allocate(klogf_buffer_alloc_size);
+	auto buffer = KHeap::instance().slab_alloc(klogf_buffer_alloc_size);
 	if(!buffer) {
 		return;
 	}
 	Format::format(format, static_cast<char*>(buffer), klogf_buffer_alloc_size, args...);
 	Debug::log_info(static_cast<char*>(buffer));
-	KHeap::free(buffer, klogf_buffer_alloc_size);
+	KHeap::instance().slab_free(buffer, klogf_buffer_alloc_size);
 }
 
 /*
@@ -58,13 +58,13 @@ constexpr void klogf_static(char const* format, Args... args) {
 template<typename... Args>
 constexpr void kerrorf(char const* format, Args... args) {
 	constexpr const size_t klogf_buffer_alloc_size = 256;
-	auto buffer = KHeap::allocate(klogf_buffer_alloc_size);
+	auto buffer = KHeap::instance().slab_alloc(klogf_buffer_alloc_size);
 	if(!buffer) {
 		return;
 	}
 	Format::format(format, static_cast<char*>(buffer), klogf_buffer_alloc_size, args...);
 	Debug::log_error(static_cast<char*>(buffer));
-	KHeap::free(buffer, klogf_buffer_alloc_size);
+	KHeap::instance().slab_free(buffer, klogf_buffer_alloc_size);
 }
 
 /*

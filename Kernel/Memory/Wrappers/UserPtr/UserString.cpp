@@ -36,7 +36,7 @@ KBox<const char> UserString::copy_to_kernel() {
 		}
 	}
 
-	auto* buf = (uint8*)KHeap::allocate(size + 1);
+	auto* buf = (uint8*)KHeap::instance().chunk_alloc(size + 1);
 	if(!buf) {
 		return KBox<const char> {};
 	}

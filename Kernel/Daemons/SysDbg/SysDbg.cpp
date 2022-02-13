@@ -28,6 +28,9 @@ void SysDbg::sysdbg_thread() {
 			SysDbg::dump_process(Process::kerneld());
 			klogf("kdebugger({}): User-mode process tree dump\n", thread->tid());
 			SysDbg::dump_process(Process::init());
+		} else if(command == "da") {
+			klogf("kdebugger({}): Kernel heap allocator statistics\n", thread->tid());
+			KHeap::instance().dump_stats();
 		}
 	};
 

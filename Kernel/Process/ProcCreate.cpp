@@ -4,7 +4,7 @@
 
 SharedPtr<Process> Process::create(gen::String name, ProcFlags flags) {
 	return SharedPtr {
-			new(KHeap::allocate(sizeof(Process))) Process(PidAllocator::next(), name, flags)
+			new(KHeap::instance().slab_alloc(sizeof(Process))) Process(PidAllocator::next(), name, flags)
 	};
 }
 

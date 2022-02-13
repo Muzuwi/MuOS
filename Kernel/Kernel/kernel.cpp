@@ -16,6 +16,7 @@
 #include <Device/Serial.hpp>
 #include <SMP/SMP.hpp>
 #include <Debug/klogf.hpp>
+#include <Debug/kpanic.hpp>
 
 /*
 	Main kernel entrypoint
@@ -36,7 +37,7 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 	VMM::initialize_kernel_vm();
 	PMM::instance().init_deferred_allocators();
 
-	KHeap::init();
+	KHeap::instance().init();
 
 	Syscall::init();
 

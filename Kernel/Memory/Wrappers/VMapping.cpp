@@ -7,7 +7,7 @@ VMapping::VMapping(void* addr, size_t size, int flags, int type)
 }
 
 SharedPtr<VMapping> VMapping::create(void* address, size_t size, uint32 flags, uint32_t type) {
-	auto* vmapping = new(KHeap::allocate(sizeof(VMapping))) VMapping(address, size, flags, type);
+	auto* vmapping = new(KHeap::instance().slab_alloc(sizeof(VMapping))) VMapping(address, size, flags, type);
 
 	//  FIXME:  Fix unaligned sizes
 	auto page_count = size / 0x1000;

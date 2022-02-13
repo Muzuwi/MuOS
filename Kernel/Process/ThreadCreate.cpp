@@ -10,7 +10,7 @@
 
 SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void(* kernel_exec)()) {
 	auto thread = SharedPtr {
-			new(KHeap::allocate(sizeof(Thread))) Thread { parent, PidAllocator::next() }
+			new(KHeap::instance().slab_alloc(sizeof(Thread))) Thread { parent, PidAllocator::next() }
 	};
 
 	if(!thread) {

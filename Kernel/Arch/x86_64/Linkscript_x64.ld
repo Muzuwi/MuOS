@@ -33,6 +33,7 @@ _userspace_heap_end = 0x00006fffffffffff;
 _ukernel_virtual_start = 0xffff800000000000;
 _ukernel_identity_start = 0xffff800000000000;
 _ukernel_heap_start = 0xffffc00000000000;
+_ukernel_heap_end = 0xffffd00000000000;
 _ukernel_elf_start = 0xffffd00000000000;
 _ukernel_virt_heap_end = 0xffffcfffffffffff;
 _ukernel_virt_elf_end = 0xffffd00010000000;

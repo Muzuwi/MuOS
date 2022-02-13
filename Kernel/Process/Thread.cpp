@@ -3,9 +3,8 @@
 #include <Process/Process.hpp>
 #include <SMP/SMP.hpp>
 
-Thread::Thread(SharedPtr<Process> parent, tid_t tid) {
-	m_tid = tid;
-	m_parent = parent;
+Thread::Thread(SharedPtr<Process> parent, tid_t tid)
+		: m_parent(parent), m_tid(tid) {
 }
 
 Thread* Thread::current() {

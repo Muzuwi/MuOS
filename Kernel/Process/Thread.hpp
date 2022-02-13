@@ -39,18 +39,18 @@ class Thread {
 
 	//  Layout of the following fields is important, as we're directly accessing
 	//  these from asm code
-	InactiveTaskFrame* m_interrupted_task_frame;   //  Offset 0x0
-	void* m_kernel_stack_bottom;                   //  Offset 0x8
-	uint64 m_kernel_gs_base;                       //  Offset 0x10
-	PhysPtr<PML4> m_pml4;                          //  Offset 0x18
+	InactiveTaskFrame* m_interrupted_task_frame {};   //  Offset 0x0
+	void* m_kernel_stack_bottom {};                   //  Offset 0x8
+	uint64 m_kernel_gs_base {};                       //  Offset 0x10
+	PhysPtr<PML4> m_pml4 {};                          //  Offset 0x18
 	//  ==================
 
-	SharedPtr<Process> m_parent;
-	tid_t m_tid;
+	SharedPtr<Process> m_parent {};
+	tid_t m_tid {};
 
-	TaskState m_state;
-	TaskFlags m_flags;
-	TaskSchedCtx m_sched;
+	TaskState m_state {TaskState::New};
+	TaskFlags m_flags {};
+	TaskSchedCtx m_sched {};
 
 	Thread(SharedPtr<Process>, tid_t);
 

@@ -3,7 +3,7 @@ include(../../Toolchain/CMakeLists.txt)
 add_library(
     LibGeneric
     ELFParser.cpp
-    Allocator.hpp)
+    Allocator.cpp)
 
 set_target_properties(LibGeneric PROPERTIES PREFIX "")
 set_target_properties(LibGeneric PROPERTIES OUTPUT_NAME "libGeneric")

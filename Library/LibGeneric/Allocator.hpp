@@ -1,12 +1,8 @@
 #pragma once
+
 #include <stdint.h>
 #include <stddef.h>
 #include <LibGeneric/Move.hpp>
-
-#ifdef __is_kernel_build__
-#include <Debug/kpanic.hpp>
-#include <Memory/KHeap.hpp>
-#endif
 
 /*
  *  Placement new implementation
@@ -21,19 +17,29 @@
 
 
 namespace gen {
+#ifdef __is_kernel_build__
+
+	void* __kernel_alloc(size_t n);
+
+	void __kernel_free(void* p, size_t n);
+
+#endif
+
 	template<class T>
 	struct Allocator {
 		using pointer = T*;
 		using size_type = size_t;
 
 #ifdef __is_kernel_build__
+
 		static pointer allocate(size_type n) {
-			return reinterpret_cast<pointer>(KHeap::allocate(sizeof(T)*n));
+			return reinterpret_cast<pointer>(__kernel_alloc(sizeof(T) * n));
 		}
 
 		static void deallocate(pointer p, size_type n) {
-			KHeap::free(p, sizeof(T) * n);
+			__kernel_free(p, sizeof(T) * n);
 		}
+
 #else
 		static pointer allocate(size_type);
 		static void deallocate(pointer, size_type);
@@ -56,11 +62,11 @@ namespace gen {
 		}
 
 		static void deallocate(pointer p, size_type n) {
-			Alloc::deallocate(p,n);
+			Alloc::deallocate(p, n);
 		}
 
 		template<class T, class... Args>
-		static void construct(Alloc&, T* p, Args&&... args) {
+		static void construct(Alloc&, T* p, Args&& ... args) {
 			if(p == nullptr) {
 				return;
 			}

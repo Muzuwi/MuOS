@@ -89,3 +89,15 @@ extern "C" [[noreturn]] void _bootstrap_user(PtraceRegs* regs);
 [[noreturn]] void CPU::jump_to_user(PtraceRegs* regs) {
 	_bootstrap_user(regs);
 }
+
+extern "C" void loadGDT(void*);
+void CPU::lgdt(void* ptr) {
+	loadGDT(ptr);
+}
+
+void CPU::ltr(uint16 selector) {
+	asm volatile(
+	"ltr %0\n"
+	::"r"(selector)
+	);
+}

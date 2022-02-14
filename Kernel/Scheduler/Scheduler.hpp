@@ -7,6 +7,7 @@ class Thread;
 
 class Scheduler {
 	friend void BootAP::boot_ap_thread();
+	friend class SMP;
 
 	RunQueue m_rq;
 	Thread* m_ap_idle;

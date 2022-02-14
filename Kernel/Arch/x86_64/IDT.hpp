@@ -22,5 +22,6 @@ struct IDT_Entry{
 static_assert(sizeof(IDT_Entry) == 16);
 
 namespace IDT {
+	void init_ap();
 	void init();
 }

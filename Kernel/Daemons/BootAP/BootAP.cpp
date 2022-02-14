@@ -51,7 +51,7 @@ void BootAP::boot_ap_thread() {
 		       static_cast<void const*>(&ap_bootstrap_start),
 		       &ap_bootstrap_end - &ap_bootstrap_start);
 		//  Pass the data page address
-		*(code_page.as<uint16>() + 1) = (uintptr_t)data_page.get();
+		*(code_page.template as<uint16 volatile>() + 1) = (uintptr_t)data_page.get();
 
 		auto idle_task = SMP::ctb().scheduler().create_idle_task(ap_id);
 		APBoostrap bootstrap_struct {};
@@ -59,6 +59,11 @@ void BootAP::boot_ap_thread() {
 		bootstrap_struct.compat_gdtr_offset = (uintptr_t)data_page.get() + offsetof(APBoostrap, compat_mode_gdt);
 		bootstrap_struct.long_gdtr_offset = (uintptr_t)data_page.get() + offsetof(APBoostrap, long_mode_gdt);
 		bootstrap_struct.cr3 = (uintptr_t)idle_task->parent()->vmm().pml4().get();
+		bootstrap_struct.ap_ctb = new(KHeap::instance().chunk_alloc(sizeof(ControlBlock))) ControlBlock(ap_id);
+		bootstrap_struct.idle_task = idle_task;
+		bootstrap_struct.rsp = idle_task->irq_task_frame();
+		bootstrap_struct.code_page = code_page.get();
+		bootstrap_struct.data_page = data_page.get();
 
 		auto idled = idle_task->parent();
 		idled->vmm().addrmap(code_page.get(), code_page,
@@ -98,13 +103,12 @@ void BootAP::boot_ap_thread() {
 		}
 		thread->preempt_enable();
 
-		while(*data_page.as<uint64>() == 0);
+		while(*data_page.template as<uint64 volatile>() < 1);
 		klogf("[BootAP({})]: AP {} started - waiting for long mode\n", thread->tid(), ap_id);
-		while(*data_page.as<uint64>() != 2);
-		klogf("[BootAP({})]: AP {} initialized\n", thread->tid(), ap_id);
-
-		idled->vmm().addrunmap(code_page.get());
-		idled->vmm().addrunmap(data_page.get());
+		while(*data_page.template as<uint64 volatile>() < 2);
+		klogf("[BootAP({})]: AP {} in long mode\n", thread->tid(), ap_id);
+		//  The AP is responsible for unmapping the lowmem pages - after entering long mode,
+		//  they should not attempt to access the bootstrap pages
 	}
 
 	klogf("[BootAP({})]: Initialization done\n", thread->tid());

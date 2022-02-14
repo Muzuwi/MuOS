@@ -15,6 +15,7 @@ class VMM {
 	friend class V86;
 	friend class SlabAllocator;
 	friend class KHeap;
+	friend class SMP;
 	friend void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth);
 
 	Process& m_process;

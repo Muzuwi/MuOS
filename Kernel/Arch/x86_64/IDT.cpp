@@ -84,7 +84,11 @@ void IDT::init(){
 
 	IDTR.limit = sizeof(interrupt_descr_table);
 	IDTR.base = reinterpret_cast<uint64_t>(interrupt_descr_table);
+	init_ap();
+	klogf_static("[IDT] registered interrupt handlers\n");
+}
+
+void IDT::init_ap() {
 	lidt(&IDTR);
 
-	klogf_static("[IDT] registered interrupt handlers\n");
 }

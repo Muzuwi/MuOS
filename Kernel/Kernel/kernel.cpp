@@ -27,7 +27,7 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 	klogf_static("[uKernel64] Hello, world!\n");
 
 	IDT::init();
-	GDT::init();
+	GDT::init_base_ap_gdt();
 	CPU::initialize_features();
 
 	SMP::bootstrap_ctb();

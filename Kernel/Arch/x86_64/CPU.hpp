@@ -16,6 +16,8 @@ public:
 	static uint64   cr2();
 	static uint64   cr3();
 	static void set_gs_base(void*);
+	static void lgdt(void*);
+	static void ltr(uint16 selector);
 
 	[[noreturn]]
 	static void jump_to_user(PtraceRegs* regs);

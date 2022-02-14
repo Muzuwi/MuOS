@@ -51,7 +51,7 @@ void Thread::finalize_switch(Thread* prev, Thread* next) {
 	SMP::ctb().set_thread(next);
 
 	//  Reset IRQ stack in the TSS
-	GDT::set_irq_stack(next->m_kernel_stack_bottom);
+	SMP::ctb().gdt()->set_irq_stack(next->m_kernel_stack_bottom);
 
 	//  Restore saved kernel gs base of next process
 	CPU::set_kernel_gs_base((void*)next->m_kernel_gs_base);

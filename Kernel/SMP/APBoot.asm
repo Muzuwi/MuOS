@@ -7,9 +7,8 @@ struc APBootstrap
 .state_flag resq 1
 .cr3        resq 1
 .rsp        resq 1
-.fsbase     resq 1
-.gsbase     resq 1
-.kgsbase    resq 1
+.code_page  resq 1
+.data_page  resq 1
 .real_gdt        resq 3
 .real_gdtr_size  resw 1
 .real_gdtr_off   resd 1
@@ -21,6 +20,8 @@ struc APBootstrap
 .long_gdtr_off   resq 1
 .kernel_idtr_size   resw 1
 .kernel_idtr_off    resq 1
+.ap_ctb     resq 1
+.idle_task  resq 1
 endstruc
 
 align 4096
@@ -81,10 +82,24 @@ ap_prot32:
     lea eax, [edi + APBootstrap.cr3]
     mov eax, [eax]
     mov cr3, eax
-    ;  Enable long mode support in EFER
+    ;  Enable long mode support in EFER, and NX when supported
+    ;  We have to enable NX immediately, otherwise using paging structures containing
+    ;  NX bits is undefined.
+    mov eax, 0x80000001
+    cpuid
+    and edx, 1 << 20
+    jz .no_nxe
+    mov eax, EFER_LM | EFER_NXE
+    push eax
+    jmp .write_efer
+.no_nxe:
+    mov eax, EFER_LM
+    push eax
+.write_efer:
     mov ecx, 0xc0000080
     rdmsr
-    or eax, EFER_LM
+    pop ebx
+    or eax, ebx
     wrmsr
     ;  Enable PE/PG
     mov eax, cr0
@@ -110,10 +125,34 @@ ap_bootstrap_end:
 bits 64
 global ap_long_entry
 ap_long_entry:
+    lea rax, [edi + APBootstrap.rsp]
+    mov rax, [rax]
+    mov rsp, rax
+    mov rbp, rax
+
+    mov rax, [edi + APBootstrap.data_page]
+    push rax
+    mov rax, [edi + APBootstrap.code_page]
+    push rax
+    mov rax, [edi + APBootstrap.idle_task]
+    push rax
+    mov rax, [edi + APBootstrap.ap_ctb]
+    push rax
+
     ;  Signal the BSP that we're out of bootstrap
     lea rax, [edi + APBootstrap.state_flag]
     mov rbx, 2
     mov [rax], rbx
+
+    ;  Restore function arguments
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+
+    ;  FIXME: Looks nasty, but friend definitions don't like extern "C" functions, so use a static class func instead
+    extern _ZN3SMP13ap_entrypointEP12ControlBlockP6Thread8PhysAddrS4_
+    call _ZN3SMP13ap_entrypointEP12ControlBlockP6Thread8PhysAddrS4_
 .halt:
     hlt
     jmp .halt

@@ -1,17 +1,15 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
-#include <Locks/KSemaphore.hpp>
 #include <LibGeneric/LockGuard.hpp>
-#include <SMP/SMP.hpp>
+#include <Locks/KSemaphore.hpp>
 #include <Process/Thread.hpp>
+#include <SMP/SMP.hpp>
 
 KSemaphore::KSemaphore(uint64 initial_value)
-		: m_lock(), m_value(initial_value), m_queue() {
+    : m_lock()
+    , m_value(initial_value)
+    , m_queue() {}
 
-}
-
-KSemaphore::~KSemaphore() {
-
-}
+KSemaphore::~KSemaphore() {}
 
 void KSemaphore::wait() {
 	{
@@ -29,8 +27,7 @@ void KSemaphore::wait() {
 		m_queue.push_back(SMP::ctb().current_thread());
 	}
 	//  FIXME: Lost wake-up problem
-	SMP::ctb().current_thread()->set_state(TaskState::Blocking);
-	SMP::ctb().scheduler().schedule();
+	SMP::ctb().scheduler().block();
 }
 
 void KSemaphore::signal() {

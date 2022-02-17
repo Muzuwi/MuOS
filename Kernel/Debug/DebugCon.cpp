@@ -1,6 +1,6 @@
 #include <Debug/DebugCon.hpp>
-#include <Device/Serial.hpp>
 #include <Debug/TTY.hpp>
+#include <Device/Serial.hpp>
 
 void Debug::log_info(char const* message) {
 	Serial::write_debugger_str("\u001b[32m");

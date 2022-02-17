@@ -1,8 +1,9 @@
+#include <Arch/x86_64/IRQDisabler.hpp>
+#include <Debug/klogf.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/kmalloc.hpp>
 #include <Memory/VMM.hpp>
-#include <Debug/klogf.hpp>
 #include <SMP/SMP.hpp>
 
 KHeap KHeap::s_instance {};
@@ -24,14 +25,17 @@ void KHeap::init() {
 }
 
 void KHeap::dump_stats() {
+	IRQDisabler irq_disabler {};
+	m_heap_lock.lock();
+
 	m_chunk_allocator.dump_allocator();
 	for(auto& size_slabs : m_slab_allocators) {
 		for(auto& v : size_slabs) {
-			klogf_static("Slab({}): size={}, free={}, used={}\n", v.pool_base(), v.object_size(),
-			             v.objects_free(),
+			klogf_static("Slab({}): size={}, free={}, used={}\n", v.pool_base(), v.object_size(), v.objects_free(),
 			             v.objects_used());
 		}
 	}
+	m_heap_lock.unlock();
 }
 
 /*
@@ -41,11 +45,15 @@ void KHeap::dump_stats() {
 void* KHeap::chunk_alloc(size_t size) {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_heap_lock.lock();
 	auto* ptr = m_chunk_allocator.allocate(size);
 	m_heap_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 
 	return ptr;
 }
@@ -56,11 +64,15 @@ void* KHeap::chunk_alloc(size_t size) {
 void KHeap::chunk_free(void* ptr) {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_heap_lock.lock();
 	m_chunk_allocator.free(ptr);
 	m_heap_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 }
 
 /*
@@ -70,7 +82,9 @@ void KHeap::chunk_free(void* ptr) {
 void* KHeap::slab_alloc(size_t size) {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_heap_lock.lock();
 	auto* ptr = [size, this]() -> void* {
 		auto& slabs = m_slab_allocators[index_for_size(size)];
@@ -88,7 +102,9 @@ void* KHeap::slab_alloc(size_t size) {
 		return nullptr;
 	}();
 	m_heap_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 
 	return ptr;
 }
@@ -99,7 +115,9 @@ void* KHeap::slab_alloc(size_t size) {
 void KHeap::slab_free(void* ptr, size_t size) {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_heap_lock.lock();
 	[size, ptr, this]() {
 		auto& slabs = m_slab_allocators[index_for_size(size)];
@@ -111,7 +129,9 @@ void KHeap::slab_free(void* ptr, size_t size) {
 		}
 	}();
 	m_heap_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 }
 
 /*

@@ -1,17 +1,17 @@
 #include <Arch/x86_64/CPU.hpp>
-#include <Arch/x86_64/GDT.hpp>
-#include <Scheduler/Scheduler.hpp>
-#include <Process/Thread.hpp>
-#include <Process/Process.hpp>
-#include <Debug/kassert.hpp>
-#include <SMP/SMP.hpp>
-#include <Interrupt/IRQDispatcher.hpp>
-#include <Debug/klogf.hpp>
+#include <Arch/x86_64/IRQDisabler.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
 #include <Daemons/Idle/Idle.hpp>
 #include <Daemons/Kbd/Kbd.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Daemons/Testd/Testd.hpp>
+#include <Debug/kassert.hpp>
+#include <Debug/klogf.hpp>
+#include <Interrupt/IRQDispatcher.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <Scheduler/Scheduler.hpp>
+#include <SMP/SMP.hpp>
 
 void Scheduler::tick() {
 	auto* thread = SMP::ctb().current_thread();
@@ -20,12 +20,17 @@ void Scheduler::tick() {
 	}
 
 	if(thread == m_ap_idle) {
+		m_scheduler_lock.lock();
+
 		//  Force reschedule when at least one thread becomes runnable
 		if(m_rq.find_runnable() != nullptr) {
 			thread->reschedule();
 		} else {
+			m_rq.swap();
 			thread->clear_reschedule();
 		}
+
+		m_scheduler_lock.unlock();
 		return;
 	}
 
@@ -34,8 +39,8 @@ void Scheduler::tick() {
 		return;
 	}
 
-	//  Spend one process quantum
-	if(thread->sched_ctx().quants_left) {
+	//  Spend one thread quantum
+	if(thread->sched_ctx().quants_left > 0) {
 		thread->sched_ctx().quants_left--;
 	} else {
 		//  Reschedule currently running thread - ran out of quants
@@ -43,25 +48,6 @@ void Scheduler::tick() {
 		thread->sched_ctx().quants_left = pri_to_quants(120 + thread->priority());
 	}
 }
-
-
-/*
- *  Called when a task voluntarily relinquishes its' CPU time
- */
-void Scheduler::schedule() {
-	auto* thread = SMP::ctb().current_thread();
-	thread->preempt_disable();
-
-	//  Find next runnable task
-	auto* next_thread = m_rq.find_runnable();
-	if(!next_thread) {
-		next_thread = m_ap_idle;
-	}
-
-	CPU::switch_to(thread, next_thread);
-	thread->preempt_enable();
-}
-
 
 void Scheduler::interrupt_return_common() {
 	auto* current = SMP::ctb().current_thread();
@@ -74,19 +60,6 @@ void Scheduler::interrupt_return_common() {
 
 	current->clear_reschedule();
 	schedule();
-}
-
-
-void Scheduler::wake_up(Thread* thread) {
-	if(!thread) { return; }
-
-	assert(thread->state() != TaskState::Running);
-	thread->set_state(TaskState::Ready);
-
-	auto* current = SMP::ctb().current_thread();
-	if(thread->priority() < current->priority()) {
-		current->reschedule();
-	}
 }
 
 /*
@@ -109,7 +82,8 @@ void Scheduler::bootstrap() {
 	m_ap_idle = create_idle_task(SMP::ctb().current_ap());
 	//  Update permanent process names
 	//  These process structs are actually contained within the kernel executable (but wrapped in a SharedPtr that
-	//  should hopefully never be deallocated). Because strings cause allocations, initializing them inline is impossible
+	//  should hopefully never be deallocated). Because strings cause allocations, initializing them inline is
+	//  impossible
 	Process::init()->m_simple_name = "Init";
 	Process::kerneld()->m_simple_name = "Kerneld";
 
@@ -129,6 +103,7 @@ void Scheduler::bootstrap() {
 
 	{
 		auto keyboard_thread = Process::create_with_main_thread("Kbd", Process::kerneld(), Kbd::kbd_thread);
+		keyboard_thread->sched_ctx().priority = 0;
 		add_thread_to_rq(keyboard_thread.get());
 		IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
 	}
@@ -159,10 +134,113 @@ unsigned Scheduler::pri_to_quants(uint8_t priority) {
 	}
 }
 
+/*
+ *  Adds a thread to be run to the inactive thread queue.
+ *  The thread will be run after all threads in the active queue are
+ *  preempted/block/sleep.
+ */
 void Scheduler::add_thread_to_rq(Thread* thread) {
+	IRQDisabler irq_disabler {};
 
-	//  FIXME/SMP: Locking
-	m_rq.add(thread);
+	m_scheduler_lock.lock();
+	m_rq.add_inactive(thread);
+	m_scheduler_lock.unlock();
 
+	thread->sched_ctx().quants_left = pri_to_quants(120 + thread->priority());
 }
 
+/*
+ *  Called when a task voluntarily relinquishes its' CPU time
+ */
+void Scheduler::schedule() {
+	IRQDisabler irq_disabler {};
+	auto* thread = SMP::ctb().current_thread();
+
+	m_scheduler_lock.lock();
+	m_rq.remove_active(thread);
+	m_rq.add_inactive(thread);
+	m_scheduler_lock.unlock();
+
+	schedule_new();
+}
+
+/*
+ *  Called when a thread wants to sleep.
+ *  The thread is not re-added to the inactive queue.
+ */
+void Scheduler::sleep() {
+	IRQDisabler irq_disabler {};
+	auto* thread = SMP::ctb().current_thread();
+	thread->set_state(TaskState::Sleeping);
+
+	m_scheduler_lock.lock();
+	m_rq.remove_active(thread);
+	m_scheduler_lock.unlock();
+
+	schedule_new();
+}
+
+/*
+ *  Called when a thread is blocking on I/O.
+ *  The thread is not re-added to the inactive queue.
+ */
+void Scheduler::block() {
+	IRQDisabler irq_disabler {};
+	auto* thread = SMP::ctb().current_thread();
+	thread->set_state(TaskState::Blocking);
+
+	m_scheduler_lock.lock();
+	m_rq.remove_active(thread);
+	m_scheduler_lock.unlock();
+
+	schedule_new();
+}
+
+/*
+ *  Schedules a new task to run and switches to it
+ */
+void Scheduler::schedule_new() {
+	auto* thread = SMP::ctb().current_thread();
+
+	//  Find next runnable task
+	m_scheduler_lock.lock();
+	auto* next_thread = m_rq.find_runnable();
+	if(!next_thread) {
+		m_rq.swap();
+		next_thread = m_ap_idle;
+	}
+	m_scheduler_lock.unlock();
+
+	CPU::switch_to(thread, next_thread);
+}
+
+/*
+ *  Wakes up a thread after block/sleep.
+ */
+void Scheduler::wake_up(Thread* thread) {
+	if(!thread) {
+		return;
+	}
+
+	IRQDisabler irq_disabler {};
+
+	kassert(thread->state() != TaskState::Running);
+	thread->set_state(TaskState::Ready);
+
+	m_scheduler_lock.lock();
+	m_rq.add_inactive(thread);
+	m_scheduler_lock.unlock();
+
+	auto* current = SMP::ctb().current_thread();
+	if(thread->priority() <= current->priority()) {
+		current->reschedule();
+	}
+}
+
+void Scheduler::dump_statistics() {
+//	IRQDisabler irq_disabler {};
+
+//	m_scheduler_lock.lock();
+	m_rq.dump_statistics();
+//	m_scheduler_lock.unlock();
+}

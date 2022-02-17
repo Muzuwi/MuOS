@@ -1,11 +1,11 @@
 #include <Device/PIT.hpp>
-#include <Process/Thread.hpp>
 #include <Process/Process.hpp>
+#include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
 
 Thread::Thread(SharedPtr<Process> parent, tid_t tid)
-		: m_parent(parent), m_tid(tid) {
-}
+    : m_parent(parent)
+    , m_tid(tid) {}
 
 Thread* Thread::current() {
 	return SMP::ctb().current_thread();
@@ -14,9 +14,8 @@ Thread* Thread::current() {
 void Thread::msleep(uint64 ms) {
 	preempt_disable();
 
-	m_state = TaskState::Sleeping;
 	PIT::sleep(ms);
-	SMP::ctb().scheduler().schedule();
+	SMP::ctb().scheduler().sleep();
 
 	preempt_enable();
 }

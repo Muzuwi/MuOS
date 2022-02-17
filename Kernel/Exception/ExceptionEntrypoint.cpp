@@ -23,6 +23,6 @@ extern "C" void _kernel_exception_entrypoint(size_t vector, PtraceRegs* interrup
 		const auto thread = SMP::ctb().current_thread();
 		thread->set_state(TaskState::Leaving);
 		thread->reschedule();
-		SMP::ctb().scheduler().schedule();
+		SMP::ctb().scheduler().block();
 	}
 }

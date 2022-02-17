@@ -1,15 +1,15 @@
 #include <APIC/APIC.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
 #include <Debug/kassert.hpp>
+#include <Debug/klogf.hpp>
+#include <Kernel/ksleep.hpp>
 #include <Memory/PMM.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
+#include <Scheduler/Scheduler.hpp>
 #include <SMP/APBootstrap.hpp>
 #include <SMP/SMP.hpp>
-#include <Scheduler/Scheduler.hpp>
 #include <SystemTypes.hpp>
-#include <Kernel/ksleep.hpp>
-#include <Debug/klogf.hpp>
 
 extern uint8 ap_bootstrap_start;
 extern uint8 ap_bootstrap_end;
@@ -22,15 +22,13 @@ void BootAP::boot_ap_thread() {
 	auto maybe_code_page = PMM::instance().allocate_lowmem();
 	if(!maybe_code_page.has_value()) {
 		klogf("[BootAP({})]: Lowmem alloc for code failed\n", thread->tid());
-		Thread::current()->set_state(TaskState::Blocking);
-		SMP::ctb().scheduler().schedule();
+		SMP::ctb().scheduler().block();
 		ASSERT_NOT_REACHED();
 	}
 	auto maybe_data_page = PMM::instance().allocate_lowmem();
 	if(!maybe_data_page.has_value()) {
 		klogf("[BootAP({})]: Lowmem alloc for data failed\n", thread->tid());
-		Thread::current()->set_state(TaskState::Blocking);
-		SMP::ctb().scheduler().schedule();
+		SMP::ctb().scheduler().block();
 		ASSERT_NOT_REACHED();
 	}
 
@@ -47,8 +45,7 @@ void BootAP::boot_ap_thread() {
 		}
 		klogf("[BootAP({})]: Booting up AP {}\n", thread->tid(), ap_id);
 
-		memcpy(code_page.get_mapped(),
-		       static_cast<void const*>(&ap_bootstrap_start),
+		memcpy(code_page.get_mapped(), static_cast<void const*>(&ap_bootstrap_start),
 		       &ap_bootstrap_end - &ap_bootstrap_start);
 		//  Pass the data page address
 		*(code_page.template as<uint16 volatile>() + 1) = (uintptr_t)data_page.get();
@@ -72,23 +69,21 @@ void BootAP::boot_ap_thread() {
 		                     static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
 
 		//  Copy over the boot struct
-		memcpy(data_page.get_mapped(),
-		       &bootstrap_struct,
-		       sizeof(APBoostrap));
+		memcpy(data_page.get_mapped(), &bootstrap_struct, sizeof(APBoostrap));
 
 		//  Try booting up the AP
 		const uint32 id_msg = (uint32)ap_id << 24u;
-		const uint32 lo_init = 0xC500;          //  Init IPI
-		const uint32 lo_deassert_init = 0x8500; //  De-assert init IPI
+		const uint32 lo_init = 0xC500;         //  Init IPI
+		const uint32 lo_deassert_init = 0x8500;//  De-assert init IPI
 
 		thread->preempt_disable();
 		APIC::lapic_write(LAPICReg::ESR, 0x0);
 		APIC::lapic_write(LAPICReg::ICRHi, id_msg);
 		APIC::lapic_write(LAPICReg::ICRLow, lo_init);
-		while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
+		while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))//  Wait for delivery
 			;
 		APIC::lapic_write(LAPICReg::ICRLow, lo_deassert_init);
-		while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
+		while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))//  Wait for delivery
 			;
 
 		ksleep(10);
@@ -98,14 +93,16 @@ void BootAP::boot_ap_thread() {
 			APIC::lapic_write(LAPICReg::ICRHi, id_msg);
 			APIC::lapic_write(LAPICReg::ICRLow, 0x600 | ipi_vector);
 			ksleep(1);
-			while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))  //  Wait for delivery
+			while(APIC::lapic_read(LAPICReg::ICRLow) & (1u << 12u))//  Wait for delivery
 				;
 		}
 		thread->preempt_enable();
 
-		while(*data_page.template as<uint64 volatile>() < 1);
+		while(*data_page.template as<uint64 volatile>() < 1)
+			;
 		klogf("[BootAP({})]: AP {} started - waiting for long mode\n", thread->tid(), ap_id);
-		while(*data_page.template as<uint64 volatile>() < 2);
+		while(*data_page.template as<uint64 volatile>() < 2)
+			;
 		klogf("[BootAP({})]: AP {} in long mode\n", thread->tid(), ap_id);
 		//  The AP is responsible for unmapping the lowmem pages - after entering long mode,
 		//  they should not attempt to access the bootstrap pages
@@ -116,7 +113,6 @@ void BootAP::boot_ap_thread() {
 	PMM::instance().free_lowmem(code_page);
 	PMM::instance().free_lowmem(data_page);
 
-	Thread::current()->set_state(TaskState::Blocking);
-	SMP::ctb().scheduler().schedule();
+	SMP::ctb().scheduler().block();
 	ASSERT_NOT_REACHED();
 }

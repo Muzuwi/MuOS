@@ -6,6 +6,7 @@ section .text
 global _switch_to_asm
 _switch_to_asm:
     SAVE_REGS_CALLEE
+    pushfq
 
     ;  Save current frame
     mov [rdi + 0x0], rsp
@@ -16,6 +17,7 @@ _switch_to_asm:
     mov rax, [rsi + 0x18]
     mov cr3, rax
 
+    popfq
     RESTORE_REGS_CALLEE
     ;  Finalize task switch
 extern _ZN6Thread15finalize_switchEPS_S0_

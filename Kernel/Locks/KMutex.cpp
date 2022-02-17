@@ -1,12 +1,12 @@
+#include <Debug/kassert.hpp>
 #include <Locks/KMutex.hpp>
-#include <Scheduler/Scheduler.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
-#include <Debug/kassert.hpp>
 
 KMutex::KMutex() noexcept
-: m_owner(nullptr), m_spinlock(), m_waiters() {
-}
+    : m_owner(nullptr)
+    , m_spinlock()
+    , m_waiters() {}
 
 void KMutex::lock() {
 	while(!_lock()) {
@@ -69,12 +69,11 @@ void KMutex::wait() {
 	thread->preempt_disable();
 
 	m_waiters_lock.lock();
-	m_waiters.push_back(KMutexWaiter{.m_waiter = thread});
- 	m_waiters_lock.unlock();
+	m_waiters.push_back(KMutexWaiter { .m_waiter = thread });
+	m_waiters_lock.unlock();
 
- 	//  FIXME_SMP: Race condition when different core would try waking up a process while we haven't been preempted
- 	thread->set_state(TaskState::Blocking);
- 	SMP::ctb().scheduler().schedule();
+	//  FIXME_SMP: Race condition when different core would try waking up a process while we haven't been preempted
+	SMP::ctb().scheduler().block();
 
 	thread->preempt_enable();
 }

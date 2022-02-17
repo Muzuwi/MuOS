@@ -1,10 +1,10 @@
 #pragma once
-#include <stddef.h>
-#include <LibGeneric/InitializerList.hpp>
 #include <LibGeneric/Allocator.hpp>
+#include <LibGeneric/InitializerList.hpp>
+#include <stddef.h>
 
 #ifdef __is_kernel_build__
-#include <Debug/kassert.hpp>
+#	include <Debug/kassert.hpp>
 #endif
 
 namespace gen {
@@ -17,13 +17,9 @@ namespace gen {
 		typedef typename Alloc<T>::template rebind<T>::other ObjAllocType;
 		typename AllocatorTraits<ObjAllocType>::allocator_type _allocator;
 
-		T* _buffer_allocate(size_t n) {
-			return AllocatorTraits<ObjAllocType>::allocate(n);
-		}
+		T* _buffer_allocate(size_t n) { return AllocatorTraits<ObjAllocType>::allocate(n); }
 
-		void _buffer_free(T* base, size_t buffer_size) {
-			AllocatorTraits<ObjAllocType>::deallocate(base, buffer_size);
-		}
+		void _buffer_free(T* base, size_t buffer_size) { AllocatorTraits<ObjAllocType>::deallocate(base, buffer_size); }
 
 		void _object_destroy(T* buffer, size_t n) {
 			if(buffer == nullptr) {
@@ -97,24 +93,24 @@ namespace gen {
 		}
 	public:
 		Vector() noexcept
-		: m_data(nullptr), m_buffer_size(0), m_item_count(0) {}
+		    : m_data(nullptr)
+		    , m_buffer_size(0)
+		    , m_item_count(0) {}
 
-		Vector(Vector const& v) noexcept {
-			from_vector(v);
-		}
+		Vector(Vector const& v) noexcept { from_vector(v); }
 
 		Vector(Vector&& v) noexcept
-		: m_data(v.m_data), m_buffer_size(v.m_buffer_size), m_item_count(v.m_item_count) {}
+		    : m_data(v.m_data)
+		    , m_buffer_size(v.m_buffer_size)
+		    , m_item_count(v.m_item_count) {}
 
-		Vector(std::initializer_list<T> initializer) noexcept = delete; //  TODO: For fun
+		Vector(std::initializer_list<T> initializer) noexcept = delete;//  TODO: For fun
 
-		~Vector() {
-			_deallocate_buffer();
-		}
+		~Vector() { _deallocate_buffer(); }
 
 		void push_back(const T& v) {
 			_resize_if_needed();
-			_object_construct(m_data+m_item_count, 1, v);
+			_object_construct(m_data + m_item_count, 1, v);
 			m_item_count++;
 		}
 
@@ -127,9 +123,7 @@ namespace gen {
 			return v;
 		}
 
-		void clear() {
-			_deallocate_buffer();
-		}
+		void clear() { _deallocate_buffer(); }
 
 		void resize(size_t n, const T& val = T()) {
 			if(n < m_item_count) {
@@ -151,14 +145,9 @@ namespace gen {
 				_buffer_reallocate(n);
 		}
 
+		T& operator[](size_t n) { return m_data[n]; }
 
-		T& operator[](size_t n) {
-			return m_data[n];
-		}
-
-		T const& operator[](size_t n) const {
-			return m_data[n];
-		}
+		T const& operator[](size_t n) const { return m_data[n]; }
 
 		T& at(size_t n) {
 			assert(n < m_item_count);
@@ -170,37 +159,22 @@ namespace gen {
 			return operator[](n);
 		}
 
+		size_t size() const { return m_item_count; }
 
-		size_t size() const {
-			return m_item_count;
-		}
+		size_t capacity() const { return m_buffer_size; }
 
-		size_t capacity() const {
-			return m_buffer_size;
-		}
-
-		bool empty() const {
-			return size() == 0;
-		}
+		bool empty() const { return size() == 0; }
 
 		using iterator = T*;
 		using const_iterator = T const*;
 
-		iterator begin() {
-			return &m_data[0];
-		}
+		iterator begin() { return &m_data[0]; }
 
-		const_iterator begin() const {
-			return &m_data[0];
-		}
+		const_iterator begin() const { return &m_data[0]; }
 
-		iterator end() {
-			return &m_data[m_item_count];
-		}
+		iterator end() { return &m_data[m_item_count]; }
 
-		const_iterator end() const {
-			return &m_data[m_item_count];
-		}
+		const_iterator end() const { return &m_data[m_item_count]; }
 
 		Vector& operator=(Vector const& v) {
 			if(&v == this) {
@@ -209,6 +183,5 @@ namespace gen {
 			from_vector(v);
 			return *this;
 		}
-
 	};
 }

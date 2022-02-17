@@ -1,5 +1,5 @@
-#include <SystemTypes.hpp>
 #include <Structs/KAtomic.hpp>
+#include <SystemTypes.hpp>
 
 template<typename T>
 T KAtomic<T>::load(MemoryOrdering ordering) {
@@ -23,11 +23,11 @@ T KAtomic<T>::exchange(T value, MemoryOrdering ordering) {
 template uint64 KAtomic<uint64>::load(MemoryOrdering);
 template uint32 KAtomic<uint32>::load(MemoryOrdering);
 template uint16 KAtomic<uint16>::load(MemoryOrdering);
-template uint8  KAtomic<uint8>::load(MemoryOrdering);
+template uint8 KAtomic<uint8>::load(MemoryOrdering);
 template int64 KAtomic<int64>::load(MemoryOrdering);
 template int32 KAtomic<int32>::load(MemoryOrdering);
 template int16 KAtomic<int16>::load(MemoryOrdering);
-template int8  KAtomic<int8>::load(MemoryOrdering);
+template int8 KAtomic<int8>::load(MemoryOrdering);
 template void KAtomic<uint64>::store(uint64, MemoryOrdering);
 template void KAtomic<uint32>::store(uint32, MemoryOrdering);
 template void KAtomic<uint16>::store(uint16, MemoryOrdering);

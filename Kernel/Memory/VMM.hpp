@@ -1,11 +1,11 @@
 #pragma once
+#include <Daemons/BootAP/BootAP.hpp>
+#include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/List.hpp>
-#include <Structs/KOptional.hpp>
+#include <Memory/Allocators/BumpAllocator.hpp>
 #include <Memory/Wrappers/VMapping.hpp>
 #include <Process/Thread.hpp>
-#include <Daemons/SysDbg/SysDbg.hpp>
-#include <Daemons/BootAP/BootAP.hpp>
-#include <Memory/Allocators/BumpAllocator.hpp>
+#include <Structs/KOptional.hpp>
 
 using gen::List;
 
@@ -22,7 +22,7 @@ class VMM {
 	PhysPtr<PML4> m_pml4;
 	List<SharedPtr<VMapping>> m_mappings;
 	List<PAllocation> m_kernel_pages;
-	void* m_next_kernel_stack_at;   //  FIXME/SMP: Lock this
+	void* m_next_kernel_stack_at;//  FIXME/SMP: Lock this
 	void* m_next_anon_vm_at;
 
 	enum class LeakAllocatedPage {
@@ -41,12 +41,12 @@ class VMM {
 
 	KOptional<PhysPtr<PML4>> clone_pml4(PhysPtr<PML4>);
 	KOptional<PhysPtr<PDPT>> clone_pdpt(PhysPtr<PDPT>);
-	KOptional<PhysPtr<PD>>   clone_pd(PhysPtr<PD>);
-	KOptional<PhysPtr<PT>>   clone_pt(PhysPtr<PT>);
+	KOptional<PhysPtr<PD>> clone_pd(PhysPtr<PD>);
+	KOptional<PhysPtr<PT>> clone_pt(PhysPtr<PT>);
 
 	PDPTE* ensure_pdpt(void* addr, LeakAllocatedPage);
-	PDE*   ensure_pd(void* addr, LeakAllocatedPage);
-	PTE*   ensure_pt(void* addr, LeakAllocatedPage);
+	PDE* ensure_pd(void* addr, LeakAllocatedPage);
+	PTE* ensure_pt(void* addr, LeakAllocatedPage);
 
 	bool addrmap(void* vaddr, PhysAddr, VMappingFlags flags);
 	bool addrunmap(void* vaddr);
@@ -54,7 +54,10 @@ class VMM {
 	bool unmap(VMapping const&);
 public:
 	explicit VMM(Process& proc) noexcept
-	: m_process(proc), m_pml4(), m_next_kernel_stack_at(&_ukernel_virt_kstack_start), m_next_anon_vm_at(&_userspace_heap_start) {}
+	    : m_process(proc)
+	    , m_pml4()
+	    , m_next_kernel_stack_at(&_ukernel_virt_kstack_start)
+	    , m_next_anon_vm_at(&_userspace_heap_start) {}
 
 	PhysPtr<PML4> pml4() const { return m_pml4; }
 
@@ -72,4 +75,3 @@ public:
 	static constexpr unsigned kernel_stack_size() { return 0x4000; }
 	static constexpr unsigned user_stack_size() { return 0x4000; }
 };
-

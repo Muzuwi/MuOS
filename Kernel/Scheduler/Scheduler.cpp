@@ -238,9 +238,9 @@ void Scheduler::wake_up(Thread* thread) {
 }
 
 void Scheduler::dump_statistics() {
-//	IRQDisabler irq_disabler {};
+	//	IRQDisabler irq_disabler {};
 
-//	m_scheduler_lock.lock();
+	//	m_scheduler_lock.lock();
 	m_rq.dump_statistics();
-//	m_scheduler_lock.unlock();
+	//	m_scheduler_lock.unlock();
 }

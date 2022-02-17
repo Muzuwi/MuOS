@@ -1,7 +1,7 @@
 #ifndef KERNEL_SYMBOLS_H
 #define KERNEL_SYMBOLS_H
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /*
  *  This file contains extern definitions for linkage symbols of the kernel executable

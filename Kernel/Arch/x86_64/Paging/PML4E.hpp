@@ -7,8 +7,8 @@ enum class FlagPML4E : uint64_t {
 	Accessed = 1 << 5u,
 	Cache = 1 << 4u,
 	WriteThrough = 1 << 3u,
-	User	= 1 << 2u,
-	RW		= 1 << 1u,
+	User = 1 << 2u,
+	RW = 1 << 1u,
 	Present = 1 << 0u,
 };
 

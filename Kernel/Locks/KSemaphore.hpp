@@ -1,8 +1,8 @@
 #pragma once
-#include <SystemTypes.hpp>
-#include <Structs/KAtomic.hpp>
-#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/List.hpp>
+#include <LibGeneric/Spinlock.hpp>
+#include <Structs/KAtomic.hpp>
+#include <SystemTypes.hpp>
 
 class Thread;
 

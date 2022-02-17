@@ -36,7 +36,6 @@ namespace Format {
 				context.append_char(low);
 			}
 		}
-
 	public:
 		bool m_hex_form;
 
@@ -55,107 +54,76 @@ namespace Format {
 				format_dec(context, value);
 			}
 		}
-
 	};
 
 	template<>
 	struct Formatter<signed char> {
 		_IntegralFormatter<signed char> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, signed char const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, signed char const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<unsigned char> {
 		_IntegralFormatter<unsigned char> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, unsigned char const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, unsigned char const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<short> {
 		_IntegralFormatter<short> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, short const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, short const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<unsigned short> {
 		_IntegralFormatter<unsigned short> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, unsigned short const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, unsigned short const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<int> {
 		_IntegralFormatter<int> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, int const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, int const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<unsigned int> {
 		_IntegralFormatter<unsigned int> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, unsigned int const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, unsigned int const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<long int> {
 		_IntegralFormatter<long int> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, long int const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, long int const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<long unsigned int> {
 		_IntegralFormatter<long unsigned int> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
 		constexpr void format(FormatContext& context, long unsigned int const& value) {
 			formatter.format(context, value);
@@ -166,22 +134,16 @@ namespace Format {
 	struct Formatter<long long int> {
 		_IntegralFormatter<long long int> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
-		constexpr void format(FormatContext& context, long long int const& value) {
-			formatter.format(context, value);
-		}
+		constexpr void format(FormatContext& context, long long int const& value) { formatter.format(context, value); }
 	};
 
 	template<>
 	struct Formatter<long long unsigned int> {
 		_IntegralFormatter<long long unsigned int> formatter {};
 
-		constexpr void parse(ParserContext& context) {
-			formatter.parse(context);
-		}
+		constexpr void parse(ParserContext& context) { formatter.parse(context); }
 
 		constexpr void format(FormatContext& context, long long unsigned int const& value) {
 			formatter.format(context, value);

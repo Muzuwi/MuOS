@@ -1,21 +1,19 @@
 #pragma once
 
-#include <SystemTypes.hpp>
-#include <Structs/KOptional.hpp>
 #include <LibGeneric/List.hpp>
 #include <Memory/Allocators/PAllocation.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
+#include <Structs/KOptional.hpp>
+#include <SystemTypes.hpp>
 
-enum VMappingFlags
-		: uint32 {
+enum VMappingFlags : uint32 {
 	VM_KERNEL = 0x00000001,
 	VM_READ = 0x00000002,
 	VM_WRITE = 0x00000004,
 	VM_EXEC = 0x00000008
 };
 
-enum VMappingType
-		: uint32 {
+enum VMappingType : uint32 {
 	MAP_SHARED = 0x00000000,
 	MAP_PRIVATE = 0x00000001
 };
@@ -39,7 +37,6 @@ private:
 	uint32 m_type;
 
 	VMapping(void* addr, size_t size, int flags, int type);
-
 public:
 	static SharedPtr<VMapping> create(void* address, size_t size, uint32 flags, uint32 type);
 
@@ -64,8 +61,7 @@ public:
 	void* end() const { return (void*)((uintptr_t)m_addr + m_size); }
 
 	bool contains(void* vaddr) {
-		return (uintptr_t)vaddr >= (uintptr_t)m_addr &&
-		       (uintptr_t)vaddr < (uintptr_t)m_addr + m_size;
+		return (uintptr_t)vaddr >= (uintptr_t)m_addr && (uintptr_t)vaddr < (uintptr_t)m_addr + m_size;
 	}
 
 	bool overlaps(VMapping const&);

@@ -13,12 +13,11 @@ public:
 	static void set_kernel_gs_base(void*);
 	static uint64_t get_kernel_gs_base();
 	static uint64_t get_gs_base();
-	static uint64   cr2();
-	static uint64   cr3();
+	static uint64 cr2();
+	static uint64 cr3();
 	static void set_gs_base(void*);
 	static void lgdt(void*);
 	static void ltr(uint16 selector);
 
-	[[noreturn]]
-	static void jump_to_user(PtraceRegs* regs);
+	[[noreturn]] static void jump_to_user(PtraceRegs* regs);
 };

@@ -19,21 +19,13 @@ namespace Format {
 		size_t written;
 		_FormatterState state;
 
-		constexpr char current() const {
-			return format[format_pos];
-		}
+		constexpr char current() const { return format[format_pos]; }
 
-		constexpr char const* current_ptr() const {
-			return &format[format_pos];
-		}
+		constexpr char const* current_ptr() const { return &format[format_pos]; }
 
-		constexpr void next() {
-			format_pos += 1;
-		}
+		constexpr void next() { format_pos += 1; }
 
-		constexpr bool is_null() const {
-			return format[format_pos] == '\0';
-		}
+		constexpr bool is_null() const { return format[format_pos] == '\0'; }
 
 		constexpr bool append_char(const char value) {
 			written++;

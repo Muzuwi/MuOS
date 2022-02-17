@@ -1,12 +1,12 @@
 #include <Arch/x86_64/CPUID.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
-#include <Memory/PMM.hpp>
-#include <Memory/VMM.hpp>
-#include <Memory/Units.hpp>
-#include <Process/Process.hpp>
 #include <Debug/klogf.hpp>
 #include <Debug/kpanic.hpp>
+#include <Memory/PMM.hpp>
+#include <Memory/Units.hpp>
+#include <Memory/VMM.hpp>
+#include <Process/Process.hpp>
 #include <string.h>
 
 using namespace Units;
@@ -38,15 +38,12 @@ void VMM::initialize_kernel_vm() {
 	klogf_static("[VMM] Preallocating kernel PML4E\n");
 	kerneld.vmm()._map_kernel_prealloc_pml4();
 
-	asm volatile(
-	"mov %%rax, %0\n"
-	"mov cr3, %%rax\n"
-	:
-	:"r"(pml4.get())
-	:"rax"
-	);
+	asm volatile("mov %%rax, %0\n"
+	             "mov cr3, %%rax\n"
+	             :
+	             : "r"(pml4.get())
+	             : "rax");
 }
-
 
 /*
  *  Maps the given PAllocation starting at virtual address vaddr
@@ -76,7 +73,6 @@ void VMM::_map_pallocation(PAllocation allocation, void* vaddr) {
 		physical += 0x1000;
 	}
 }
-
 
 /*
  *  Maps the kernel executable in the target process memory.
@@ -120,7 +116,6 @@ void VMM::_map_kernel_executable() {
 		kernel_physical += 0x1000;
 	}
 }
-
 
 /*
  *  Creates the identity map in the current address space. Only called on kernel
@@ -175,7 +170,6 @@ void VMM::_map_physical_identity() {
 	}
 }
 
-
 /*
  *  Preallocate all PML4 PDPT nodes for the kernel shared address space
  *  That way, any changes to the shared kernel address space will persist throughout all processes,
@@ -190,7 +184,6 @@ void VMM::_map_kernel_prealloc_pml4() {
 		ensure_pdpt(addr, LeakAllocatedPage::Yes);
 	}
 }
-
 
 PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
 	PML4E& pml4e = (*m_pml4)[addr];
@@ -222,7 +215,9 @@ PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
 
 PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
 	auto* pdpte = ensure_pdpt(addr, leak);
-	if(!pdpte) { return nullptr; }
+	if(!pdpte) {
+		return nullptr;
+	}
 
 	if(!pdpte->directory()) {
 		PhysAddr phys;
@@ -251,7 +246,9 @@ PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
 
 PTE* VMM::ensure_pt(void* addr, LeakAllocatedPage leak) {
 	auto* pde = ensure_pd(addr, leak);
-	if(!pde) { return nullptr; }
+	if(!pde) {
+		return nullptr;
+	}
 
 	if(!pde->table()) {
 		PhysAddr phys;
@@ -337,7 +334,6 @@ KOptional<PhysPtr<PDPT>> VMM::clone_pdpt(PhysPtr<PDPT> source) {
 	}
 
 	return pdpt;
-
 }
 
 KOptional<PhysPtr<PD>> VMM::clone_pd(PhysPtr<PD> source) {
@@ -383,7 +379,6 @@ KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
 	return { pt };
 }
 
-
 /*
  *  Maps a given VMapping in the target process
  */
@@ -400,7 +395,6 @@ bool VMM::map(VMapping const& mapping) {
 	return true;
 }
 
-
 /*
  *  Unmaps the given VMapping from the target process
  */
@@ -416,7 +410,6 @@ bool VMM::unmap(VMapping const& mapping) {
 	}
 	return true;
 }
-
 
 /*
  *  Map a virtual address to a physical address
@@ -458,7 +451,6 @@ bool VMM::addrmap(void* vaddr, PhysAddr paddr, VMappingFlags flags) {
 	return false;
 }
 
-
 /*
  *  Unmap the page with the specified virtual address
  */
@@ -485,7 +477,6 @@ bool VMM::addrunmap(void* vaddr) {
 	return true;
 }
 
-
 /*
  *  Allocates a physical page for use in the kernel, on behalf of the current process.
  *  After the process is removed, these pages WILL BE FREED.
@@ -501,14 +492,17 @@ KOptional<PhysAddr> VMM::_allocate_kernel_page(size_t order) {
 	return { alloc.unwrap().base() };
 }
 
-
 /*
  *  Looks for a VMapping for the given virtual address
  */
 KOptional<SharedPtr<VMapping>> VMM::find_vmapping(void* vaddr) const {
 	for(auto& vmapping : m_mappings) {
-		if(!vmapping) { continue; }
-		if(!vmapping->contains(vaddr)) { continue; }
+		if(!vmapping) {
+			continue;
+		}
+		if(!vmapping->contains(vaddr)) {
+			continue;
+		}
 
 		return { vmapping };
 	}
@@ -516,13 +510,14 @@ KOptional<SharedPtr<VMapping>> VMM::find_vmapping(void* vaddr) const {
 	return {};
 }
 
-
 /*
  *  Validates whether the given VMapping does not overlap with any other mappings,
  *  and saves it into the list
  */
 bool VMM::insert_vmapping(SharedPtr<VMapping>&& mapping) {
-	if(!mapping) { return false; }
+	if(!mapping) {
+		return false;
+	}
 
 	auto find_vmapping_iterator = [this](void* address) {
 		auto it = m_mappings.begin();
@@ -546,18 +541,14 @@ bool VMM::insert_vmapping(SharedPtr<VMapping>&& mapping) {
 	return map(*mapping);
 }
 
-
 void* VMM::allocate_user_stack(uint64 stack_size) {
 	//  FIXME: Actually randomize
-	auto random = [](size_t, size_t) -> size_t {
-		return 4;
-	};
+	auto random = [](size_t, size_t) -> size_t { return 4; };
 
 	uint64_t stack_top;
 	if(m_process.flags().randomize_vm) {
 		//  FIXME: Use stack_size
-		stack_top = (uintptr_t)&_userspace_stack_start
-		            + VMM::user_stack_size() * random(0, 0x40000);
+		stack_top = (uintptr_t)&_userspace_stack_start + VMM::user_stack_size() * random(0, 0x40000);
 	} else {
 		stack_top = (uintptr_t)&_userspace_stack_start;
 	}
@@ -567,7 +558,6 @@ void* VMM::allocate_user_stack(uint64 stack_size) {
 
 	return (void*)(stack_top + stack_size);
 }
-
 
 VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
 	void* kstack_top = m_next_kernel_stack_at;
@@ -581,18 +571,12 @@ VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
 
 	m_next_kernel_stack_at = (void*)((uintptr_t)m_next_kernel_stack_at + stack_size + 0x1000);
 
-	auto mapping = VMapping::create(
-			(void*)kstack_top,
-			stack_size,
-			VM_READ | VM_WRITE | VM_KERNEL,
-			MAP_PRIVATE
-	                               );
+	auto mapping = VMapping::create((void*)kstack_top, stack_size, VM_READ | VM_WRITE | VM_KERNEL, MAP_PRIVATE);
 	auto mapping_ptr = mapping.get();
 	kassert(insert_vmapping(gen::move(mapping)));
 
 	return mapping_ptr;
 }
-
 
 void* VMM::allocate_user_heap(size_t region_size) {
 	size_t size_rounded = region_size & ~(0x1000 - 1);
@@ -612,7 +596,6 @@ void* VMM::allocate_user_heap(size_t region_size) {
 	return addr;
 }
 
-
 bool VMM::clone_address_space_from(PhysPtr<PML4> pml4) {
 	auto clone_or_error = clone_pml4(pml4);
 	if(!clone_or_error.has_value()) {
@@ -624,7 +607,7 @@ bool VMM::clone_address_space_from(PhysPtr<PML4> pml4) {
 }
 
 BumpAllocator VMM::s_heap_break { &_ukernel_heap_start,
-                                  (size_t)((uint8*)&_ukernel_heap_end - (uint8*)&_ukernel_heap_start) };
+	                              (size_t)((uint8*)&_ukernel_heap_end - (uint8*)&_ukernel_heap_start) };
 
 /*
  *  Allocates a region of the specified size (rounded to integer amount of pages) in the kernel heap address space.

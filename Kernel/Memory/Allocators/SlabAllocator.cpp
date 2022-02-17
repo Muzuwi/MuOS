@@ -2,11 +2,10 @@
 #include <Memory/VMM.hpp>
 
 SlabAllocator::SlabAllocator(void* allocator_base, size_t pool_size, size_t object_size)
-		: m_allocations(allocator_base, pool_size / object_size),
-		  m_pool_base(reinterpret_cast<uint8*>(allocator_base) + m_allocations.buffer_size()),
-		  m_pool_size(pool_size),
-		  m_object_size(object_size) {
-}
+    : m_allocations(allocator_base, pool_size / object_size)
+    , m_pool_base(reinterpret_cast<uint8*>(allocator_base) + m_allocations.buffer_size())
+    , m_pool_size(pool_size)
+    , m_object_size(object_size) {}
 
 KOptional<SlabAllocator> SlabAllocator::make(size_t pool_size, size_t object_size) {
 	const auto objects = pool_size / object_size;
@@ -19,7 +18,9 @@ KOptional<SlabAllocator> SlabAllocator::make(size_t pool_size, size_t object_siz
 		return KOptional<SlabAllocator> {};
 	}
 
-	return KOptional<SlabAllocator> { SlabAllocator { allocator_area, pool_size, object_size }};
+	return KOptional<SlabAllocator> {
+		SlabAllocator {allocator_area, pool_size, object_size}
+	};
 }
 
 void* SlabAllocator::allocate() {
@@ -40,8 +41,7 @@ void SlabAllocator::free(void* addr) {
 }
 
 bool SlabAllocator::contains_address(void* addr) const {
-	return addr >= m_pool_base &&
-	       (uintptr_t)addr < (uintptr_t)m_pool_base + m_pool_size;
+	return addr >= m_pool_base && (uintptr_t)addr < (uintptr_t)m_pool_base + m_pool_size;
 }
 
 void* SlabAllocator::idx_to_virtual(size_t idx) const {

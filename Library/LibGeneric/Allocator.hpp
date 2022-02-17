@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
 #include <LibGeneric/Move.hpp>
+#include <stddef.h>
+#include <stdint.h>
 
 /*
  *  Placement new implementation
@@ -14,7 +14,6 @@
 [[nodiscard]] inline constexpr void* operator new[](size_t, void* ptr) noexcept {
 	return ptr;
 }
-
 
 namespace gen {
 #ifdef __is_kernel_build__
@@ -32,13 +31,9 @@ namespace gen {
 
 #ifdef __is_kernel_build__
 
-		static pointer allocate(size_type n) {
-			return reinterpret_cast<pointer>(__kernel_alloc(sizeof(T) * n));
-		}
+		static pointer allocate(size_type n) { return reinterpret_cast<pointer>(__kernel_alloc(sizeof(T) * n)); }
 
-		static void deallocate(pointer p, size_type n) {
-			__kernel_free(p, sizeof(T) * n);
-		}
+		static void deallocate(pointer p, size_type n) { __kernel_free(p, sizeof(T) * n); }
 
 #else
 		static pointer allocate(size_type);
@@ -57,16 +52,12 @@ namespace gen {
 		using pointer = typename Alloc::pointer;
 		using size_type = typename Alloc::size_type;
 
-		static pointer allocate(size_type n) {
-			return Alloc::allocate(n);
-		}
+		static pointer allocate(size_type n) { return Alloc::allocate(n); }
 
-		static void deallocate(pointer p, size_type n) {
-			Alloc::deallocate(p, n);
-		}
+		static void deallocate(pointer p, size_type n) { Alloc::deallocate(p, n); }
 
 		template<class T, class... Args>
-		static void construct(Alloc&, T* p, Args&& ... args) {
+		static void construct(Alloc&, T* p, Args&&... args) {
 			if(p == nullptr) {
 				return;
 			}

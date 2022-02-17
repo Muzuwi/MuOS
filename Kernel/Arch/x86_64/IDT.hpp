@@ -1,16 +1,16 @@
 #pragma once
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
-#define IDT_INTS_COUNT 256
-#define PIC_MASTER_CMD 0x0020
+#define IDT_INTS_COUNT  256
+#define PIC_MASTER_CMD  0x0020
 #define PIC_MASTER_DATA 0x0021
-#define PIC_SLAVE_CMD 0x00A0
-#define PIC_SLAVE_DATA 0x00A1
+#define PIC_SLAVE_CMD   0x00A0
+#define PIC_SLAVE_DATA  0x00A1
 
-#define ICW4_8086	0x01		/* 8086/88 (MCS-80/85) mode */
+#define ICW4_8086 0x01 /* 8086/88 (MCS-80/85) mode */
 
-struct IDT_Entry{
+struct IDT_Entry {
 	uint16_t offset_0;
 	uint16_t selector;
 	uint8_t _zero1;

@@ -9,7 +9,7 @@ struct RSDPDescriptor {
 	char m_oemid[6];
 	uint8_t m_revision;
 	uint32_t m_rsdt_addr;
-} __attribute__ ((packed));
+} __attribute__((packed));
 
 struct ACPISDTHeader {
 	char m_signature[4];
@@ -21,8 +21,7 @@ struct ACPISDTHeader {
 	uint32_t m_oem_revision;
 	uint32_t m_creator_id;
 	uint32_t m_creator_revision;
-} __attribute__ ((packed));
-
+} __attribute__((packed));
 
 namespace ACPI {
 	static const uint64_t rsdp_signature = 0x2052545020445352;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SystemTypes.hpp>
 #include <Memory/Allocators/VBitmap.hpp>
+#include <SystemTypes.hpp>
 
 class SlabAllocator {
 	VBitmap m_allocations {};
@@ -14,7 +14,6 @@ class SlabAllocator {
 	size_t virtual_to_idx(void*) const;
 
 	SlabAllocator(void* allocator_base, size_t pool_size, size_t object_size);
-
 public:
 	SlabAllocator() = default;
 

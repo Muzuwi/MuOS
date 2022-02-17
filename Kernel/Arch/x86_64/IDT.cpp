@@ -1,6 +1,6 @@
+#include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/IDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
-#include <Arch/x86_64/GDT.hpp>
 #include <Debug/klogf.hpp>
 
 static IDT_Entry interrupt_descr_table[IDT_INTS_COUNT] = {};
@@ -11,27 +11,25 @@ static struct {
 } __attribute__((packed)) IDTR;
 
 /*
-	IRQ handler wrappers
+    IRQ handler wrappers
 */
 extern "C" void _kernel_syscall_entry();
 extern "C" void* exception_entrypoint_table[32];
 extern "C" void* irq_entrypoint_table[256 - 32];
 
 inline void lidt(void* idtr) {
-	asm volatile(
-	            "mov %%rax, %0\n"
-	            "lidt [%%rax]\n"
-	            :
-	            : "r"((uintptr_t)idtr)
-	            : "rax"
-	            );
+	asm volatile("mov %%rax, %0\n"
+	             "lidt [%%rax]\n"
+	             :
+	             : "r"((uintptr_t)idtr)
+	             : "rax");
 }
 
 /*
-	Remaps the PIC to offset interrupts
-	by 0x20 to avoid overlapping standard arch interrupts
+    Remaps the PIC to offset interrupts
+    by 0x20 to avoid overlapping standard arch interrupts
 */
-static void remap_pic(){
+static void remap_pic() {
 	Ports::out(PIC_MASTER_CMD, 0x11);
 	Ports::out(PIC_SLAVE_CMD, 0x11);
 
@@ -63,15 +61,15 @@ static void register_interrupt_gate(uint8_t irq_num, T gate, uint8_t type, uint1
 }
 
 /*
-	This function sets up the Interrupt Descriptor Table
-	with entries for basic 15 interrupts and loads it
-	into IDTR
+    This function sets up the Interrupt Descriptor Table
+    with entries for basic 15 interrupts and loads it
+    into IDTR
 */
-void IDT::init(){
+void IDT::init() {
 	remap_pic();
 
-	const uint8_t type_irq {0x8e};
-	const uint8_t type_trap {0x8f};
+	const uint8_t type_irq { 0x8e };
+	const uint8_t type_trap { 0x8f };
 	const auto cs = GDT::get_kernel_CS();
 
 	//  Exceptions
@@ -90,5 +88,4 @@ void IDT::init(){
 
 void IDT::init_ap() {
 	lidt(&IDTR);
-
 }

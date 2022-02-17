@@ -11,7 +11,7 @@ class UserPtr {
 	typedef gen::remove_pointer<T> type;
 public:
 	explicit UserPtr(void* user_ptr) noexcept
-			: m_ptr(user_ptr) {}
+	    : m_ptr(user_ptr) {}
 
 	gen::SharedPtr<type> copy_to_kernel();
 
@@ -22,7 +22,7 @@ class UserString {
 	void* m_ptr;
 public:
 	explicit UserString(void* user_ptr) noexcept
-			: m_ptr(user_ptr) {}
+	    : m_ptr(user_ptr) {}
 
 	KBox<const char> copy_to_kernel();
 };

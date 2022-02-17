@@ -1,5 +1,5 @@
-#include <cpuid.h>
 #include <Arch/x86_64/CPUID.hpp>
+#include <cpuid.h>
 #include <SystemTypes.hpp>
 
 bool CPUID::has_huge_pages() {

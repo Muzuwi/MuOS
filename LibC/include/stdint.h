@@ -1,5 +1,5 @@
 #ifndef __LIBC_TIME_H
-# define __LIBC_TIME_H
+#define __LIBC_TIME_H
 
 typedef unsigned char __u_char;
 typedef unsigned short int __u_short;
@@ -59,6 +59,5 @@ typedef __int64_t int_fast64_t;
  */
 typedef long int intptr_t;
 typedef unsigned long int uintptr_t;
-
 
 #endif

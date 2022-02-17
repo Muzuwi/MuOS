@@ -1,7 +1,7 @@
+#include <Debug/klogf.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <Debug/klogf.hpp>
 
 KBox<const char> UserString::copy_to_kernel() {
 	//  FIXME: Make sure a different thread cannot modify the address space while we're in here

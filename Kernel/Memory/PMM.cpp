@@ -3,9 +3,9 @@
 #include <Memory/kmalloc.hpp>
 #include <Memory/PMM.hpp>
 #include <Multiboot/MultibootInfo.hpp>
-#include <Symbols.hpp>
-#include <SMP/SMP.hpp>
 #include <Process/Thread.hpp>
+#include <SMP/SMP.hpp>
+#include <Symbols.hpp>
 
 PMM PMM::s_instance {};
 
@@ -88,8 +88,7 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 		pointer = pointer->next_entry();
 	}
 
-	auto kernel_start = (uint64_t)(&_ukernel_elf_start),
-			kernel_end = (uint64_t)(&_ukernel_elf_end);
+	auto kernel_start = (uint64_t)(&_ukernel_elf_start), kernel_end = (uint64_t)(&_ukernel_elf_end);
 
 	uint32_t mem_mib = memory_amount / 0x100000;
 
@@ -123,9 +122,11 @@ void PMM::init_deferred_allocators() {
 [[nodiscard]] KOptional<PAllocation> PMM::allocate(size_t count_order) {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_pmm_lock.lock();
-	auto result = [this, count_order]() -> auto {
+	auto result = [ this, count_order ]() -> auto {
 		for(auto& region : m_normal_regions) {
 			auto ret = region.allocator().allocate(count_order);
 			if(ret.has_value()) {
@@ -135,9 +136,12 @@ void PMM::init_deferred_allocators() {
 			}
 		}
 		return KOptional<PAllocation> {};
-	}();
+	}
+	();
 	m_pmm_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 
 	return result;
 }
@@ -145,7 +149,9 @@ void PMM::init_deferred_allocators() {
 void PMM::free(PAllocation const& allocation) {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_pmm_lock.lock();
 	for(auto& region : m_normal_regions) {
 		if(region.contains(allocation.base()) && region.contains(allocation.end())) {
@@ -154,7 +160,9 @@ void PMM::free(PAllocation const& allocation) {
 		}
 	}
 	m_pmm_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 }
 
 /*
@@ -163,7 +171,9 @@ void PMM::free(PAllocation const& allocation) {
 [[nodiscard]] KOptional<PhysAddr> PMM::allocate_lowmem() {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_pmm_lock.lock();
 	auto result = [this]() -> auto {
 		for(auto& region : m_mem16_regions) {
@@ -174,9 +184,12 @@ void PMM::free(PAllocation const& allocation) {
 			}
 		}
 		return KOptional<PhysAddr> {};
-	}();
+	}
+	();
 	m_pmm_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 
 	return result;
 }
@@ -184,7 +197,9 @@ void PMM::free(PAllocation const& allocation) {
 void PMM::free_lowmem(PhysAddr addr) {
 	auto* thread = SMP::ctb().current_thread();
 
-	if(thread) { thread->preempt_disable(); }
+	if(thread) {
+		thread->preempt_disable();
+	}
 	m_pmm_lock.lock();
 	for(auto& region : m_mem16_regions) {
 		if(region.contains(addr)) {
@@ -193,7 +208,9 @@ void PMM::free_lowmem(PhysAddr addr) {
 		}
 	}
 	m_pmm_lock.unlock();
-	if(thread) { thread->preempt_enable(); }
+	if(thread) {
+		thread->preempt_enable();
+	}
 }
 
 PhysAddr PMM::physical_end_addr() {

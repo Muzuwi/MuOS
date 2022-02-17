@@ -1,5 +1,5 @@
-#include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/GDT.hpp>
 #include <Debug/klogf.hpp>
 #include <SMP/SMP.hpp>
 

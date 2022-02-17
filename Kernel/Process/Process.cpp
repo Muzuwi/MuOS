@@ -1,25 +1,30 @@
 #include <Process/Process.hpp>
 
 Process::Process(pid_t pid, gen::String name, ProcFlags flags)
-		: m_pid(pid), m_flags(flags), m_vmm(*this), m_children(), m_threads(), m_simple_name(name) {
-}
+    : m_pid(pid)
+    , m_flags(flags)
+    , m_vmm(*this)
+    , m_children()
+    , m_threads()
+    , m_simple_name(name) {}
 
-Process::~Process() {
-}
+Process::~Process() {}
 
 Process& Process::_init_ref() {
-	static Process s_init { 1, {}, ProcFlags {
-			.privilege = User,
-			.randomize_vm = true
-	}};
+	static Process s_init {
+		1,
+		{                   },
+		ProcFlags { .privilege = User,.randomize_vm = true }
+	};
 	return s_init;
 }
 
 Process& Process::_kerneld_ref() {
-	static Process s_kerneld { 2, {}, ProcFlags {
-			.privilege = Kernel,
-			.randomize_vm = true
-	}};
+	static Process s_kerneld {
+		2,
+		{                   },
+		ProcFlags { .privilege = Kernel,.randomize_vm = true }
+	};
 	return s_kerneld;
 }
 

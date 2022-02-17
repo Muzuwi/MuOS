@@ -1,9 +1,9 @@
 #pragma once
 #include <Arch/x86_64/Paging.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
-#include <SystemTypes.hpp>
-#include <LibGeneric/SharedPtr.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
+#include <LibGeneric/SharedPtr.hpp>
+#include <SystemTypes.hpp>
 
 enum class TaskState {
 	New,
@@ -20,7 +20,7 @@ struct TaskFlags {
 };
 
 struct TaskSchedCtx {
-	uint8  priority;
+	uint8 priority;
 	uint64 preempt_count;
 	uint64 quants_left;
 };
@@ -39,16 +39,16 @@ class Thread {
 
 	//  Layout of the following fields is important, as we're directly accessing
 	//  these from asm code
-	InactiveTaskFrame* m_interrupted_task_frame {};   //  Offset 0x0
-	void* m_kernel_stack_bottom {};                   //  Offset 0x8
-	uint64 m_kernel_gs_base {};                       //  Offset 0x10
-	PhysPtr<PML4> m_pml4 {};                          //  Offset 0x18
+	InactiveTaskFrame* m_interrupted_task_frame {};//  Offset 0x0
+	void* m_kernel_stack_bottom {};                //  Offset 0x8
+	uint64 m_kernel_gs_base {};                    //  Offset 0x10
+	PhysPtr<PML4> m_pml4 {};                       //  Offset 0x18
 	//  ==================
 
 	SharedPtr<Process> m_parent {};
 	tid_t m_tid {};
 
-	TaskState m_state {TaskState::New};
+	TaskState m_state { TaskState::New };
 	TaskFlags m_flags {};
 	TaskSchedCtx m_sched {};
 
@@ -57,7 +57,7 @@ class Thread {
 	[[nodiscard]] void* _bootstrap_task_stack(PhysAddr kernel_stack_bottom, PtraceRegs state);
 	[[maybe_unused]] static void finalize_switch(Thread* prev, Thread* next);
 public:
-	static SharedPtr<Thread> create_in_process(SharedPtr<Process>, void(*kernel_exec)());
+	static SharedPtr<Thread> create_in_process(SharedPtr<Process>, void (*kernel_exec)());
 	static Thread* current();
 
 	tid_t tid() const { return m_tid; }
@@ -71,8 +71,8 @@ public:
 
 	void set_state(TaskState state) { m_state = state; }
 
-	void preempt_disable() { __atomic_add_fetch(&m_sched.preempt_count,  1, __ATOMIC_SEQ_CST); }
-	void preempt_enable()  { __atomic_add_fetch(&m_sched.preempt_count, -1, __ATOMIC_SEQ_CST); }
+	void preempt_disable() { __atomic_add_fetch(&m_sched.preempt_count, 1, __ATOMIC_SEQ_CST); }
+	void preempt_enable() { __atomic_add_fetch(&m_sched.preempt_count, -1, __ATOMIC_SEQ_CST); }
 	uint64 preempt_count() { return __atomic_load_n(&m_sched.preempt_count, __ATOMIC_SEQ_CST); }
 	void reschedule() { m_flags.need_resched = true; }
 	bool needs_reschedule() { return m_flags.need_resched; }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SystemTypes.hpp>
 #include <Memory/Allocators/BumpAllocator.hpp>
+#include <SystemTypes.hpp>
 
 enum class ChunkState {
 	Free,
@@ -16,7 +16,9 @@ struct Chunk {
 	Chunk() = default;
 
 	Chunk(size_t size)
-			: m_next(nullptr), m_size(size), m_state(ChunkState::Free) {}
+	    : m_next(nullptr)
+	    , m_size(size)
+	    , m_state(ChunkState::Free) {}
 
 	void* alloc_ptr() { return reinterpret_cast<uint8*>(this) + sizeof(Chunk); }
 
@@ -33,7 +35,6 @@ class ChunkAllocator {
 	Chunk* find_chunk_with_address(void* addr);
 
 	bool mark_chunk_allocated(Chunk&, size_t);
-
 public:
 	ChunkAllocator() noexcept = default;
 

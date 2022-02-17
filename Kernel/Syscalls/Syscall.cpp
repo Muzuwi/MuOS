@@ -4,7 +4,7 @@
 
 template<typename... Args>
 static uint64_t call(void* ptr, Args... args) {
-	return reinterpret_cast<uint64_t(*)(Args...)>(ptr)(args...);
+	return reinterpret_cast<uint64_t (*)(Args...)>(ptr)(args...);
 }
 
 struct _SyscallHandler {
@@ -16,10 +16,10 @@ struct _SyscallHandler {
 _SyscallHandler s_syscall_functions[256];
 
 void Syscall::init() {
-#define DEFINE_SYSCALL(idx, ptr, argc, ret) \
-	s_syscall_functions[idx]._ptr = (void*)ptr;  \
-	s_syscall_functions[idx]._argc = argc;\
-	s_syscall_functions[idx]._ret = ret; \
+#define DEFINE_SYSCALL(idx, ptr, argc, ret)                   \
+	s_syscall_functions[idx]._ptr = (void*)ptr;               \
+	s_syscall_functions[idx]._argc = argc;                    \
+	s_syscall_functions[idx]._ret = ret;                      \
 	static_assert(idx < 256, "Syscall function ID too big!"); \
 	static_assert(ret == true || ret == false, "Syscall _ret value must be true or false");
 
@@ -43,13 +43,31 @@ void Syscall::init() {
 	bool has_retval = handler._ret;
 
 	//  Beautiful call() pyramid
-	switch (argc) {
-		case 0: { regs->rax = call(ptr); break; }
-		case 1: { regs->rax = call(ptr, regs->rdi); break; }
-		case 2: { regs->rax = call(ptr, regs->rdi, regs->rsi); break; }
-		case 3: { regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx); break; }
-		case 4: { regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx, regs->r8); break; }
-		case 5: { regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx, regs->r8, regs->r9); break; }
+	switch(argc) {
+		case 0: {
+			regs->rax = call(ptr);
+			break;
+		}
+		case 1: {
+			regs->rax = call(ptr, regs->rdi);
+			break;
+		}
+		case 2: {
+			regs->rax = call(ptr, regs->rdi, regs->rsi);
+			break;
+		}
+		case 3: {
+			regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx);
+			break;
+		}
+		case 4: {
+			regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx, regs->r8);
+			break;
+		}
+		case 5: {
+			regs->rax = call(ptr, regs->rdi, regs->rsi, regs->rdx, regs->r8, regs->r9);
+			break;
+		}
 		default: {
 			kerrorf("[Syscall] Corrupted argc={} for syscall_id={}\n", argc, id);
 			return;
@@ -60,4 +78,3 @@ void Syscall::init() {
 	if(!has_retval)
 		regs->rax = 0;
 }
-

@@ -1,11 +1,11 @@
-#include <SystemTypes.hpp>
-#include <Daemons/Kbd/Kbd.hpp>
 #include <Arch/x86_64/PortIO.hpp>
+#include <Daemons/Kbd/Kbd.hpp>
+#include <Debug/klogf.hpp>
+#include <Locks/KSemaphore.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <Locks/KSemaphore.hpp>
 #include <Structs/StaticRing.hpp>
-#include <Debug/klogf.hpp>
+#include <SystemTypes.hpp>
 
 static StaticRing<uint8, 1024> s_keyboard_buffer {};
 static KSemaphore s_keyboard_semaphore;

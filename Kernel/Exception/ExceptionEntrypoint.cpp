@@ -4,10 +4,13 @@
 #include <SMP/SMP.hpp>
 
 static Exception::HandlerFunction s_exception_handlers[32] {
-		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, Exception::handle_page_fault, nullptr,
-		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-		nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
+	nullptr, nullptr, nullptr, nullptr, nullptr,
+	nullptr, nullptr, nullptr, nullptr, nullptr,
+	nullptr, nullptr, nullptr, nullptr, Exception::handle_page_fault,
+	nullptr, nullptr, nullptr, nullptr, nullptr,
+	nullptr, nullptr, nullptr, nullptr, nullptr,
+	nullptr, nullptr, nullptr, nullptr, nullptr,
+	nullptr, nullptr
 };
 
 extern "C" void _kernel_exception_entrypoint(size_t vector, PtraceRegs* interrupt_stack_frame) {

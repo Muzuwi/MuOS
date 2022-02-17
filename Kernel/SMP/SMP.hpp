@@ -6,7 +6,6 @@ class PhysAddr;
 
 class SMP {
 	static void ap_entrypoint(ControlBlock*, Thread*, PhysAddr, PhysAddr);
-
 public:
 	static void init_boot_ap_gdt(void*);
 

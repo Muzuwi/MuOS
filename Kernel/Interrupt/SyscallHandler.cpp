@@ -1,7 +1,7 @@
-#include <Debug/kdebugf.hpp>
 #include <Arch/x86_64/TrapFrame.hpp>
-#include <Process/Scheduler.hpp>
+#include <Debug/kdebugf.hpp>
 #include <Process/Process.hpp>
+#include <Process/Scheduler.hpp>
 #include <Syscalls/SyscallList.hpp>
 
 extern "C" uint32_t _ukernel_syscall_handler(TrapFrame regs) {

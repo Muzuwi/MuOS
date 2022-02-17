@@ -7,10 +7,12 @@ class PAllocation {
 	size_t m_allocation_order;
 public:
 	PAllocation() noexcept
-			: m_allocation_base(nullptr), m_allocation_order(0) {}
+	    : m_allocation_base(nullptr)
+	    , m_allocation_order(0) {}
 
 	PAllocation(PhysAddr base, size_t size) noexcept
-			: m_allocation_base(base), m_allocation_order(size) {}
+	    : m_allocation_base(base)
+	    , m_allocation_order(size) {}
 
 	PhysAddr base() const { return m_allocation_base; }
 

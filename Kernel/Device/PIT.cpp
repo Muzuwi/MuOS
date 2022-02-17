@@ -1,13 +1,13 @@
-#include <Device/PIT.hpp>
-#include <Arch/x86_64/PtraceRegs.hpp>
 #include <Arch/x86_64/PortIO.hpp>
+#include <Arch/x86_64/PtraceRegs.hpp>
+#include <Device/PIT.hpp>
 #include <Interrupt/IRQDispatcher.hpp>
-#include <Scheduler/Scheduler.hpp>
+#include <LibGeneric/List.hpp>
+#include <LibGeneric/LockGuard.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <LibGeneric/List.hpp>
-#include <LibGeneric/Spinlock.hpp>
-#include <LibGeneric/LockGuard.hpp>
+#include <Scheduler/Scheduler.hpp>
 #include <SMP/SMP.hpp>
 
 struct Alarm {
@@ -21,9 +21,9 @@ static gen::List<Alarm> s_alarms {};
 static gen::Spinlock s_alarms_lock;
 
 /*
-	Updates the reload value on channel0 PIT
+    Updates the reload value on channel0 PIT
 */
-void update_timer_reload(uint16_t freq){
+void update_timer_reload(uint16_t freq) {
 	Ports::out(PIT::port_ch0_data(), freq & 0xFF);
 	Ports::out(PIT::port_ch0_data(), (freq >> 8) & 0xFF);
 }
@@ -47,11 +47,12 @@ void _pit_irq0_handler(PtraceRegs*) {
 }
 
 PIT::PIT() noexcept
-: m_divider(1193), m_ticks(0) { //  ~1000.15 Hz
+    : m_divider(1193)
+    , m_ticks(0) {//  ~1000.15 Hz
 	IRQDispatcher::register_microtask(0, _pit_irq0_handler);
 	Ports::out(PIT::port_command(), 0b00110100);
 	update_timer_reload(m_divider);
-//	kdebugf("[PIT] Timer at %i Hz\n", PIT::base_frequency() / m_divider);
+	//	kdebugf("[PIT] Timer at %i Hz\n", PIT::base_frequency() / m_divider);
 }
 
 void PIT::tick() {
@@ -75,11 +76,10 @@ uint64_t PIT::milliseconds() {
 }
 
 void PIT::sleep(uint64_t len) {
-	gen::LockGuard<gen::Spinlock> guard {s_alarms_lock};
+	gen::LockGuard<gen::Spinlock> guard { s_alarms_lock };
 	auto* thread = SMP::ctb().current_thread();
 	auto time = milliseconds();
-//	kdebugf("set sleep for pid=%i\n", proc->pid());
+	//	kdebugf("set sleep for pid=%i\n", proc->pid());
 
-	s_alarms.push_back({.m_thread = thread, .m_start = time, .m_len = len });
-
+	s_alarms.push_back({ .m_thread = thread, .m_start = time, .m_len = len });
 }

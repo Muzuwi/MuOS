@@ -1,8 +1,8 @@
+#include <Debug/klogf.hpp>
+#include <Memory/Wrappers/UserPtr.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <Memory/Wrappers/UserPtr.hpp>
 #include <SMP/SMP.hpp>
-#include <Debug/klogf.hpp>
 
 pid_t Process::getpid() {
 	return Thread::current()->parent()->pid();

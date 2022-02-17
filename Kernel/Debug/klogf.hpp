@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibGeneric/Spinlock.hpp>
-#include <LibFormat/Format.hpp>
 #include <Debug/DebugCon.hpp>
+#include <LibFormat/Format.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <Memory/KHeap.hpp>
 
 class StaticKlogfBuffer {
@@ -15,7 +15,6 @@ public:
 		static StaticKlogfBuffer s_buffer;
 		return s_buffer;
 	}
-
 private:
 	StaticKlogfBuffer() = default;
 };

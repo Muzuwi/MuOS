@@ -1,15 +1,15 @@
-#include <Debug/kpanic.hpp>
-#include <SystemTypes.hpp>
-#include <Syscalls/Syscall.hpp>
-#include <Process/Process.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/CPUID.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Debug/klogf.hpp>
+#include <Debug/kpanic.hpp>
+#include <Process/Process.hpp>
+#include <Syscalls/Syscall.hpp>
+#include <SystemTypes.hpp>
 
 void CPU::initialize_features() {
-	uint32_t new_efer {0x500}; //  Long-Mode enable + Long-mode active
+	uint32_t new_efer { 0x500 };//  Long-Mode enable + Long-mode active
 
 	klogf_static("[CPU] Support ");
 	if(CPUID::has_NXE()) {
@@ -68,19 +68,13 @@ uint64_t CPU::get_gs_base() {
 
 uint64 CPU::cr2() {
 	uint64 data = 0;
-	asm volatile(
-			"mov %0, %%cr2"
-			:"=a"(data)
-			::);
+	asm volatile("mov %0, %%cr2" : "=a"(data)::);
 	return data;
 }
 
 uint64 CPU::cr3() {
 	uint64 data = 0;
-	asm volatile(
-	"mov %0, %%cr3"
-	:"=a"(data)
-	::);
+	asm volatile("mov %0, %%cr3" : "=a"(data)::);
 	return data;
 }
 
@@ -96,8 +90,5 @@ void CPU::lgdt(void* ptr) {
 }
 
 void CPU::ltr(uint16 selector) {
-	asm volatile(
-	"ltr %0\n"
-	::"r"(selector)
-	);
+	asm volatile("ltr %0\n" ::"r"(selector));
 }

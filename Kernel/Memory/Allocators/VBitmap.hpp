@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SystemTypes.hpp>
 #include <Structs/KOptional.hpp>
+#include <SystemTypes.hpp>
 
 class VBitmap {
 	void* m_base;
@@ -39,7 +39,6 @@ class VBitmap {
 	KOptional<size_t> allocate_impl(size_t count);
 
 	void free_impl(size_t idx, size_t count);
-
 public:
 	VBitmap();
 

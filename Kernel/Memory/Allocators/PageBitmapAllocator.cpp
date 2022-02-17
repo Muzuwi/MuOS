@@ -1,17 +1,17 @@
+#include <Debug/kpanic.hpp>
 #include <Memory/Allocators/PageBitmapAllocator.hpp>
 #include <Memory/Units.hpp>
-#include <Debug/kpanic.hpp>
 
 PageBitmapAllocator::PageBitmapAllocator(PhysAddr base, size_t region_size)
-		: m_base(base), m_region_size(region_size) {
+    : m_base(base)
+    , m_region_size(region_size) {
 	auto region_pages = region_size / 0x1000;
 	m_bitmap_size = divround(region_pages, 8);
 
 	//  Verify if the bitmap will be accessible with the bootstrap identity mappings,
 	//  as only 1GiB of lower physical is mapped. Defer initialization of the region
 	//  if not.
-	if((uintptr_t)m_base.get() > 1024 * Units::MiB ||
-	   (uintptr_t)(m_base + m_bitmap_size).get() > 1024 * Units::MiB) {
+	if((uintptr_t)m_base.get() > 1024 * Units::MiB || (uintptr_t)(m_base + m_bitmap_size).get() > 1024 * Units::MiB) {
 		m_deferred_initialization = true;
 	} else {
 		m_deferred_initialization = false;

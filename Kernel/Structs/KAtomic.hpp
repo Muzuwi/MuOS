@@ -17,7 +17,7 @@ public:
 	KAtomic() = default;
 
 	explicit KAtomic(T value) noexcept
-			: m_value(value) {}
+	    : m_value(value) {}
 
 	~KAtomic() = default;
 
@@ -36,4 +36,3 @@ public:
 	 */
 	[[nodiscard]] T exchange(T value, MemoryOrdering);
 };
-

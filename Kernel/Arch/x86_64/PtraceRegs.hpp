@@ -1,6 +1,6 @@
 #pragma once
-#include <SystemTypes.hpp>
 #include <Arch/x86_64/GDT.hpp>
+#include <SystemTypes.hpp>
 
 struct PtraceRegs {
 	uint64_t r15;

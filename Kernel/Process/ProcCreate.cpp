@@ -1,14 +1,12 @@
-#include <Process/Process.hpp>
-#include <Process/PidAllocator.hpp>
 #include <Memory/KHeap.hpp>
+#include <Process/PidAllocator.hpp>
+#include <Process/Process.hpp>
 
 SharedPtr<Process> Process::create(gen::String name, ProcFlags flags) {
-	return SharedPtr {
-			new(KHeap::instance().slab_alloc(sizeof(Process))) Process(PidAllocator::next(), name, flags)
-	};
+	return SharedPtr { new(KHeap::instance().slab_alloc(sizeof(Process))) Process(PidAllocator::next(), name, flags) };
 }
 
-SharedPtr<Thread> Process::create_with_main_thread(gen::String name, SharedPtr<Process> parent, void(* kernel_exec)(),
+SharedPtr<Thread> Process::create_with_main_thread(gen::String name, SharedPtr<Process> parent, void (*kernel_exec)(),
                                                    ProcFlags flags) {
 	if(!parent) {
 		return SharedPtr<Thread> { nullptr };

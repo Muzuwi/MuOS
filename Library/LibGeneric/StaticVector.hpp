@@ -1,8 +1,8 @@
 #pragma once
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 #ifdef __is_kernel_build__
-#include <Debug/kassert.hpp>
+#	include <Debug/kassert.hpp>
 #endif
 
 namespace gen {
@@ -31,10 +31,9 @@ namespace gen {
 			assert(!empty());
 			return _get(--m_pointer);
 		}
-
 	public:
 		StaticVector() noexcept
-				: m_pointer(0) {}
+		    : m_pointer(0) {}
 
 		StaticVector(StaticVector const& v) noexcept {
 			m_pointer = v.m_pointer;
@@ -43,62 +42,39 @@ namespace gen {
 			}
 		}
 
-		size_t size() const {
-			return m_pointer;
-		}
+		size_t size() const { return m_pointer; }
 
-		bool empty() const {
-			return m_pointer == 0;
-		}
+		bool empty() const { return m_pointer == 0; }
 
 		/*
 		 *  Vec mutators
 		 */
-		void push_back(T val) {
-			_insert(val);
-		}
+		void push_back(T val) { _insert(val); }
 
-		T pop_back() {
-			return _remove_back();
-		}
+		T pop_back() { return _remove_back(); }
 
 		template<typename... Args>
-		void emplace_back(Args&& ... args) {
+		void emplace_back(Args&&... args) {
 			assert(m_pointer < buffer_size);
 			_get(m_pointer++) = T(args...);
 		}
 
-		void clear() {
-			m_pointer = 0;
-		}
+		void clear() { m_pointer = 0; }
 
-		T& operator[](size_t n) {
-			return _get(n);
-		}
+		T& operator[](size_t n) { return _get(n); }
 
-		T const& operator[](size_t n) const {
-			return _get(n);
-		}
+		T const& operator[](size_t n) const { return _get(n); }
 
 		using iterator = T*;
 		using const_iterator = T const*;
 
-		iterator begin() {
-			return m_buffer;
-		}
+		iterator begin() { return m_buffer; }
 
-		const_iterator begin() const {
-			return m_buffer;
-		}
+		const_iterator begin() const { return m_buffer; }
 
-		iterator end() {
-			return m_buffer + buffer_size;
-		}
+		iterator end() { return m_buffer + buffer_size; }
 
-		const_iterator end() const {
-			return m_buffer + buffer_size;
-		}
-
+		const_iterator end() const { return m_buffer + buffer_size; }
 	};
 
 }

@@ -1,7 +1,7 @@
+#include <Debug/klogf.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <Debug/klogf.hpp>
 
 template<class T>
 gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {

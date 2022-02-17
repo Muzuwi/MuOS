@@ -1,6 +1,6 @@
 #pragma once
-#include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/List.hpp>
+#include <LibGeneric/Spinlock.hpp>
 
 class Thread;
 

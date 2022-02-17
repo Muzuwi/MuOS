@@ -1,14 +1,12 @@
 #ifndef __LIBC_TIME_H
-# define __LIBC_TIME_H
+#define __LIBC_TIME_H
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif
+#endif
 
-
-
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif
+#endif
 
 #endif

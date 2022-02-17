@@ -1,21 +1,21 @@
 #ifdef __is_kernel_build
-#include <Debug/kassert.hpp>
+#	include <Debug/kassert.hpp>
 #endif
 //
 //#include <LibGeneric/ELFParser.hpp>
 //
-//template<class T>
-//bool ensure_within(void* image_base, size_t image_size, void* address) {
+//  template<class T>
+//  bool ensure_within(void* image_base, size_t image_size, void* address) {
 //	return (address >= image_base) && ((uintptr_t)address + sizeof(T) <= (uintptr_t)image_base + image_size);
 //}
 //
-//template<size_t struct_size>
-//bool ensure_within(void* image_base, size_t image_size, void* address) {
+//  template<size_t struct_size>
+//  bool ensure_within(void* image_base, size_t image_size, void* address) {
 //	return (address >= image_base) && ((uintptr_t)address + struct_size <= (uintptr_t)image_base + image_size);
 //}
 //
-//template<typename Architecture>
-//gen::String ELFParser<Architecture>::string_lookup(size_t index) const {
+//  template<typename Architecture>
+//  gen::String ELFParser<Architecture>::string_lookup(size_t index) const {
 //	auto* elfHeader = reinterpret_cast<ElfHeaderType*>(m_elf_phys);
 //	auto offset = elfHeader->e_shoff;
 //	auto entrySize = elfHeader->e_shentsize;
@@ -40,8 +40,8 @@
 //}
 //
 //
-//template<typename Architecture>
-//void ELFParser<Architecture>::parse_prog_headers() {
+//  template<typename Architecture>
+//  void ELFParser<Architecture>::parse_prog_headers() {
 //	auto* elfHeader = reinterpret_cast<ElfHeaderType*>(m_elf_phys);
 //	auto offset    = elfHeader->e_phoff;
 //	auto entrySize = elfHeader->e_phentsize;
@@ -58,8 +58,8 @@
 //	}
 //}
 //
-//template<typename Architecture>
-//void ELFParser<Architecture>::parse_sect_headers() {
+//  template<typename Architecture>
+//  void ELFParser<Architecture>::parse_sect_headers() {
 //	auto* elfHeader = reinterpret_cast<ElfHeaderType*>(m_elf_phys);
 //	auto offset = elfHeader->e_shoff;
 //	auto entrySize = elfHeader->e_shentsize;
@@ -82,8 +82,8 @@
 //	}
 //}
 //
-//template<typename Architecture>
-//void ELFParser<Architecture>::parse_header() {
+//  template<typename Architecture>
+//  void ELFParser<Architecture>::parse_header() {
 //	auto* header = reinterpret_cast<ElfHeaderType*>(m_elf_phys);
 //	if(!ensure_within<ElfHeaderType>(m_elf_phys, m_elf_size, header))
 //		return;
@@ -99,8 +99,8 @@
 //	this->parse_prog_headers();
 //}
 //
-//template<typename Architecture>
-//ELFParser<Architecture>::ELFParser(void* base, size_t size) {
+//  template<typename Architecture>
+//  ELFParser<Architecture>::ELFParser(void* base, size_t size) {
 //	m_elf_phys = base;
 //	m_elf_size = size;
 //
@@ -118,8 +118,8 @@
 ////	return gen::vector<ProgHeaderType>(const_cast<gen::vector<ProgHeaderType>&>(m_prog_headers));
 ////}
 //
-//template<typename Architecture>
-//ELFParser<Architecture>* ELFParser<Architecture>::from_image(void* elf, size_t size) {
+//  template<typename Architecture>
+//  ELFParser<Architecture>* ELFParser<Architecture>::from_image(void* elf, size_t size) {
 //	auto* identity = reinterpret_cast<unsigned char*>(elf);
 //	if(!ensure_within<16>(elf, size, identity))
 //		return nullptr;
@@ -147,8 +147,8 @@
 //	return new ELFParser<Architecture>(elf, size);
 //}
 //
-//template<typename Architecture>
-//Arch ELFParser<Architecture>::arch_from_image(void* elf, size_t size) {
+//  template<typename Architecture>
+//  Arch ELFParser<Architecture>::arch_from_image(void* elf, size_t size) {
 //	auto* identity = reinterpret_cast<unsigned char*>(elf);
 //	if(!ensure_within<16>(elf, size, identity))
 //		return Arch::Invalid;
@@ -159,5 +159,5 @@
 //		return Arch::Invalid;
 //}
 //
-//template class ELFParser<Architecture32>;
-//template class ELFParser<Architecture64>;
+//  template class ELFParser<Architecture32>;
+//  template class ELFParser<Architecture64>;

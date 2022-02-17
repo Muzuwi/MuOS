@@ -1,7 +1,7 @@
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
 #include <LibGeneric/Allocator.hpp>
+#include <stddef.h>
+#include <stdint.h>
 
 namespace gen {
 	template<template<typename> class Alloc = gen::Allocator>
@@ -21,13 +21,15 @@ namespace gen {
 		}
 
 		constexpr void _add_ref() {
-			if(!m_ref_count) return;
+			if(!m_ref_count)
+				return;
 
 			++(*m_ref_count);
 		}
 
 		constexpr void _release_ref() {
-			if(!m_ref_count) return;
+			if(!m_ref_count)
+				return;
 
 			--(*m_ref_count);
 
@@ -36,15 +38,16 @@ namespace gen {
 		}
 	public:
 		constexpr __SharedCount(_refcount_t* p) noexcept
-		: m_ref_count(p) {}
+		    : m_ref_count(p) {}
 
 		__SharedCount(const __SharedCount& ptr) noexcept
-		: m_ref_count(ptr.m_ref_count) {
+		    : m_ref_count(ptr.m_ref_count) {
 			_add_ref();
 		}
 
 		__SharedCount& operator=(const __SharedCount& c) {
-			if(&c == this) return *this;
+			if(&c == this)
+				return *this;
 
 			_release_ref();
 			m_ref_count = c.m_ref_count;
@@ -53,13 +56,9 @@ namespace gen {
 			return *this;
 		}
 
-		~__SharedCount() noexcept {
-			_release_ref();
-		}
+		~__SharedCount() noexcept { _release_ref(); }
 
-		_refcount_t _use_count() const {
-			return ((m_ref_count) ? (*m_ref_count) : 0);
-		}
+		_refcount_t _use_count() const { return ((m_ref_count) ? (*m_ref_count) : 0); }
 
 		void _swap(__SharedCount& v) {
 			auto* tmp = v.m_ref_count;
@@ -68,7 +67,6 @@ namespace gen {
 		}
 	};
 
-
 	template<class T, template<typename> class Alloc = gen::Allocator>
 	class SharedPtr {
 		using RefCount = __SharedCount<Alloc>;
@@ -76,7 +74,8 @@ namespace gen {
 		T* m_ptr;
 		RefCount m_ref_count;
 
-		typedef typename Alloc<typename RefCount::_refcount_t>::template rebind<typename RefCount::_refcount_t>::other RefAllocType;
+		typedef typename Alloc<typename RefCount::_refcount_t>::template rebind<typename RefCount::_refcount_t>::other
+		        RefAllocType;
 		typename AllocatorTraits<RefAllocType>::allocator_type _ref_allocator;
 		typedef typename Alloc<T>::template rebind<T>::other ObjAllocType;
 		typename AllocatorTraits<ObjAllocType>::allocator_type _obj_allocator;
@@ -96,16 +95,19 @@ namespace gen {
 		}
 	public:
 		constexpr SharedPtr() noexcept
-		: m_ptr(nullptr), m_ref_count(nullptr) {}
+		    : m_ptr(nullptr)
+		    , m_ref_count(nullptr) {}
 
 		explicit constexpr SharedPtr(nullptr_t)
-		: SharedPtr() {}
+		    : SharedPtr() {}
 
 		explicit SharedPtr(T* ptr) noexcept
-		: m_ptr(ptr), m_ref_count(_alloc_refcount()) {}
+		    : m_ptr(ptr)
+		    , m_ref_count(_alloc_refcount()) {}
 
 		SharedPtr(const SharedPtr& ptr) noexcept
-		: m_ptr(ptr.m_ptr), m_ref_count(ptr.m_ref_count) {}
+		    : m_ptr(ptr.m_ptr)
+		    , m_ref_count(ptr.m_ref_count) {}
 
 		~SharedPtr() {
 			//  Free when we're the only reference left
@@ -113,7 +115,8 @@ namespace gen {
 		}
 
 		SharedPtr& operator=(const SharedPtr& ptr) noexcept {
-			if(&ptr == this) return *this;
+			if(&ptr == this)
+				return *this;
 
 			_on_destruct();
 			m_ptr = ptr.m_ptr;
@@ -122,25 +125,15 @@ namespace gen {
 			return *this;
 		}
 
-		size_t use_count() const {
-			return m_ref_count._use_count();
-		}
+		size_t use_count() const { return m_ref_count._use_count(); }
 
-		T* get() const noexcept {
-			return m_ptr;
-		}
+		T* get() const noexcept { return m_ptr; }
 
-		T& operator*() const noexcept {
-			return *m_ptr;
-		}
+		T& operator*() const noexcept { return *m_ptr; }
 
-		T* operator->() const noexcept {
-			return m_ptr;
-		}
+		T* operator->() const noexcept { return m_ptr; }
 
-		operator bool() const {
-			return (m_ptr != nullptr);
-		}
+		operator bool() const { return (m_ptr != nullptr); }
 
 		void reset() noexcept {
 			_on_destruct();
@@ -169,4 +162,3 @@ namespace gen {
 		return SharedPtr<T>(new T(args...));
 	}
 }
-

@@ -1,5 +1,5 @@
-#include <string.h>
 #include <Arch/x86_64/Paging.hpp>
+#include <string.h>
 
 bool PTE::get(FlagPTE flag) const {
 	return m_data & static_cast<uint64_t>(flag);

@@ -15,10 +15,7 @@ namespace Format {
 
 	template<>
 	struct Formatter<void*> {
-
-		constexpr void parse(ParserContext&) {
-
-		}
+		constexpr void parse(ParserContext&) {}
 
 		constexpr void format(FormatContext& context, void*& value) {
 			auto ptr_value = _format_bitcast<uintptr_t>(value);
@@ -35,10 +32,7 @@ namespace Format {
 
 	template<>
 	struct Formatter<void const*> {
-
-		constexpr void parse(ParserContext&) {
-
-		}
+		constexpr void parse(ParserContext&) {}
 
 		constexpr void format(FormatContext& context, void const*& value) {
 			auto ptr_value = _format_bitcast<uintptr_t>(value);

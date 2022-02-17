@@ -1,7 +1,7 @@
 #pragma once
+#include <Memory/Units.hpp>
 #include <stdint.h>
 #include <SystemTypes.hpp>
-#include <Memory/Units.hpp>
 
 class KMalloc {
 	KMalloc();
@@ -15,9 +15,9 @@ class KMalloc {
 	bool is_kmalloc_memory(void*);
 public:
 	static KMalloc& get();
-	
+
 	void init();
-	void* kmalloc_alloc(size_t,size_t=1);
+	void* kmalloc_alloc(size_t, size_t = 1);
 	void kmalloc_free(void*);
 
 	using Chunk = uint32_t;
@@ -25,17 +25,11 @@ public:
 	/*
 	 *  This must match the size of the boostrap buffer KMalloc is initialized with
 	 */
-	static constexpr uint64_t pool_size() {
-		return (1 * Units::MiB);
-	}
+	static constexpr uint64_t pool_size() { return (1 * Units::MiB); }
 
-	static constexpr uint64_t chunk_size() {
-		return 2;
-	}
+	static constexpr uint64_t chunk_size() { return 2; }
 
-	static constexpr uint64_t array_count() {
-		return ((pool_size() / chunk_size()) / (sizeof(Chunk)*8));
-	}
+	static constexpr uint64_t array_count() { return ((pool_size() / chunk_size()) / (sizeof(Chunk) * 8)); }
 
 	template<class T>
 	struct BootstrapAllocator {
@@ -48,9 +42,7 @@ public:
 			return reinterpret_cast<pointer>(ptr);
 		}
 
-		static void deallocate(pointer p, size_type) {
-			KMalloc::get().kmalloc_free(p);
-		}
+		static void deallocate(pointer p, size_type) { KMalloc::get().kmalloc_free(p); }
 
 		template<class Type>
 		struct rebind {

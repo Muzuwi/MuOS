@@ -1,12 +1,12 @@
-#include <Arch/x86_64/CPU.hpp>
-#include <LibGeneric/Vector.hpp>
 #include <APIC/APIC.hpp>
-#include <SMP/SMP.hpp>
-#include <Memory/Ptr.hpp>
-#include <Process/Thread.hpp>
-#include <Process/Process.hpp>
-#include <Memory/VMM.hpp>
+#include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/IDT.hpp>
+#include <LibGeneric/Vector.hpp>
+#include <Memory/Ptr.hpp>
+#include <Memory/VMM.hpp>
+#include <Process/Process.hpp>
+#include <Process/Thread.hpp>
+#include <SMP/SMP.hpp>
 
 static ControlBlock s_bootstrap_ctl { static_cast<uint8>(-1) };
 
@@ -27,11 +27,7 @@ void SMP::init_boot_ap_gdt(void* ptr) {
 
 void* read_ctlblock_from_gs() {
 	uint64 data;
-	asm volatile(
-	"mov %0, %%gs:0\n"
-	:"=r"(data)
-	:
-	);
+	asm volatile("mov %0, %%gs:0\n" : "=r"(data) :);
 	return (void*)data;
 }
 
@@ -63,9 +59,9 @@ void SMP::ap_entrypoint(ControlBlock* ctb, Thread* idle_task, PhysAddr code_page
 
 	SMP::ctb().scheduler().m_ap_idle = idle_task;
 
-//	while(true) {
-//		asm volatile("cli\nhlt\n");
-//	}
+	//	while(true) {
+	//		asm volatile("cli\nhlt\n");
+	//	}
 
 	uint8 _dummy_val[sizeof(Thread)] = {};
 	//  Huge hack - use dummy buffer on the stack when switching for the first time,

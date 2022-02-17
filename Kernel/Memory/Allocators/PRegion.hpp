@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Memory/Ptr.hpp>
 #include <Memory/Allocators/PageBitmapAllocator.hpp>
+#include <Memory/Ptr.hpp>
 
 class PRegion {
 	PhysAddr m_region_base;
@@ -10,9 +10,9 @@ class PRegion {
 	PageBitmapAllocator m_allocator;
 public:
 	PRegion(PhysAddr base, size_t size)
-			: m_region_base(base), m_region_size(size), m_allocator(base, size) {
-
-	}
+	    : m_region_base(base)
+	    , m_region_size(size)
+	    , m_allocator(base, size) {}
 
 	PhysAddr base() const { return m_region_base; }
 
@@ -20,8 +20,5 @@ public:
 
 	PageBitmapAllocator& allocator() { return m_allocator; }
 
-	bool contains(PhysAddr address) {
-		return address >= m_region_base &&
-		       address < m_region_base + m_region_size;
-	}
+	bool contains(PhysAddr address) { return address >= m_region_base && address < m_region_base + m_region_size; }
 };

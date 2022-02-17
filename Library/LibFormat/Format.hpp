@@ -1,11 +1,11 @@
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
-#include <LibFormat/Formatter.hpp>
 #include <LibFormat/FormatContext.hpp>
-#include <LibFormat/ParserContext.hpp>
+#include <LibFormat/Formatter.hpp>
 #include <LibFormat/Formatters/Default.hpp>
+#include <LibFormat/ParserContext.hpp>
+#include <stddef.h>
+#include <stdint.h>
 
 namespace Format {
 	template<typename T>
@@ -147,20 +147,17 @@ namespace Format {
 				default: break;
 			}
 		}
-
 	}
 
 	template<typename... Args>
 	constexpr size_t format(char const* format, char* output, size_t output_len, Args... args) {
-		auto context = FormatContext {
-				.format = format,
-				.buf = output,
-				.buf_len = output_len,
-				.format_pos = 0,
-				.buf_pos = 0,
-				.written = 0,
-				.state = FormatContext::_FormatterState::RawOutput
-		};
+		auto context = FormatContext { .format = format,
+			                           .buf = output,
+			                           .buf_len = output_len,
+			                           .format_pos = 0,
+			                           .buf_pos = 0,
+			                           .written = 0,
+			                           .state = FormatContext::_FormatterState::RawOutput };
 		Format::_format_impl(context, args...);
 		return context.written;
 	}

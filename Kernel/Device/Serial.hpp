@@ -1,8 +1,8 @@
 #pragma once
-#include <SystemTypes.hpp>
 #include <Interrupt/IRQDispatcher.hpp>
-#include <Structs/StaticRing.hpp>
 #include <Locks/KSemaphore.hpp>
+#include <Structs/StaticRing.hpp>
+#include <SystemTypes.hpp>
 
 class Serial {
 public:
@@ -14,7 +14,7 @@ public:
 	};
 
 	enum class Register {
-		Data  = 0,
+		Data = 0,
 		IrqEn = 1,
 		IrqId = 2,
 		LineControl = 3,

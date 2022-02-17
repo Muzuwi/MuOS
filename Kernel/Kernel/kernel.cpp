@@ -1,25 +1,22 @@
+#include <ACPI/ACPI.hpp>
+#include <APIC/APIC.hpp>
+#include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/GDT.hpp>
+#include <Arch/x86_64/IDT.hpp>
+#include <Debug/klogf.hpp>
+#include <Debug/kpanic.hpp>
 #include <Debug/TTY.hpp>
+#include <Device/PIT.hpp>
+#include <Device/Serial.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/PMM.hpp>
 #include <Multiboot/MultibootInfo.hpp>
-#include <Arch/x86_64/GDT.hpp>
-#include <Arch/x86_64/IDT.hpp>
-
-#include <Device/PIT.hpp>
-#include <Arch/x86_64/CPU.hpp>
 #include <Process/Process.hpp>
+#include <SMP/SMP.hpp>
 #include <Syscalls/Syscall.hpp>
 
-#include <APIC/APIC.hpp>
-#include <ACPI/ACPI.hpp>
-
-#include <Device/Serial.hpp>
-#include <SMP/SMP.hpp>
-#include <Debug/klogf.hpp>
-#include <Debug/kpanic.hpp>
-
 /*
-	Main kernel entrypoint
+    Main kernel entrypoint
 */
 extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info) {
 	TTY::init();

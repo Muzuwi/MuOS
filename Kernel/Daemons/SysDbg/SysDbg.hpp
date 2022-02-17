@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SystemTypes.hpp>
 #include <LibGeneric/SharedPtr.hpp>
+#include <SystemTypes.hpp>
 
 class Process;
 

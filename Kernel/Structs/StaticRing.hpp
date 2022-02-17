@@ -1,8 +1,8 @@
 #pragma once
 
 #include <stddef.h>
-#include <Structs/KOptional.hpp>
 #include <Structs/KAtomic.hpp>
+#include <Structs/KOptional.hpp>
 
 /*
  *  Implements a single-producer, single-consumer lock-free ring buffer
@@ -14,7 +14,8 @@ class StaticRing {
 	KAtomic<size_t> m_write_pointer;
 public:
 	StaticRing() noexcept
-			: m_read_pointer(), m_write_pointer() {
+	    : m_read_pointer()
+	    , m_write_pointer() {
 		m_read_pointer.store(0, MemoryOrdering::Relaxed);
 		m_write_pointer.store(0, MemoryOrdering::Relaxed);
 	}
@@ -26,8 +27,7 @@ public:
 		}
 
 		const auto value = m_elements[current];
-		m_read_pointer.store((current + 1) % count,
-		                     MemoryOrdering::SeqCst);
+		m_read_pointer.store((current + 1) % count, MemoryOrdering::SeqCst);
 		return { value };
 	}
 
@@ -43,7 +43,5 @@ public:
 		return true;
 	}
 
-	bool empty() {
-		return m_read_pointer.load(MemoryOrdering::SeqCst) == m_write_pointer.load(MemoryOrdering::SeqCst);
-	}
+	bool empty() { return m_read_pointer.load(MemoryOrdering::SeqCst) == m_write_pointer.load(MemoryOrdering::SeqCst); }
 };

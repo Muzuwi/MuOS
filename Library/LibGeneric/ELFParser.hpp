@@ -1,11 +1,11 @@
 #pragma once
-#include <LibGeneric/Vector.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/String.hpp>
+#include <LibGeneric/Vector.hpp>
 
 enum ABI {
-	SysV    = 0,
-	Linux   = 4
+	SysV = 0,
+	Linux = 4
 };
 
 enum Arch {
@@ -21,15 +21,15 @@ enum Encoding {
 
 enum ObjectType {
 	Relocatable = 1,
-	Executable  = 2,
-	Shared      = 3,
-	Core        = 4
+	Executable = 2,
+	Shared = 3,
+	Core = 4
 };
 
 enum SegType {
 	Null = 0,
 	Load = 1,
-	Dynamic  = 2,
+	Dynamic = 2,
 	Interpreter = 3,
 	Note = 4,
 	ShLib = 5,
@@ -76,66 +76,66 @@ struct ELFHeader64 {
 } __attribute__((packed));
 
 struct SectionHeader32 {
-	uint32_t   sh_name;
-	uint32_t   sh_type;
-	uint32_t   sh_flags;
-	uint32_t   sh_addr;
-	uint32_t   sh_offset;
-	uint32_t   sh_size;
-	uint32_t   sh_link;
-	uint32_t   sh_info;
-	uint32_t   sh_addralign;
-	uint32_t   sh_entsize;
+	uint32_t sh_name;
+	uint32_t sh_type;
+	uint32_t sh_flags;
+	uint32_t sh_addr;
+	uint32_t sh_offset;
+	uint32_t sh_size;
+	uint32_t sh_link;
+	uint32_t sh_info;
+	uint32_t sh_addralign;
+	uint32_t sh_entsize;
 } __attribute__((packed));
 struct SectionHeader64 {
-	uint32_t   sh_name;
-	uint32_t   sh_type;
-	uint64_t   sh_flags;
-	uint64_t   sh_addr;
-	uint64_t   sh_offset;
-	uint64_t   sh_size;
-	uint32_t   sh_link;
-	uint32_t   sh_info;
-	uint64_t   sh_addralign;
-	uint64_t   sh_entsize;
+	uint32_t sh_name;
+	uint32_t sh_type;
+	uint64_t sh_flags;
+	uint64_t sh_addr;
+	uint64_t sh_offset;
+	uint64_t sh_size;
+	uint32_t sh_link;
+	uint32_t sh_info;
+	uint64_t sh_addralign;
+	uint64_t sh_entsize;
 } __attribute__((packed));
 
 struct Symbol32 {
-	uint32_t      st_name;
-	uint32_t      st_value;
-	uint32_t      st_size;
+	uint32_t st_name;
+	uint32_t st_value;
+	uint32_t st_size;
 	unsigned char st_info;
 	unsigned char st_other;
-	uint16_t      st_shndx;
+	uint16_t st_shndx;
 } __attribute__((packed));
 struct Symbol64 {
-	uint32_t      st_name;
+	uint32_t st_name;
 	unsigned char st_info;
 	unsigned char st_other;
-	uint16_t      st_shndx;
-	uint64_t      st_value;
-	uint64_t      st_size;
+	uint16_t st_shndx;
+	uint64_t st_value;
+	uint64_t st_size;
 } __attribute__((packed));
 
 struct ProgHeader32 {
-	uint32_t   p_type;
-	uint32_t   p_offset;
-	uint32_t   p_vaddr;
-	uint32_t   p_paddr;
-	uint32_t   p_filesz;
-	uint32_t   p_memsz;
-	uint32_t   p_flags;
-	uint32_t   p_align;
+	uint32_t p_type;
+	uint32_t p_offset;
+	uint32_t p_vaddr;
+	uint32_t p_paddr;
+	uint32_t p_filesz;
+	uint32_t p_memsz;
+	uint32_t p_flags;
+	uint32_t p_align;
 } __attribute__((packed));
 struct ProgHeader64 {
-	uint32_t   p_type;
-	uint32_t   p_flags;
-	uint64_t   p_offset;
-	uint64_t   p_vaddr;
-	uint64_t   p_paddr;
-	uint64_t   p_filesz;
-	uint64_t   p_memsz;
-	uint64_t   p_align;
+	uint32_t p_type;
+	uint32_t p_flags;
+	uint64_t p_offset;
+	uint64_t p_vaddr;
+	uint64_t p_paddr;
+	uint64_t p_filesz;
+	uint64_t p_memsz;
+	uint64_t p_align;
 } __attribute__((packed));
 
 struct Architecture32 {
@@ -167,22 +167,21 @@ private:
 
 	uint64_t m_entry;
 	ObjectType m_type;
-//	gen::vector<SectHeaderType> m_sections;
-//	gen::vector<ProgHeaderType> m_prog_headers;
+	//	gen::vector<SectHeaderType> m_sections;
+	//	gen::vector<ProgHeaderType> m_prog_headers;
 
 	void parse_sect_headers();
 	void parse_prog_headers();
 	void parse_header();
 
 	ELFParser(void* elf, size_t);
-
 public:
 	static Arch arch_from_image(void* elf, size_t);
 	static ELFParser* from_image(void* elf, size_t);
 
 	gen::String string_lookup(size_t index) const;
-//	gen::vector<SectHeaderType> sections() const;
-//	gen::vector<ProgHeaderType> program_headers() const;
+	//	gen::vector<SectHeaderType> sections() const;
+	//	gen::vector<ProgHeaderType> program_headers() const;
 	void* entrypoint() const { return reinterpret_cast<void*>(m_entry); }
 	ObjectType object_type() const { return m_type; }
 };

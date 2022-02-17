@@ -1,14 +1,14 @@
 #pragma once
-#include <stdint.h>
 #include <Memory/Ptr.hpp>
+#include <stdint.h>
 
 class MultibootMMap {
 public:
 	enum class RegionType : uint32_t {
 		USABLE = 1,
-		ACPI   = 3,
+		ACPI = 3,
 		HIBERN = 4,
-		BAD    = 5
+		BAD = 5
 	};
 private:
 	uint32_t m_size;
@@ -16,28 +16,20 @@ private:
 	uint64_t m_range;
 	RegionType m_type;
 public:
-	uint32_t size() const {
-		return m_size;
-	}
+	uint32_t size() const { return m_size; }
 
-	uint64_t start() const {
-		return m_start;
-	}
+	uint64_t start() const { return m_start; }
 
-	uint64_t range() const {
-		return m_range;
-	}
+	uint64_t range() const { return m_range; }
 
-	RegionType type() const {
-		return m_type;
-	}
+	RegionType type() const { return m_type; }
 
 	MultibootMMap const* next_entry() const {
-		return reinterpret_cast<MultibootMMap const*>(reinterpret_cast<uint8_t const*>(this)+m_size+4);
+		return reinterpret_cast<MultibootMMap const*>(reinterpret_cast<uint8_t const*>(this) + m_size + 4);
 	}
 
 	MultibootMMap* next_entry() {
-		return reinterpret_cast<MultibootMMap*>(reinterpret_cast<uint8_t*>(this)+m_size+4);
+		return reinterpret_cast<MultibootMMap*>(reinterpret_cast<uint8_t*>(this) + m_size + 4);
 	}
 } __attribute__((packed));
 
@@ -96,15 +88,12 @@ class MultibootInfo {
 	uint8_t framebuffer_bpp;
 
 	uint8_t framebuffer_type;
-	union
-	{
-		struct
-		{
+	union {
+		struct {
 			uint32_t framebuffer_palette_addr;
 			uint16_t framebuffer_palette_num_colors;
 		};
-		struct
-		{
+		struct {
 			uint8_t framebuffer_red_field_position;
 			uint8_t framebuffer_red_mask_size;
 			uint8_t framebuffer_green_field_position;
@@ -119,6 +108,6 @@ public:
 	}
 
 	[[nodiscard]] PhysPtr<MultibootMMap> mmap_end() const {
-		return PhysPtr<MultibootMMap>(reinterpret_cast<MultibootMMap*>(mmap_addr+mmap_length));
+		return PhysPtr<MultibootMMap>(reinterpret_cast<MultibootMMap*>(mmap_addr + mmap_length));
 	}
 } __attribute__((packed));

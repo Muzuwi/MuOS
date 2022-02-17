@@ -18,9 +18,7 @@ class KHeap {
 			return reinterpret_cast<pointer>(ptr);
 		}
 
-		static void deallocate(pointer p, size_type) {
-			KHeap::instance().chunk_free(p);
-		}
+		static void deallocate(pointer p, size_type) { KHeap::instance().chunk_free(p); }
 
 		template<class Type>
 		struct rebind {
@@ -56,7 +54,6 @@ class KHeap {
 	gen::List<SlabAllocator, KMalloc::BootstrapAllocator> m_slab_allocators[7] {};
 
 	SlabAllocator* slab_grow(size_t requested_size);
-
 public:
 	static KHeap& instance() { return s_instance; }
 
@@ -72,11 +69,7 @@ public:
 
 	void dump_stats();
 
-	static inline void* allocate(size_t size) {
-		return instance().chunk_alloc(size);
-	}
+	static inline void* allocate(size_t size) { return instance().chunk_alloc(size); }
 
-	static inline void free(void* ptr, size_t = 0) {
-		return instance().chunk_free(ptr);
-	}
+	static inline void free(void* ptr, size_t = 0) { return instance().chunk_free(ptr); }
 };

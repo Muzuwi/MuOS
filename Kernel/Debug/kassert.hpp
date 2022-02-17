@@ -5,13 +5,12 @@
 void __kassert_impl(const char*, int, const char*, bool);
 
 #define TOSTRING(a) #a
-#define kassert(a) __kassert_impl(__FILE__, __LINE__, TOSTRING(a), a)
-#define assert(a) kassert(a)
+#define kassert(a)  __kassert_impl(__FILE__, __LINE__, TOSTRING(a), a)
+#define assert(a)   kassert(a)
 
-#define ASSERT_NOT_REACHED() \
-    __kassert_panic(__FILE__, __LINE__, "Reached ASSERT_NOT_REACHED()")
+#define ASSERT_NOT_REACHED() __kassert_panic(__FILE__, __LINE__, "Reached ASSERT_NOT_REACHED()")
 
 #ifdef NDEBUG
-#define assert(a)
-#define kassert(a)
+#	define assert(a)
+#	define kassert(a)
 #endif

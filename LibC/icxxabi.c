@@ -4,17 +4,16 @@
 extern "C"
 #endif
 
-extern void* __dso_handle;
+        extern void* __dso_handle;
 
 struct atexit_func_entry_t __atexit_funcs[ATEXIT_MAX_FUNCS];
 uarch_t __atexit_func_cnt = 0;
 
-void __cxa_pure_virtual() {
+void __cxa_pure_virtual() {}
 
-}
-
-int __cxa_atexit(void (*dtor)(void*), void *objptr, void *dso_handle) {
-	if(__atexit_func_cnt >= ATEXIT_MAX_FUNCS) return -1;
+int __cxa_atexit(void (*dtor)(void*), void* objptr, void* dso_handle) {
+	if(__atexit_func_cnt >= ATEXIT_MAX_FUNCS)
+		return -1;
 
 	__atexit_funcs[__atexit_func_cnt].objptr = objptr;
 	__atexit_funcs[__atexit_func_cnt].dtor = dtor;
@@ -23,7 +22,7 @@ int __cxa_atexit(void (*dtor)(void*), void *objptr, void *dso_handle) {
 	return 0;
 }
 
-void __cxa_finalize(void *dtor) {
+void __cxa_finalize(void* dtor) {
 	uarch_t i = __atexit_func_cnt;
 	if(!dtor) {
 		while(i--) {
@@ -42,7 +41,6 @@ void __cxa_finalize(void *dtor) {
 		}
 	}
 }
-
 
 #ifdef __cplusplus
 }

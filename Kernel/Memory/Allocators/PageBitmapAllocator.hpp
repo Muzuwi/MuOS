@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string.h>
-#include <SystemTypes.hpp>
-#include <Structs/KOptional.hpp>
 #include <Memory/Ptr.hpp>
+#include <string.h>
+#include <Structs/KOptional.hpp>
+#include <SystemTypes.hpp>
 
 //  Page-backed bitmap allocator for pages
 class PageBitmapAllocator {
@@ -39,13 +39,9 @@ class PageBitmapAllocator {
 		byte |= (value ? 1 : 0) << offset;
 	}
 
-	inline size_t page_count() const {
-		return (m_region_size - m_bitmap_size) / 0x1000;
-	}
+	inline size_t page_count() const { return (m_region_size - m_bitmap_size) / 0x1000; }
 
-	inline PhysAddr idx_to_physical(size_t idx) const {
-		return PhysAddr { m_alloc_pool_base + idx * 0x1000 };
-	}
+	inline PhysAddr idx_to_physical(size_t idx) const { return PhysAddr { m_alloc_pool_base + idx * 0x1000 }; }
 
 	inline size_t physical_to_idx(PhysAddr addr) const {
 		auto idx = (addr - m_alloc_pool_base) / 0x1000;

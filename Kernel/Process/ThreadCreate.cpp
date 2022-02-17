@@ -1,16 +1,15 @@
-#include <string.h>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
+#include <Process/PidAllocator.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <Process/PidAllocator.hpp>
 #include <SMP/SMP.hpp>
+#include <string.h>
 
-
-SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void(* kernel_exec)()) {
+SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*kernel_exec)()) {
 	auto thread = SharedPtr {
-			new(KHeap::instance().slab_alloc(sizeof(Thread))) Thread { parent, PidAllocator::next() }
+		new(KHeap::instance().slab_alloc(sizeof(Thread))) Thread {parent, PidAllocator::next()}
 	};
 
 	if(!thread) {
@@ -27,8 +26,8 @@ SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void(* ke
 	state.rip = (uint64)kernel_exec;
 	state.rsp = (uint64)stack_bottom;
 	state.rbp = (uint64)stack_bottom;
-	thread->m_interrupted_task_frame = (InactiveTaskFrame*)thread
-			->_bootstrap_task_stack(PhysAddr { (stack_last_page + 1).get() }, state);
+	thread->m_interrupted_task_frame =
+	        (InactiveTaskFrame*)thread->_bootstrap_task_stack(PhysAddr { (stack_last_page + 1).get() }, state);
 	thread->sched_ctx().priority = 1;
 	thread->set_state(TaskState::Ready);
 	thread->m_pml4 = parent->vmm().pml4();
@@ -36,9 +35,7 @@ SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void(* ke
 	return thread;
 }
 
-
-[[maybe_unused]]
-void Thread::finalize_switch(Thread* prev, Thread* next) {
+[[maybe_unused]] void Thread::finalize_switch(Thread* prev, Thread* next) {
 	if(prev->state() == TaskState::Running) {
 		prev->set_state(TaskState::Ready);
 	}
@@ -62,7 +59,6 @@ void Thread::finalize_switch(Thread* prev, Thread* next) {
 
 	next->set_state(TaskState::Running);
 }
-
 
 void* Thread::_bootstrap_task_stack(PhysAddr kernel_stack_bottom, PtraceRegs state) {
 	uint8* kernel_stack = kernel_stack_bottom.as<uint8>().get_mapped();

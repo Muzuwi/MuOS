@@ -40,7 +40,6 @@ Exception::Response Exception::handle_uncaught(PtraceRegs* pt, uint8 vector) {
 	return Exception::Response::TerminateThread;
 }
 
-
 Exception::Response Exception::handle_page_fault(PtraceRegs* pt, uint8) {
 	const auto thread = SMP::ctb().current_thread();
 

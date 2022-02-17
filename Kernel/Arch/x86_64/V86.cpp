@@ -20,12 +20,9 @@ void V86::run_irq(uint8 irq, V86Regs& regs) {
 	auto code_page = maybe_code_page.unwrap();
 	auto stack_page = maybe_stack_page.unwrap();
 
-	process->vmm().addrmap(code_page.get(),
-	                       code_page,
-	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL ));
-	process->vmm().addrmap(stack_page.get(),
-	                       stack_page,
-	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_KERNEL ));
+	process->vmm().addrmap(code_page.get(), code_page,
+	                       static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_EXEC | VM_KERNEL));
+	process->vmm().addrmap(stack_page.get(), stack_page, static_cast<VMappingFlags>(VM_READ | VM_WRITE | VM_KERNEL));
 
 	vm86_irq(PhysAddr { code_page.get() }, PhysAddr { stack_page.get() }, irq, regs);
 

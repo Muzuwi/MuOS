@@ -1,16 +1,16 @@
 #include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/IRQDisabler.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
-#include <Arch/x86_64/IRQDisabler.hpp>
 #include <Interrupt/IRQDispatcher.hpp>
+#include <LibGeneric/Algorithm.hpp>
+#include <LibGeneric/LockGuard.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include <SMP/SMP.hpp>
-#include <LibGeneric/Spinlock.hpp>
-#include <LibGeneric/LockGuard.hpp>
-#include <LibGeneric/Algorithm.hpp>
 
-using gen::Spinlock;
 using gen::LockGuard;
+using gen::Spinlock;
 
 static IRQDispatcher::HandlerFunc s_microtasks[256 - 32] {};
 static Spinlock s_microtask_lock {};
@@ -18,8 +18,7 @@ static Spinlock s_microtask_lock {};
 static gen::List<Thread*> s_threadirqs[256 - 32] {};
 static Spinlock s_threadirqs_lock {};
 
-extern "C"
-void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
+extern "C" void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 	irq = irq - 32;
 	if(irq > 7)
 		Ports::out(0xa0, 0x20);

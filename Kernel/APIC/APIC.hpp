@@ -1,7 +1,7 @@
 #pragma once
-#include <SystemTypes.hpp>
-#include <Structs/KOptional.hpp>
 #include <LibGeneric/List.hpp>
+#include <Structs/KOptional.hpp>
+#include <SystemTypes.hpp>
 
 enum class LAPICReg : unsigned {
 	APICID = 0x020,
@@ -10,11 +10,11 @@ enum class LAPICReg : unsigned {
 	EOI = 0x0B0,
 	SIV = 0x0F0,
 
-	ESR     = 0x280,
+	ESR = 0x280,
 	LVTCMCI = 0x2F0,
 
 	ICRLow = 0x300,
-	ICRHi  = 0x310,
+	ICRHi = 0x310,
 
 	LVTTimer = 0x320,
 	LVTThermal = 0x330,

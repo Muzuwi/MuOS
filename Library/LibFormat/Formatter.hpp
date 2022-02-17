@@ -5,7 +5,5 @@
 
 namespace Format {
 	template<class T>
-	struct Formatter {
-
-	};
+	struct Formatter {};
 }

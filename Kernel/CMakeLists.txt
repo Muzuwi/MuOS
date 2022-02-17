@@ -4,17 +4,17 @@ include(../Toolchain/CMakeLists.txt)
 #  CRT objects, required by the compiler
 #
 add_custom_target(CRTi
-                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/x86_64/crti.S
-                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o)
+    COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/x86_64/crti.S
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTi.o)
 add_custom_target(CRTn
-                  COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/x86_64/crtn.S
-                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o)
+    COMMAND ${CMAKE_ASM-ATT_COMPILER} -o ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o ${CMAKE_SOURCE_DIR}/Kernel/Arch/x86_64/crtn.S
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTn.o)
 add_custom_target(CRTbegin
-                  COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtbegin.o` ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o
-                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o)
+    COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtbegin.o` ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTbegin.o)
 add_custom_target(CRTend
-                  COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtend.o` ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o
-                  BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o)
+    COMMAND ${CMAKE_COMMAND} -E copy `${CMAKE_C_COMPILER} -print-file-name=crtend.o` ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/CRTend.o)
 
 #
 #   Kernel entrypoint
@@ -114,28 +114,28 @@ add_executable(KernelELF
     Memory/Wrappers/VMapping.cpp Memory/Allocators/PageBitmapAllocator.cpp Memory/Allocators/VBitmap.cpp Memory/Allocators/ChunkAllocator.hpp Memory/Allocators/ChunkAllocator.cpp Memory/Allocators/BumpAllocator.hpp Memory/Allocators/BumpAllocator.cpp)
 
 target_compile_options(KernelELF
-                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-O2 -g -Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>
-                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
-                       PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-mno-red-zone>
-                       PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>
-                       PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>)
+    PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-O2 -g -Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>
+    PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-fstack-protector-all>
+    PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-mno-red-zone>
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--std=c++2a>
+    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>)
 
 target_compile_definitions(KernelELF
-                           PRIVATE __is_kernel_build__)
+    PRIVATE __is_kernel_build__)
 
 add_dependencies(KernelELF
-                 CRTi
-                 CRTn
-                 CRTbegin
-                 CRTend)
+    CRTi
+    CRTn
+    CRTbegin
+    CRTend)
 
 target_link_libraries(KernelELF
-                      Entrypoint
-                      LibGeneric
-                      LibC)
+    Entrypoint
+    LibGeneric
+    LibC)
 
 add_custom_command(TARGET KernelELF
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
-                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:KernelELF> ${CMAKE_SOURCE_DIR}/Root/uKernel.bin
-                   COMMENT "Copying kernel executable to Root directory ${CMAKE_SOURCE_DIR}/Root ")
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:KernelELF> ${CMAKE_SOURCE_DIR}/Root/uKernel.bin
+    COMMENT "Copying kernel executable to Root directory ${CMAKE_SOURCE_DIR}/Root ")

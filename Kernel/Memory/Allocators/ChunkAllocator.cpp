@@ -1,19 +1,19 @@
-#include <LibGeneric/Allocator.hpp>
-#include <Memory/Allocators/ChunkAllocator.hpp>
 #include <Debug/klogf.hpp>
 #include <Debug/kpanic.hpp>
+#include <LibGeneric/Allocator.hpp>
+#include <Memory/Allocators/ChunkAllocator.hpp>
 #include <string.h>
 
 ChunkAllocator::ChunkAllocator(void* virtual_start, size_t size)
-		: m_chunk_list(new(virtual_start) Chunk(size - sizeof(Chunk))), m_region_size(size), m_start(virtual_start) {
-
-}
+    : m_chunk_list(new(virtual_start) Chunk(size - sizeof(Chunk)))
+    , m_region_size(size)
+    , m_start(virtual_start) {}
 
 void* ChunkAllocator::allocate(size_t size) {
 	auto chunk = find_free_chunk(size);
 	if(chunk) {
 		mark_chunk_allocated(*chunk, size);
-//		klogf_static("Alloc {} -> {}\n", size, chunk->alloc_ptr());
+		//		klogf_static("Alloc {} -> {}\n", size, chunk->alloc_ptr());
 		return chunk->alloc_ptr();
 	}
 	return nullptr;
@@ -69,7 +69,8 @@ bool ChunkAllocator::mark_chunk_allocated(Chunk& chunk, size_t size) {
 
 	const auto size_after_alloc = chunk.m_size - size;
 	//  If the chunk is too small to split (doesn't have enough space to contain the chunk structure
-	//  and the amount of left free space would be meaningless), don't split into new chunks and live with the overcommit
+	//  and the amount of left free space would be meaningless), don't split into new chunks and live with the
+	//  overcommit
 	if(size_after_alloc < sizeof(Chunk) + minimum_chunk_data_size) {
 		//  Mark it as allocated - we're done
 		chunk.m_state = ChunkState::Allocated;
@@ -115,12 +116,8 @@ void ChunkAllocator::dump_allocator() {
 
 	auto* current = m_chunk_list;
 	while(current) {
-		kerrorf_static("Chunk({}): {} <-> {}, size{{{}}}, state{{{}}}, next{{{}}}\n",
-		               Format::ptr(current),
-		               current->alloc_ptr(),
-		               current->alloc_end_ptr(),
-		               current->m_size,
-		               state_str(current->m_state),
+		kerrorf_static("Chunk({}): {} <-> {}, size{{{}}}, state{{{}}}, next{{{}}}\n", Format::ptr(current),
+		               current->alloc_ptr(), current->alloc_end_ptr(), current->m_size, state_str(current->m_state),
 		               Format::ptr(current->m_next));
 		current = current->m_next;
 	}

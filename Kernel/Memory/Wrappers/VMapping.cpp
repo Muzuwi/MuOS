@@ -1,10 +1,13 @@
-#include <Memory/Wrappers/VMapping.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
+#include <Memory/Wrappers/VMapping.hpp>
 
 VMapping::VMapping(void* addr, size_t size, int flags, int type)
-		: m_pages(), m_addr(addr), m_size(size), m_flags(flags), m_type(type) {
-}
+    : m_pages()
+    , m_addr(addr)
+    , m_size(size)
+    , m_flags(flags)
+    , m_type(type) {}
 
 SharedPtr<VMapping> VMapping::create(void* address, size_t size, uint32 flags, uint32_t type) {
 	auto* vmapping = new(KHeap::instance().slab_alloc(sizeof(VMapping))) VMapping(address, size, flags, type);

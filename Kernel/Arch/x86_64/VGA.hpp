@@ -1,10 +1,11 @@
 #pragma once
+#include <SystemTypes.hpp>
 
 namespace VGA {
 	static const size_t VGA_WIDTH = 80;
 	static const size_t VGA_HEIGHT = 25;
 
-	enum VGA_COLOR{
+	enum VGA_COLOR {
 		VGA_COLOR_BLACK = 0,
 		VGA_COLOR_BLUE = 1,
 		VGA_COLOR_GREEN = 2,

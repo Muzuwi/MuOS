@@ -1,20 +1,23 @@
-#include <string.h>
-#include <Memory/Allocators/VBitmap.hpp>
 #include <Debug/kpanic.hpp>
+#include <Memory/Allocators/VBitmap.hpp>
+#include <string.h>
 
 VBitmap::VBitmap()
-		: m_base(nullptr), m_buffer_size(0), m_entries(0), m_used(0) {
-
-}
+    : m_base(nullptr)
+    , m_buffer_size(0)
+    , m_entries(0)
+    , m_used(0) {}
 
 VBitmap::VBitmap(void* base, size_t entries)
-		: m_base(base), m_buffer_size(divround(entries, 8)), m_entries(entries), m_used(0) {
+    : m_base(base)
+    , m_buffer_size(divround(entries, 8))
+    , m_entries(entries)
+    , m_used(0) {
 	memset(base, 0, m_buffer_size);
 }
 
 KOptional<size_t> VBitmap::allocate_impl(size_t count) {
-	auto ret = (count == 1) ? find_one()
-	                        : find_many(count);
+	auto ret = (count == 1) ? find_one() : find_many(count);
 	if(!ret.has_value()) {
 		return KOptional<size_t> {};
 	}

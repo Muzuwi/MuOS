@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SystemTypes.hpp>
 #include <LibGeneric/Utility.hpp>
+#include <SystemTypes.hpp>
 
 #define TSS_RSP0 (4)
 #define TSS_IOPB (0x66)
@@ -19,9 +19,7 @@ public:
 		uint64 base;
 	} __attribute__((packed));
 private:
-	constexpr uint64 create_tss_higher_descriptor() {
-		return (gen::bitcast<uint64>(&m_tss.data[0])) >> 32u;
-	}
+	constexpr uint64 create_tss_higher_descriptor() { return (gen::bitcast<uint64>(&m_tss.data[0])) >> 32u; }
 
 	constexpr uint64 create_tss_lower_descriptor() {
 		const auto address = gen::bitcast<uint64>(&m_tss.data[0]);
@@ -46,27 +44,22 @@ private:
 		return gdtr;
 	}
 
-	static constexpr unsigned kernelcdescr_offset = 1,
-			kernelddescr_offset = 2,
-			usercdescr_offset = 5,
-			userddescr_offset = 4,
-			tss_offset = 6;
+	static constexpr unsigned kernelcdescr_offset = 1, kernelddescr_offset = 2, usercdescr_offset = 5,
+	                          userddescr_offset = 4, tss_offset = 6;
 
-	static constexpr unsigned user_CS = usercdescr_offset * 8,
-			user_DS = userddescr_offset * 8,
-			kernel_CS = kernelcdescr_offset * 8,
-			kernel_DS = kernelddescr_offset * 8,
-			tss_sel = tss_offset * 8;
+	static constexpr unsigned user_CS = usercdescr_offset * 8, user_DS = userddescr_offset * 8,
+	                          kernel_CS = kernelcdescr_offset * 8, kernel_DS = kernelddescr_offset * 8,
+	                          tss_sel = tss_offset * 8;
 public:
 	uint64 m_descriptor_table[8] {
-			0x0,                        //  Null
-			0x00209A0000000000,         //  Code0
-			0x0000920000000000,         //  Data0
-			0x0,                        //  Null
-			0x0000F20000000000,         //  Data3
-			0x0020FA0000000000,         //  Code3
-			create_tss_lower_descriptor(),    //  TSS_lower
-			create_tss_higher_descriptor(),    //  TSS_higher
+		0x0,                           //  Null
+		0x00209A0000000000,            //  Code0
+		0x0000920000000000,            //  Data0
+		0x0,                           //  Null
+		0x0000F20000000000,            //  Data3
+		0x0020FA0000000000,            //  Code3
+		create_tss_lower_descriptor(), //  TSS_lower
+		create_tss_higher_descriptor(),//  TSS_higher
 	};
 
 	GDTR m_descriptor { create_gdtr() };

@@ -1,5 +1,5 @@
 #ifndef __LIBC_SYSTYPES_H
-# define __LIBC_SYSTYPES_H
+#define __LIBC_SYSTYPES_H
 
 #include <stdint.h>
 

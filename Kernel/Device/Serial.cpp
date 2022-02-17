@@ -1,8 +1,8 @@
 #include <Arch/x86_64/PortIO.hpp>
-#include <string.h>
-#include <Device/Serial.hpp>
-#include <Structs/KOptional.hpp>
 #include <Debug/klogf.hpp>
+#include <Device/Serial.hpp>
+#include <string.h>
+#include <Structs/KOptional.hpp>
 
 //  FIXME: Only support COM0 for now
 
@@ -15,7 +15,7 @@ void Serial::set_debugger_port(Serial::Port port) {
 		return;
 	}
 
-	s_kernel_debugger_port = KOptional {port};
+	s_kernel_debugger_port = KOptional { port };
 	//  Enable IRQs for the kernel debugger - data inbound
 	register_write(port, Register::IrqEn, 0x1);
 	//  Register microtask
@@ -38,16 +38,16 @@ void Serial::_serial_irq_handler(PtraceRegs*) {
 bool Serial::try_initialize(Serial::Port port) {
 	//  Set speed - 115200
 	register_write(port, Register::IrqEn, 0x0);
-	register_write(port, Register::LineControl, 0x80);  //  DLAB on
-	register_write(port, Register::Data, 0x01);         //  Divisor 1
+	register_write(port, Register::LineControl, 0x80);//  DLAB on
+	register_write(port, Register::Data, 0x01);       //  Divisor 1
 	register_write(port, Register::IrqEn, 0x00);
-	register_write(port, Register::LineControl, 0x03);  //  8N1, DLAB off
+	register_write(port, Register::LineControl, 0x03);//  8N1, DLAB off
 
-	register_write(port, Register::IrqId, 0xc7);        //  FIFO enabled and cleared
-	register_write(port, Register::ModemControl, 0x0b); //  RTS/DTS set
+	register_write(port, Register::IrqId, 0xc7);       //  FIFO enabled and cleared
+	register_write(port, Register::ModemControl, 0x0b);//  RTS/DTS set
 
 	//  Test if the serial port actually exists
-	register_write(port, Register::ModemControl, 0x1e); //  Loopback mode
+	register_write(port, Register::ModemControl, 0x1e);//  Loopback mode
 
 	//  Clear any potential pending data
 	for(unsigned i = 0; i < 30; ++i)
@@ -56,7 +56,7 @@ bool Serial::try_initialize(Serial::Port port) {
 	const uint8 magic = 0xDA;
 	register_write(port, Register::Data, magic);
 	const uint8 read = register_read(port, Register::Data);
-	if (read != magic) {
+	if(read != magic) {
 		return false;
 	}
 
@@ -81,7 +81,7 @@ void Serial::init() {
 
 uint16 Serial::io_port(Serial::Port port) {
 	static constexpr const uint16 io_address_for_port[4] = { 0x3F8, 0x2F8, 0x3E8, 0x2E8 };
-	return io_address_for_port[static_cast<size_t>(port)%4];
+	return io_address_for_port[static_cast<size_t>(port) % 4];
 }
 
 void Serial::register_write(Serial::Port port, Serial::Register reg, uint8 val) {
@@ -122,7 +122,7 @@ StaticRing<uint8, 4096>& Serial::buffer() {
 
 uint8 Serial::irq(Serial::Port port) {
 	static constexpr const uint16 io_address_for_port[4] = { 4, 3, 4, 3 };
-	return io_address_for_port[static_cast<size_t>(port)%4];
+	return io_address_for_port[static_cast<size_t>(port) % 4];
 }
 
 KSemaphore& Serial::debugger_semaphore() {

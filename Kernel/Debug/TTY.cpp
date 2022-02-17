@@ -1,30 +1,30 @@
-#include <string.h>
-#include <stddef.h>
-#include <Debug/TTY.hpp>
 #include <Arch/x86_64/VGA.hpp>
+#include <Debug/TTY.hpp>
 #include <Locks/KMutex.hpp>
 #include <Process/Process.hpp>
 #include <SMP/SMP.hpp>
+#include <stddef.h>
+#include <string.h>
 
 static KMutex s_tty_lock {};
 
-void TTY::init(){
+void TTY::init() {
 	VGA::clear();
-	VGA::setpos(0,0);
+	VGA::setpos(0, 0);
 	VGA::setcolor(VGA::VGA_COLOR_BLACK, VGA::VGA_COLOR_WHITE);
 }
 
-void TTY::prints(const char* data){
-//	if(SMP::ctb().current_thread())
-//		s_tty_lock.lock();
+void TTY::prints(const char* data) {
+	//	if(SMP::ctb().current_thread())
+	//		s_tty_lock.lock();
 
 	for(size_t i = 0; i < strlen(data); i++)
 		VGA::putch(data[i]);
-	
-//	if(SMP::ctb().current_thread())
-//		s_tty_lock.unlock();
+
+	//	if(SMP::ctb().current_thread())
+	//		s_tty_lock.unlock();
 }
 
-void TTY::printch(char data){
+void TTY::printch(char data) {
 	VGA::putch(data);
 }

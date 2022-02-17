@@ -176,14 +176,14 @@ namespace gen {
 		typedef char_traits<CharType> Traits;
 		typedef BasicString<CharType, Alloc> StrType;
 
-		StrType const& m_str;
+		StrType m_str;
 		size_t m_index;
 		size_t m_len;
 	public:
 		typedef typename StrType::iterator iterator;
 		typedef typename StrType::const_iterator const_iterator;
 
-		BasicStringView(StrType const& str, size_t i, size_t len)
+		BasicStringView(StrType str, size_t i, size_t len)
 		    : m_str(str)
 		    , m_index(i)
 		    , m_len(len) {}
@@ -255,4 +255,5 @@ namespace gen {
 
 	typedef BasicString<char> String;
 	typedef BasicStringView<char> StringView;
+	typedef BasicStringView<char const> ConstStringView;
 }

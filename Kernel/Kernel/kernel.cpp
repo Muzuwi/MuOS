@@ -8,6 +8,7 @@
 #include <Debug/TTY.hpp>
 #include <Device/PIT.hpp>
 #include <Device/Serial.hpp>
+#include <LibGeneric/OsPath.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/PMM.hpp>
 #include <Multiboot/MultibootInfo.hpp>
@@ -39,6 +40,18 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 	Syscall::init();
 
 	klogf("[uKernel] Init done, time passed: {}ms\n", PIT::milliseconds());
+
+	{
+		gen::String path = "/home/muzuwi/something\0";
+		auto ospath = gen::OsPath { path };
+		for(auto view : ospath) {
+			gen::String string {};
+			for(auto ch : view) {
+				string += ch;
+			}
+			klogf("part: '{}'\n", string.to_c_string());
+		}
+	}
 
 	ACPI::parse_tables();
 	APIC::discover();

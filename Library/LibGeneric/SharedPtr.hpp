@@ -159,6 +159,6 @@ namespace gen {
 
 	template<class T, class... Args>
 	SharedPtr<T> make_shared(Args&&... args) {
-		return SharedPtr<T>(new T(args...));
+		return SharedPtr<T> { new (gen::Allocator<T>::allocate(1)) T(args...) };
 	}
 }

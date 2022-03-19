@@ -16,29 +16,21 @@
 }
 
 namespace gen {
-#ifdef __is_kernel_build__
-
-	void* __kernel_alloc(size_t n);
-
-	void __kernel_free(void* p, size_t n);
-
-#endif
+	/*
+	 *  Hooks for access to the current platform's allocator
+	 *  To avoid header soup, these need to be linked in to the resulting executable
+	 */
+	void* __platform_alloc(size_t n);
+	void __platform_free(void* p, size_t n);
 
 	template<class T>
 	struct Allocator {
 		using pointer = T*;
 		using size_type = size_t;
 
-#ifdef __is_kernel_build__
+		static pointer allocate(size_type n) { return static_cast<pointer>(__platform_alloc(sizeof(T) * n)); }
 
-		static pointer allocate(size_type n) { return reinterpret_cast<pointer>(__kernel_alloc(sizeof(T) * n)); }
-
-		static void deallocate(pointer p, size_type n) { __kernel_free(p, sizeof(T) * n); }
-
-#else
-		static pointer allocate(size_type);
-		static void deallocate(pointer, size_type);
-#endif
+		static void deallocate(pointer p, size_type n) { __platform_free(p, sizeof(T) * n); }
 
 		template<class Type>
 		struct rebind {

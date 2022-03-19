@@ -16,6 +16,6 @@ Toolchain/src/gcc/
 Toolchain/src/build-gcc/
 !Toolchain/CMakeLists.txt
 MuOS.*
-cmake-build-muos/
+**/cmake-build-**/**
 Root/
 Userland/Test

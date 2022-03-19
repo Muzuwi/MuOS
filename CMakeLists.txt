@@ -3,6 +3,9 @@
 project(MuOS)
 cmake_minimum_required(VERSION 3.15)
 
+#  Signal that this is the main kernel build
+set(MU_BUILD_TYPE cross)
+
 #  Compile modules
 add_subdirectory(LibC/)
 add_subdirectory(Kernel/)

@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __is_kernel_build__
+
 namespace std {
 	template<class _E>
 	class initializer_list {
@@ -43,3 +45,5 @@ namespace std {
 	}
 
 }
+
+#endif

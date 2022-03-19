@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __is_kernel_build__
+
 /*
  *  Placement new implementation
  */
@@ -14,6 +16,8 @@
 [[nodiscard]] inline constexpr void* operator new[](size_t, void* ptr) noexcept {
 	return ptr;
 }
+
+#endif
 
 namespace gen {
 	/*

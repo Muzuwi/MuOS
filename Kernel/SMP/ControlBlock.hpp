@@ -9,6 +9,7 @@ struct GDT;
 
 class ControlBlock {
 	friend class SMP;
+	friend struct GDT;
 
 	//  Offset:
 	ControlBlock* m_self_reference;//  0, store self reference for quick ctrlblock fetching

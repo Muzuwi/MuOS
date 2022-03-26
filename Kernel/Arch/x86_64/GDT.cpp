@@ -19,5 +19,5 @@ void GDT::init_ap_gdt(ControlBlock* ctb) {
 	auto* gdt = new(maybe_gdt) GDT();
 	CPU::lgdt(&gdt->m_descriptor);
 	CPU::ltr(GDT::tss_sel);
-	ctb->set_gdt(gdt);
+	ctb->m_gdt = gdt;
 }

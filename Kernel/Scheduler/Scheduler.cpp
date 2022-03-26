@@ -77,9 +77,9 @@ Thread* Scheduler::create_idle_task(uint8 apic_id) {
  */
 void Scheduler::bootstrap() {
 	CPU::irq_disable();
-	klogf("[Scheduler] Bootstrapping AP {}\n", SMP::ctb().current_ap());
+	klogf("[Scheduler] Bootstrapping AP {}\n", SMP::ctb().apic_id());
 
-	m_ap_idle = create_idle_task(SMP::ctb().current_ap());
+	m_ap_idle = create_idle_task(SMP::ctb().apic_id());
 	//  Update permanent process names
 	//  These process structs are actually contained within the kernel executable (but wrapped in a SharedPtr that
 	//  should hopefully never be deallocated). Because strings cause allocations, initializing them inline is

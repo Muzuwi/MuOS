@@ -31,6 +31,11 @@ void SysDbg::sysdbg_thread() {
 		} else if(command == "ds") {
 			klogf("kdebugger({}): Scheduler statistics\n", thread->tid());
 			SMP::ctb().scheduler().dump_statistics();
+		} else if(command == "dc") {
+			klogf("kdebugger({}): attached CPUs\n", thread->tid());
+			for(auto const& cpu : SMP::attached_aps()) {
+				klogf("... CPU #{}, APIC ID={}\n", cpu->vid(), cpu->apic_id());
+			}
 		}
 	};
 

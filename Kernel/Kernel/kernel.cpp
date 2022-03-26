@@ -27,7 +27,7 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 	GDT::init_base_ap_gdt();
 	CPU::initialize_features();
 
-	SMP::bootstrap_ctb();
+	SMP::reload_boot_ctb();
 	CPU::irq_enable();
 
 	PMM::instance().init_regions(multiboot_info);
@@ -42,8 +42,8 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 
 	ACPI::parse_tables();
 	APIC::discover();
-	SMP::init_control_blocks();
-	SMP::ctb().scheduler().bootstrap();
+	SMP::attach_boot_ap();
+	this_cpu().scheduler().bootstrap();
 
 	kpanic();
 }

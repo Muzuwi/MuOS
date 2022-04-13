@@ -2,7 +2,8 @@ find_package(Catch2 REQUIRED)
 
 add_library(LibGeneric
     ELFParser.cpp
-    Platform/Native/Allocator-Native.cpp)
+    Platform/Native/Allocator-Native.cpp
+    Optional.hpp Memory.hpp Traits.hpp)
 
 set(LIBGEN_CXX_FLAGS
     -Wall -Wextra --std=c++20
@@ -26,7 +27,8 @@ add_executable(TestLibGeneric
     Platform/Native/Tests/List.cpp
     Platform/Native/Tests/Algorithm.cpp
     Platform/Native/Tests/Vector.cpp
-    Platform/Native/Tests/SharedPtr.cpp)
+    Platform/Native/Tests/SharedPtr.cpp
+    Platform/Native/Tests/Optional.cpp)
 target_link_libraries(TestLibGeneric PRIVATE
     Catch2::Catch2
     LibGeneric)

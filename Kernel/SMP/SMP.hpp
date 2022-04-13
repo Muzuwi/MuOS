@@ -26,3 +26,7 @@ public:
 static inline ControlBlock& this_cpu() {
 	return SMP::ctb();
 }
+
+static inline Thread* this_thread() {
+	return this_cpu().current_thread();
+}

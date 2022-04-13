@@ -1,3 +1,4 @@
+#include <APIC/APIC.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
@@ -7,6 +8,7 @@
 #include <Daemons/Testd/Testd.hpp>
 #include <Debug/kassert.hpp>
 #include <Debug/klogf.hpp>
+#include <Device/Serial.hpp>
 #include <Interrupt/IRQDispatcher.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
@@ -67,7 +69,7 @@ void Scheduler::interrupt_return_common() {
  */
 Thread* Scheduler::create_idle_task(uint8 apic_id) {
 	static char s_buffer[64] {};
-	Format::format("Idled[{}]", s_buffer, 256, apic_id);
+	Format::format("Idled[{}]", s_buffer, 64, apic_id);
 	auto thread = Process::create_with_main_thread({ s_buffer }, Process::kerneld(), Idle::idle_thread);
 	return thread.get();
 }
@@ -105,6 +107,8 @@ void Scheduler::bootstrap() {
 		auto keyboard_thread = Process::create_with_main_thread("Kbd", Process::kerneld(), Kbd::kbd_thread);
 		keyboard_thread->sched_ctx().priority = 0;
 		add_thread_to_rq(keyboard_thread.get());
+		APIC::redirect_irq(1, 32 + 1, DeliveryMode::Normal, IrqPolarity::ActiveHigh, IrqTrigger::Edge,
+		                   APIC::ap_bootstrap_id());
 		IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
 	}
 
@@ -116,6 +120,7 @@ void Scheduler::bootstrap() {
 	{
 		auto debugger_thread = Process::create_with_main_thread("SysDbg", Process::kerneld(), SysDbg::sysdbg_thread);
 		add_thread_to_rq(debugger_thread.get());
+		Serial::init_apic_irq();
 	}
 
 	uint8 _dummy_val[sizeof(Thread)] = {};

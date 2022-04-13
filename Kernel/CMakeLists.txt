@@ -111,7 +111,7 @@ add_executable(KernelELF
     Daemons/Idle/Idle.cpp
     Daemons/Testd/Testd.cpp
     Debug/DebugCon.cpp
-    Memory/Wrappers/VMapping.cpp Memory/Allocators/PageBitmapAllocator.cpp Memory/Allocators/VBitmap.cpp Memory/Allocators/ChunkAllocator.hpp Memory/Allocators/ChunkAllocator.cpp Memory/Allocators/BumpAllocator.hpp Memory/Allocators/BumpAllocator.cpp)
+    Memory/Wrappers/VMapping.cpp Memory/Allocators/PageBitmapAllocator.cpp Memory/Allocators/VBitmap.cpp Memory/Allocators/ChunkAllocator.hpp Memory/Allocators/ChunkAllocator.cpp Memory/Allocators/BumpAllocator.hpp Memory/Allocators/BumpAllocator.cpp SMP/MigrationService.cpp SMP/MigrationService.hpp)
 
 target_compile_options(KernelELF
     PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-O2 -g -Wall -Wextra -ffreestanding -mcmodel=large -Werror=unused-result>

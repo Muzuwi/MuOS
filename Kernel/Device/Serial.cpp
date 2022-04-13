@@ -1,6 +1,8 @@
+#include <APIC/APIC.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Debug/klogf.hpp>
 #include <Device/Serial.hpp>
+#include <LibGeneric/Spinlock.hpp>
 #include <string.h>
 #include <Structs/KOptional.hpp>
 
@@ -9,6 +11,7 @@
 static KOptional<Serial::Port> s_kernel_debugger_port {};
 static KSemaphore s_debugger_semaphore {};
 static StaticRing<uint8, 4096> s_buffer;
+static gen::Spinlock s_port_spinlock {};
 
 void Serial::set_debugger_port(Serial::Port port) {
 	if(s_kernel_debugger_port.has_value()) {
@@ -101,11 +104,13 @@ bool Serial::transmitter_empty(Serial::Port port) {
 }
 
 void Serial::write_str(Serial::Port port, char const* str) {
+	s_port_spinlock.lock();
 	for(unsigned i = 0; i < strlen(str); ++i) {
 		while(!transmitter_empty(port))
 			;
 		register_write(port, Register::Data, str[i]);
 	}
+	s_port_spinlock.unlock();
 }
 
 void Serial::write_debugger_str(char const* str) {
@@ -127,4 +132,11 @@ uint8 Serial::irq(Serial::Port port) {
 
 KSemaphore& Serial::debugger_semaphore() {
 	return s_debugger_semaphore;
+}
+
+void Serial::init_apic_irq() {
+	if(s_kernel_debugger_port.has_value()) {
+		APIC::redirect_irq(irq(s_kernel_debugger_port.unwrap()), 32 + irq(s_kernel_debugger_port.unwrap()),
+		                   DeliveryMode::Normal, IrqPolarity::ActiveHigh, IrqTrigger::Edge, APIC::ap_bootstrap_id());
+	}
 }

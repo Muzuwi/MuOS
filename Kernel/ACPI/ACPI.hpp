@@ -5,28 +5,36 @@
 
 struct RSDPDescriptor {
 	char m_signature[8];
-	uint8_t m_checksum;
+	uint8 m_checksum;
 	char m_oemid[6];
-	uint8_t m_revision;
-	uint32_t m_rsdt_addr;
+	uint8 m_revision;
+	uint32 m_rsdt_addr;
 } __attribute__((packed));
 
 struct ACPISDTHeader {
 	char m_signature[4];
-	uint32_t m_length;
-	uint8_t m_revision;
-	uint8_t m_checksum;
+	uint32 m_length;
+	uint8 m_revision;
+	uint8 m_checksum;
 	char m_oemid[6];
 	char m_oemtableid[8];
-	uint32_t m_oem_revision;
-	uint32_t m_creator_id;
-	uint32_t m_creator_revision;
+	uint32 m_oem_revision;
+	uint32 m_creator_id;
+	uint32 m_creator_revision;
 } __attribute__((packed));
 
-namespace ACPI {
-	static const uint64_t rsdp_signature = 0x2052545020445352;
-	static const uint32_t table_apic_sig = 0x43495041;
+class ACPI {
+	static ACPI s_instance;
 
-	void parse_tables();
-	KOptional<PhysPtr<ACPISDTHeader>> find_table(uint32_t signature);
-}
+	PhysPtr<ACPISDTHeader> m_rsdt;
+
+	ACPI() = default;
+	static KOptional<PhysPtr<RSDPDescriptor>> find_rsdp();
+	static bool verify_checksum(PhysPtr<ACPISDTHeader> table);
+public:
+	static void initialize();
+	static KOptional<PhysPtr<ACPISDTHeader>> find_table(uint32 signature);
+
+	static constexpr uint64 rsdp_signature = 0x2052545020445352;
+	static constexpr uint32 table_apic_sig = 0x43495041;
+};

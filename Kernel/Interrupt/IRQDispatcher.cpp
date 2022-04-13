@@ -1,3 +1,4 @@
+#include <APIC/APIC.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
 #include <Arch/x86_64/PortIO.hpp>
@@ -20,13 +21,11 @@ static Spinlock s_threadirqs_lock {};
 
 extern "C" void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 	irq = irq - 32;
-	if(irq > 7)
-		Ports::out(0xa0, 0x20);
-	Ports::out(0x20, 0x20);
+	APIC::eoi();
 
 	IRQDispatcher::dispatch_irq(irq, interrupt_trap_frame);
 
-	SMP::ctb().scheduler().interrupt_return_common();
+	this_cpu().scheduler().interrupt_return_common();
 }
 
 void IRQDispatcher::dispatch_irq(uint8_t irq, PtraceRegs* interrupt_trap_frame) {

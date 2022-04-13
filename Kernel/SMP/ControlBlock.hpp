@@ -4,6 +4,7 @@
 #include <SystemTypes.hpp>
 
 class Thread;
+class MigrationService;
 
 struct GDT;
 
@@ -20,6 +21,7 @@ class ControlBlock {
 	Scheduler m_sched;
 	GDT* m_gdt;
 	uint64 m_vid;
+	MigrationService* m_migration_service;
 public:
 	ControlBlock(uint8 ap_id) noexcept
 	    : m_self_reference(this)
@@ -27,7 +29,8 @@ public:
 	    , m_apic_id(ap_id)
 	    , _scratch(0)
 	    , m_gdt(nullptr)
-	    , m_vid(0) {
+	    , m_vid(0)
+	    , m_migration_service(nullptr) {
 		(void)m_self_reference;
 		(void)_scratch;
 	}
@@ -39,4 +42,5 @@ public:
 	constexpr Scheduler& scheduler() { return m_sched; }
 	constexpr GDT* gdt() { return m_gdt; }
 	constexpr uint64 vid() const { return m_vid; }
+	constexpr MigrationService* migration() const { return m_migration_service; }
 } __attribute__((packed));

@@ -24,6 +24,7 @@ public:
 		Scratch = 7
 	};
 
+	static void init_apic_irq();
 	static void init();
 	static void write_str(Port, const char*);
 	static void write_debugger_str(const char*);

@@ -63,7 +63,20 @@ void SMP::ap_entrypoint(ControlBlock* ctb, Thread* idle_task, PhysAddr code_page
 	SMP::attach_ap(ctb);
 	this_cpu().scheduler().m_ap_idle = idle_task;
 
+	APIC::initialize_this_ap();
+
 	klogf_static("[AP(VID={})] AP running kernel code. APIC ID={x}\n", this_cpu().vid(), this_cpu().apic_id());
+
+	{
+		auto thr = Process::create_with_main_thread("test", Process::kerneld(), [] {
+			while(true) {
+				klogf("[AP] Hello, world!");
+				this_thread()->msleep(1000);
+			}
+			ASSERT_NOT_REACHED();
+		});
+		this_cpu().scheduler().add_thread_to_rq(thr.get());
+	}
 
 	uint8 _dummy_val[sizeof(Thread)] = {};
 	//  Huge hack - use dummy buffer on the stack when switching for the first time,

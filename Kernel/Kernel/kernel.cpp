@@ -19,6 +19,7 @@
     Main kernel entrypoint
 */
 extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboot_info) {
+	PIT::init_with_frequency(1000);
 	TTY::init();
 	Serial::init();
 	klogf_static("[uKernel64] Hello, world!\n");
@@ -28,11 +29,13 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 	CPU::initialize_features();
 
 	SMP::reload_boot_ctb();
-	CPU::irq_enable();
+	//	CPU::irq_enable();
 
 	PMM::instance().init_regions(multiboot_info);
 	VMM::initialize_kernel_vm();
 	PMM::instance().init_deferred_allocators();
+
+	ACPI::initialize();
 
 	KHeap::instance().init();
 
@@ -40,8 +43,8 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 
 	klogf("[uKernel] Init done, time passed: {}ms\n", PIT::milliseconds());
 
-	ACPI::parse_tables();
-	APIC::discover();
+	CPU::irq_enable();
+	APIC::initialize();
 	SMP::attach_boot_ap();
 	this_cpu().scheduler().bootstrap();
 

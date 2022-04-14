@@ -1,4 +1,6 @@
 #pragma once
+#include <LibGeneric/Memory.hpp>
+#include <LibGeneric/Move.hpp>
 #include <stddef.h>
 #include <stdint.h>
 #ifdef __is_kernel_build__
@@ -6,75 +8,127 @@
 #endif
 
 namespace gen {
-	template<class T, unsigned buffer_size>
+	/*
+	 *  A vector-like container that encapsulates dynamic item addition and removal.
+	 *  Instead of allocating, a buffer of pre-declared size is used.
+	 */
+	template<typename T, size_t bufsize>
 	class StaticVector {
-		static_assert(buffer_size > 0, "Invalid buffer size");
-		T m_buffer[buffer_size];
+		T m_data[bufsize];
 		size_t m_pointer;
 
-		T const& _get(size_t n) const {
-			assert(n < buffer_size);
-			return m_buffer[n];
+		template<typename... Args>
+		constexpr void construct_at(size_t n, Args&&... args) {
+			gen::construct_at(m_data + n, gen::forward<Args>(args)...);
 		}
 
-		T& _get(size_t n) {
-			assert(n < buffer_size);
-			return m_buffer[n];
-		}
+		constexpr void destroy_at(size_t n) { gen::destroy_at(m_data + n); }
 
-		void _insert(T val) {
-			assert(m_pointer < buffer_size);
-			m_buffer[m_pointer++] = val;
-		}
-
-		T _remove_back() {
-			assert(!empty());
-			return _get(--m_pointer);
-		}
-	public:
-		StaticVector() noexcept
-		    : m_pointer(0) {}
-
-		StaticVector(StaticVector const& v) noexcept {
-			m_pointer = v.m_pointer;
-			for(unsigned i = 0; i < m_pointer; ++i) {
-				m_buffer[i] = v.m_buffer[i];
+		constexpr void destroy_all() {
+			for(auto i = 0u; i < m_pointer; ++i) {
+				destroy_at(i);
 			}
 		}
-
-		size_t size() const { return m_pointer; }
-
-		bool empty() const { return m_pointer == 0; }
+	public:
+		constexpr StaticVector()
+		    : m_pointer(0) {}
 
 		/*
-		 *  Vec mutators
+		 *  Destroys all stored elements in the vector
 		 */
-		void push_back(T val) { _insert(val); }
+		constexpr ~StaticVector() { destroy_all(); }
 
-		T pop_back() { return _remove_back(); }
+		/*
+		 *  Adds an item at the end of the vector. Returns true when the operation
+		 *  succeeded, otherwise false.
+		 *  The elements are constructed as if directly initialized.
+		 */
+		template<typename U = T>
+		constexpr bool push_back(U&& value) {
+			if(m_pointer >= bufsize) {
+				return false;
+			}
 
-		template<typename... Args>
-		void emplace_back(Args&&... args) {
-			assert(m_pointer < buffer_size);
-			_get(m_pointer++) = T(args...);
+			construct_at(m_pointer++, gen::forward<U&&>(value));
+			return true;
 		}
 
-		void clear() { m_pointer = 0; }
+		/*
+		 *  Removes an element from the end of the vector.
+		 */
+		constexpr void pop_back() {
+			if(!m_pointer) {
+				return;
+			}
 
-		T& operator[](size_t n) { return _get(n); }
+			destroy_at(--m_pointer);
+		}
 
-		T const& operator[](size_t n) const { return _get(n); }
+		/*
+		 *  Removes all elements from the vector.
+		 */
+		constexpr void clear() {
+			destroy_all();
+			m_pointer = 0;
+		}
+
+		/*
+		 *  Amount of items currently stored in the vector.
+		 */
+		constexpr size_t size() const { return m_pointer; }
+
+		constexpr bool empty() const { return m_pointer == 0; }
+
+		/*
+		 *  Total buffer capacity of the structure.
+		 */
+		constexpr size_t capacity() const { return bufsize; }
 
 		using iterator = T*;
 		using const_iterator = T const*;
 
-		iterator begin() { return m_buffer; }
+		/*
+		 *  Iterators
+		 */
+		constexpr iterator begin() { return m_data; }
 
-		const_iterator begin() const { return m_buffer; }
+		constexpr iterator end() { return m_data + m_pointer; }
 
-		iterator end() { return m_buffer + buffer_size; }
+		constexpr const_iterator begin() const { return m_data; }
 
-		const_iterator end() const { return m_buffer + buffer_size; }
+		constexpr const_iterator end() const { return m_data + m_pointer; }
+
+		/*
+		 *  Array-index operator
+		 */
+		constexpr T& operator[](size_t n) {
+			assert(n < m_pointer);
+			return m_data[n];
+		}
+
+		constexpr T const& operator[](size_t n) const {
+			assert(n < m_pointer);
+			return m_data[n];
+		}
+
+		constexpr T& front() {
+			assert(m_pointer);
+			return m_data[0];
+		}
+
+		constexpr T const& front() const {
+			assert(m_pointer);
+			return m_data[0];
+		}
+
+		constexpr T& back() {
+			assert(m_pointer);
+			return m_data[m_pointer - 1];
+		}
+
+		constexpr T const& back() const {
+			assert(m_pointer);
+			return m_data[m_pointer - 1];
+		}
 	};
-
 }

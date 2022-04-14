@@ -26,7 +26,8 @@ add_executable(TestLibGeneric
     Platform/Native/Tests/List.cpp
     Platform/Native/Tests/Algorithm.cpp
     Platform/Native/Tests/Vector.cpp
-    Platform/Native/Tests/SharedPtr.cpp)
+    Platform/Native/Tests/SharedPtr.cpp
+    Platform/Native/Tests/StaticVector.cpp)
 target_link_libraries(TestLibGeneric PRIVATE
     Catch2::Catch2
     LibGeneric)

@@ -1,4 +1,5 @@
 #pragma once
+#include <LibGeneric/Allocator.hpp>
 #include <LibGeneric/Move.hpp>
 
 namespace gen {

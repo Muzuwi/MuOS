@@ -9,7 +9,7 @@ void __kassert_impl(const char* file, int line, const char* expr_str, bool expre
 }
 
 void __kassert_panic(const char* file, int line, const char* expr_str) {
-	klogf_static("Kernel assertion failed: {}\n", expr_str);
-	klogf_static("File: {}, line: {}\n", file, line);
+	kerrorf_static("Kernel assertion failed: {}\n", expr_str);
+	kerrorf_static("File: {}, line: {}\n", file, line);
 	kpanic();
 }

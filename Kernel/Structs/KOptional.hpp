@@ -1,5 +1,7 @@
 #pragma once
 #include <Debug/kassert.hpp>
+#include <LibGeneric/Allocator.hpp>
+#include <LibGeneric/Memory.hpp>
 
 //  FIXME:  Hacky hack
 
@@ -10,16 +12,21 @@ class KOptional {
 
 	void _construct_none() { m_has_value = false; }
 
-	void _construct_some(T value) {
+	void _construct_some(T const& value) {
 		m_has_value = true;
-		m_value = value;
+		gen::construct_at(&m_value, value);
 	}
 public:
 	KOptional() { _construct_none(); }
 
-	KOptional(T val) { _construct_some(val); }
+	KOptional(T const& val) { _construct_some(val); }
 
-	T unwrap() {
+	T& unwrap() {
+		assert(m_has_value);
+		return m_value;
+	}
+
+	T const& unwrap() const {
 		assert(m_has_value);
 		return m_value;
 	}

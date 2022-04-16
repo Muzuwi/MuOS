@@ -1,10 +1,8 @@
 #pragma once
-
-#include <LibGeneric/List.hpp>
 #include <LibGeneric/Spinlock.hpp>
+#include <LibGeneric/StaticVector.hpp>
 #include <Memory/Allocators/ChunkAllocator.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
-#include <Memory/kmalloc.hpp>
 
 class KHeap {
 	template<class T>
@@ -51,7 +49,7 @@ class KHeap {
 
 	gen::Spinlock m_heap_lock {};
 	ChunkAllocator m_chunk_allocator {};
-	gen::List<SlabAllocator, KMalloc::BootstrapAllocator> m_slab_allocators[7] {};
+	gen::StaticVector<SlabAllocator, 256> m_slab_allocators[7] {};
 
 	SlabAllocator* slab_grow(size_t requested_size);
 public:

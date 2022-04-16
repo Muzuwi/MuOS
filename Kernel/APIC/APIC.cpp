@@ -1,12 +1,12 @@
 #include <ACPI/ACPI.hpp>
 #include <APIC/APIC.hpp>
 #include <Debug/klogf.hpp>
-#include <LibGeneric/List.hpp>
+#include <LibGeneric/StaticVector.hpp>
 #include <Memory/Ptr.hpp>
 #include <string.h>
 
 static PhysAddr s_local_apic_base;
-static gen::List<uint8_t> s_ap_ids;
+static gen::StaticVector<uint8_t, 512> s_ap_ids {};
 static uint8 s_bootstrap_ap;
 
 uint32 APIC::lapic_read(LAPICReg reg) {
@@ -136,7 +136,7 @@ void APIC::find_local_base() {
 	s_local_apic_base = PhysAddr { (void*)static_cast<uintptr_t>(local_apic) };
 }
 
-gen::List<uint8> const& APIC::ap_list() {
+gen::StaticVector<uint8, 512> const& APIC::ap_list() {
 	return s_ap_ids;
 }
 

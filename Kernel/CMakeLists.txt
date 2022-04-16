@@ -56,8 +56,6 @@ add_executable(KernelELF
     Exception/asm/ExceptionEntrypoint.asm
     Interrupt/asm/IRQEntrypoint.asm
 
-    Memory/kmalloc.cpp
-
     Memory/PMM.cpp
     Memory/VMM.cpp
     Arch/x86_64/Paging/PTE.cpp

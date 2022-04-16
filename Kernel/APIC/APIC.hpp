@@ -1,5 +1,5 @@
 #pragma once
-#include <LibGeneric/List.hpp>
+#include <LibGeneric/StaticVector.hpp>
 #include <Structs/KOptional.hpp>
 #include <SystemTypes.hpp>
 
@@ -31,6 +31,6 @@ namespace APIC {
 	uint32 lapic_read(LAPICReg);
 	void lapic_write(LAPICReg, uint32);
 
-	gen::List<uint8> const& ap_list();
+	gen::StaticVector<uint8, 512> const& ap_list();
 	uint8 ap_bootstrap_id();
 }

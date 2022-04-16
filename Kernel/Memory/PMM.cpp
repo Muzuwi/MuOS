@@ -1,13 +1,29 @@
 #include <Debug/klogf.hpp>
 #include <Memory/KHeap.hpp>
-#include <Memory/kmalloc.hpp>
 #include <Memory/PMM.hpp>
+#include <Memory/Units.hpp>
 #include <Multiboot/MultibootInfo.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
 #include <Symbols.hpp>
 
 PMM PMM::s_instance {};
+
+void PMM::create_normal_region(void* start, size_t size) {
+	auto region = PRegion { PhysAddr { start }, size };
+	if(!region.allocator().deferred_initialization()) {
+		region.allocator().initialize();
+	}
+	m_normal_regions.push_back(region);
+}
+
+void PMM::create_lowmem_region(void* start, size_t size) {
+	auto region = PRegion { PhysAddr { start }, size };
+	if(!region.allocator().deferred_initialization()) {
+		region.allocator().initialize();
+	}
+	m_mem16_regions.push_back(region);
+}
 
 void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 	klogf_static("[PMM] Multiboot memory map:\n");
@@ -45,23 +61,26 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 						start = 0x1000;
 						range -= 0x1000;
 					}
-					m_mem16_regions.push_back({ PhysAddr { (void*)start }, range });
+					create_lowmem_region((void*)start, range);
 					break;
 				}
 
 				auto kernel_phys_start = (uint64_t)&_ukernel_preloader_physical;
 				auto kernel_phys_end = (uint64_t)&_ukernel_elf_end - (uint64_t)&_ukernel_virtual_offset;
 
+				assert((kernel_phys_start & 0xFFF) == 0);
+				assert((kernel_phys_end & 0xFFF) == 0);
+
 				//  Split regions overlapping with the kernel executable
 				if(start < kernel_phys_end) {
 					if(end > kernel_phys_end) {
 						if(start < kernel_phys_start) {
-							m_normal_regions.push_back({ PhysAddr { (void*)start }, kernel_phys_start - start });
+							create_normal_region((void*)start, kernel_phys_start - start);
 						}
-						m_normal_regions.push_back({ PhysAddr { (void*)kernel_phys_end }, end - kernel_phys_end });
+						create_normal_region((void*)kernel_phys_end, end - kernel_phys_end);
 					}
 				} else {
-					m_normal_regions.push_back({ PhysAddr { (void*)start }, range });
+					create_normal_region((void*)start, range);
 				}
 
 				break;
@@ -126,7 +145,7 @@ void PMM::init_deferred_allocators() {
 		thread->preempt_disable();
 	}
 	m_pmm_lock.lock();
-	auto result = [ this, count_order ]() -> auto {
+	auto result = [ this, count_order ]() -> auto{
 		for(auto& region : m_normal_regions) {
 			auto ret = region.allocator().allocate(count_order);
 			if(ret.has_value()) {
@@ -175,7 +194,7 @@ void PMM::free(PAllocation const& allocation) {
 		thread->preempt_disable();
 	}
 	m_pmm_lock.lock();
-	auto result = [this]() -> auto {
+	auto result = [this]() -> auto{
 		for(auto& region : m_mem16_regions) {
 			auto ret = region.allocator().allocate(0);
 			if(ret.has_value()) {

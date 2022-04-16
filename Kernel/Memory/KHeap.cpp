@@ -2,7 +2,7 @@
 #include <Debug/klogf.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
 #include <Memory/KHeap.hpp>
-#include <Memory/kmalloc.hpp>
+#include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
 #include <SMP/SMP.hpp>
 
@@ -145,12 +145,11 @@ SlabAllocator* KHeap::slab_grow(size_t requested_size) {
 	if(!maybe_slab.has_value()) {
 		return nullptr;
 	}
-
-	auto& list = m_slab_allocators[index_for_size(requested_size)];
-	list.push_back(maybe_slab.unwrap());
-
-	auto& slab = list.back();
+	auto slab = maybe_slab.unwrap();
 	klogf_static("[KHeap] SlabAllocator({}), size {}, objects {}\n", slab.pool_base(), slab.object_size(),
 	             slab.objects_free());
-	return &slab;
+
+	auto& list = m_slab_allocators[index_for_size(requested_size)];
+	list.push_back(gen::move(slab));
+	return &list.back();
 }

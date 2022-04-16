@@ -15,7 +15,7 @@ void Serial::set_debugger_port(Serial::Port port) {
 		return;
 	}
 
-	s_kernel_debugger_port = KOptional { port };
+	s_kernel_debugger_port = KOptional<Serial::Port> { port };
 	//  Enable IRQs for the kernel debugger - data inbound
 	register_write(port, Register::IrqEn, 0x1);
 	//  Register microtask

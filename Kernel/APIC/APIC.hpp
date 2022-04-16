@@ -2,6 +2,7 @@
 #include <Interrupt/IRQDispatcher.hpp>
 #include <LibGeneric/List.hpp>
 #include <Memory/Ptr.hpp>
+#include <LibGeneric/StaticVector.hpp>
 #include <Structs/KOptional.hpp>
 #include <SystemTypes.hpp>
 
@@ -54,7 +55,7 @@ class APIC {
 	static APIC s_instance;
 	PhysAddr m_local_apic_base;
 	PhysAddr m_madt;
-	gen::List<uint8> m_ap_ids;
+	gen::StaticVector<uint8, 512> m_ap_ids;
 	uint8 m_bootstrap_ap;
 
 	static DEFINE_MICROTASK(lapic_timer_irq_handler);
@@ -80,7 +81,7 @@ public:
 	 *  List of all AP's visible and flagged as runnable in the MADT
 	 *  FIXME: Refactor
 	 */
-	static gen::List<uint8> const& ap_list() { return s_instance.m_ap_ids; }
+	static gen::StaticVector<uint8, 512> const& ap_list() { return s_instance.m_ap_ids; }
 
 	/*
 	 *  APIC ID of the BSP

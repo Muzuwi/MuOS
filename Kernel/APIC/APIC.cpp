@@ -2,6 +2,7 @@
 #include <APIC/APIC.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Debug/klogf.hpp>
+#include <LibGeneric/StaticVector.hpp>
 #include <Kernel/ksleep.hpp>
 #include <Memory/Ptr.hpp>
 #include <SMP/SMP.hpp>

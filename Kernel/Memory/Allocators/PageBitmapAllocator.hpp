@@ -7,11 +7,13 @@
 
 //  Page-backed bitmap allocator for pages
 class PageBitmapAllocator {
-	PhysAddr m_base;
-	PhysAddr m_alloc_pool_base;
-	size_t m_bitmap_size;
-	size_t m_region_size;
-	bool m_deferred_initialization;
+	PhysAddr m_base {};
+	PhysAddr m_alloc_pool_base {};
+	size_t m_bitmap_size {};
+	size_t m_region_size {};
+	bool m_deferred_initialization { false };
+
+	friend class PMM;
 
 	static inline int64 divround(const int64 n, const int64 d) {
 		return ((n < 0) ^ (d < 0)) ? ((n - d / 2) / d) : ((n + d / 2) / d);
@@ -50,29 +52,23 @@ class PageBitmapAllocator {
 
 	//  Quick skip through full bytes
 	KOptional<size_t> find_one();
-
-	//  FIXME:  Implement
 	KOptional<size_t> find_many(size_t);
-
 	void mark_bits(size_t idx, size_t count, bool value);
 
 	KOptional<PhysAddr> alloc_one();
-
 	KOptional<PhysAddr> alloc_pow2(size_t order);
-
 	void free_impl(PhysAddr base, size_t order);
-
 	bool contains_address(PhysAddr addr);
 
 	void initialize();
-
-	friend class PMM;
 public:
+	PageBitmapAllocator() = default;
+	~PageBitmapAllocator() = default;
+
 	PageBitmapAllocator(PhysAddr base, size_t region_size);
 
 	KOptional<PhysAddr> allocate(size_t count_order = 0);
-
 	void free(PhysAddr address, size_t order);
 
-	bool deferred_initialization() const { return m_deferred_initialization; }
+	constexpr bool deferred_initialization() const { return m_deferred_initialization; }
 };

@@ -90,14 +90,8 @@ SECTIONS
    		*(.bss)
    	}
 
-   	/*  Kmalloc bootstrap region  */
-   	.kmalloc ALIGN(4K) : AT(ADDR(.kmalloc) - _ukernel_virtual_offset) {
-   	    _ukernel_kmalloc_start = .;
-   	    . += 16 * 0x1000;
-   	    _ukernel_kmalloc_end = .;
-   	}
-
-    _ukernel_elf_end = .;
+    /*  Make sure the kernel has a page-aligned size  */
+    _ukernel_elf_end = ALIGN(0x1000);
 
    	_ukernel_elf_size = _ukernel_elf_end - _ukernel_elf_start;
 

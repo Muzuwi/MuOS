@@ -18,9 +18,10 @@ KOptional<SlabAllocator> SlabAllocator::make(size_t pool_size, size_t object_siz
 		return KOptional<SlabAllocator> {};
 	}
 
-	return KOptional<SlabAllocator> {
-		SlabAllocator {allocator_area, pool_size, object_size}
-	};
+	auto allocator = SlabAllocator { allocator_area, pool_size, object_size };
+	allocator.m_allocations.initialize();
+
+	return KOptional<SlabAllocator> { gen::move(allocator) };
 }
 
 void* SlabAllocator::allocate() {

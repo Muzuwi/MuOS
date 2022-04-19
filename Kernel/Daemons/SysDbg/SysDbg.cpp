@@ -77,7 +77,7 @@ void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth) {
 	};
 
 	print_header();
-	klogf("Name {{'{}'}}\n", process->m_simple_name.to_c_string());
+	klogf("Name {{'{}'}}\n", process->m_simple_name.data());
 	print_header();
 	klogf("PML4 {{{}}}\n", Format::ptr(process->vmm().pml4().get()));
 	print_header();

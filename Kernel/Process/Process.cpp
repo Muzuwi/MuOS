@@ -13,7 +13,7 @@ Process::~Process() {}
 Process& Process::_init_ref() {
 	static Process s_init {
 		1,
-		{                   },
+		gen::String{"init"},
 		ProcFlags { .privilege = User,.randomize_vm = true }
 	};
 	return s_init;
@@ -22,7 +22,7 @@ Process& Process::_init_ref() {
 Process& Process::_kerneld_ref() {
 	static Process s_kerneld {
 		2,
-		{                   },
+		gen::String{"kerneld"},
 		ProcFlags { .privilege = Kernel,.randomize_vm = true }
 	};
 	return s_kerneld;

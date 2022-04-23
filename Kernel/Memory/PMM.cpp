@@ -1,8 +1,8 @@
+#include <Bootstage/MultibootInfo.hpp>
 #include <Debug/klogf.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/Units.hpp>
-#include <Multiboot/MultibootInfo.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
 #include <Symbols.hpp>

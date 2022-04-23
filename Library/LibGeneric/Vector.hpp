@@ -104,8 +104,6 @@ namespace gen {
 		    , m_buffer_size(v.m_buffer_size)
 		    , m_item_count(v.m_item_count) {}
 
-		Vector(std::initializer_list<T> initializer) noexcept = delete;//  TODO: For fun
-
 		~Vector() { _deallocate_buffer(); }
 
 		void push_back(const T& v) {

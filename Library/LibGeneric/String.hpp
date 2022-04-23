@@ -202,7 +202,12 @@ namespace gen {
 		constexpr __BasicStrStorage(__BasicStrStorage const& str) { construct_from(str); }
 
 		constexpr __BasicStrStorage(__BasicStrStorage&& str) noexcept
-		    : m_storage(gen::move(str.m_storage)) {}
+		    : m_storage(gen::move(str.m_storage)) {
+			//  Reset storage to avoid a double-free
+			if(!str.is_small_string()) {
+				str.m_storage = {};
+			}
+		}
 
 		constexpr ~__BasicStrStorage() { destroy(); }
 

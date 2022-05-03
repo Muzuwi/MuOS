@@ -1,6 +1,7 @@
 #pragma once
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/List.hpp>
+#include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/String.hpp>
@@ -38,11 +39,10 @@ class Process {
 	pid_t m_pid;
 	ProcFlags m_flags;
 	VMM m_vmm;
-
+	gen::String m_simple_name;
+	gen::Spinlock m_process_struct_lock;//  Protects children processes and threads
 	List<SharedPtr<Process>> m_children;
 	List<SharedPtr<Thread>> m_threads;
-
-	gen::String m_simple_name;
 
 	void add_child(SharedPtr<Process> const&);
 	void add_thread(SharedPtr<Thread> const&);
@@ -60,7 +60,6 @@ public:
 
 	pid_t pid() const { return m_pid; }
 	ProcFlags flags() const { return m_flags; }
-
 	VMM& vmm() { return m_vmm; }
 
 	//  ------------

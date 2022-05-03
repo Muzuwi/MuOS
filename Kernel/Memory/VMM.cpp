@@ -542,6 +542,8 @@ bool VMM::insert_vmapping(SharedPtr<VMapping>&& mapping) {
 }
 
 void* VMM::allocate_user_stack(uint64 stack_size) {
+	auto lock = acquire_vm_lock();
+
 	//  FIXME: Actually randomize
 	auto random = [](size_t, size_t) -> size_t { return 4; };
 
@@ -560,6 +562,8 @@ void* VMM::allocate_user_stack(uint64 stack_size) {
 }
 
 VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
+	auto lock = acquire_vm_lock();
+
 	void* kstack_top = m_next_kernel_stack_at;
 	void* kstack_bottom = (void*)((uintptr_t)m_next_kernel_stack_at + stack_size);
 
@@ -579,6 +583,8 @@ VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
 }
 
 void* VMM::allocate_user_heap(size_t region_size) {
+	auto lock = acquire_vm_lock();
+
 	size_t size_rounded = region_size & ~(0x1000 - 1);
 	if(size_rounded == 0) {
 		return (void*)(-1);
@@ -635,4 +641,8 @@ void* VMM::allocate_kernel_heap(size_t size) {
 	}
 
 	return ptr;
+}
+
+gen::LockGuard<gen::Spinlock> VMM::acquire_vm_lock() {
+	return gen::LockGuard { m_vm_lock };
 }

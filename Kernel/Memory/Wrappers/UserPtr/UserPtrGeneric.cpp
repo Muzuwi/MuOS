@@ -8,6 +8,7 @@ gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {
 	//  FIXME: Make sure a different thread cannot modify the address space while we're in here
 	auto* user_ptr = (uint8*)m_ptr;
 	auto& vmm = Thread::current()->parent()->vmm();
+	auto lock = vmm.acquire_vm_lock();
 	auto size = sizeof(T);
 
 	//  Verify whether the entire structure is mapped in the process

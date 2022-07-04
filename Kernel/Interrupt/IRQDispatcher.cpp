@@ -31,7 +31,6 @@ extern "C" void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_fra
 
 void IRQDispatcher::dispatch_irq(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
 	dispatch_microtask(irq, interrupt_trap_frame);
-	dispatch_threadirqs(irq, interrupt_trap_frame);
 }
 
 void IRQDispatcher::dispatch_microtask(uint8_t irq, PtraceRegs* interrupt_trap_frame) {
@@ -41,14 +40,6 @@ void IRQDispatcher::dispatch_microtask(uint8_t irq, PtraceRegs* interrupt_trap_f
 		handler(interrupt_trap_frame);
 	}
 	s_microtask_lock.unlock();
-}
-
-void IRQDispatcher::dispatch_threadirqs(uint8_t irq, PtraceRegs*) {
-	s_threadirqs_lock.lock();
-	for(auto& thread : s_threadirqs[irq]) {
-		SMP::ctb().scheduler().wake_up(thread);
-	}
-	s_threadirqs_lock.unlock();
 }
 
 /*
@@ -83,43 +74,4 @@ void IRQDispatcher::remove_microtask(uint8_t irq_num, IRQDispatcher::HandlerFunc
 	}
 
 	s_microtask_lock.unlock();
-}
-
-/*
- *  The following can be called from a preemptible context, and care
- *  must be taken to not introduce deadlocks with atomic, irq contexts.
- */
-
-/*
- *  Registers a threadirq for a specified interrupt, causing the target
- *  thread to be unblocked when an interrupt occurs.
- */
-void IRQDispatcher::register_threadirq(uint8 irq, Thread* thread) {
-	//  Do NOT let the following be preempted
-	IRQDisabler disabler {};
-	s_threadirqs_lock.lock();
-
-	//  Deduplicate entries
-	auto& handlers = s_threadirqs[irq];
-	if(gen::find(handlers, thread) == handlers.end()) {
-		handlers.push_back(thread);
-	}
-
-	s_threadirqs_lock.unlock();
-}
-
-/*
- *  Removes a threadirq for a specified interrupt and thread.
- */
-void IRQDispatcher::remove_threadirq(uint8 irq, Thread* thread) {
-	//  Do NOT let the following be preempted
-	IRQDisabler disabler {};
-	s_threadirqs_lock.lock();
-
-	auto& handlers = s_threadirqs[irq];
-	if(auto it = gen::find(handlers, thread); it != handlers.end()) {
-		handlers.erase(it);
-	}
-
-	s_threadirqs_lock.unlock();
 }

@@ -12,12 +12,8 @@ class IRQDispatcher {
 	friend void _kernel_irq_dispatch(uint8_t, PtraceRegs*);
 	static void dispatch_irq(uint8_t irq, PtraceRegs*);
 	static void dispatch_microtask(uint8_t irq, PtraceRegs*);
-	static void dispatch_threadirqs(uint8_t irq, PtraceRegs*);
 public:
 	typedef void (*HandlerFunc)(PtraceRegs*);
 	static bool register_microtask(uint8_t irq_num, HandlerFunc);
 	static void remove_microtask(uint8_t irq_num, HandlerFunc);
-
-	static void register_threadirq(uint8 irq, Thread* thread);
-	static void remove_threadirq(uint8 irq, Thread* thread);
 };

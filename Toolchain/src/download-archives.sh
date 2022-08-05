@@ -1,7 +1,8 @@
 #!/bin/bash
+set -e
 
-GCC_VER="11.2.0"
-BINUTILS_VER="2.37"
+GCC_VER="12.1.0"
+BINUTILS_VER="2.39"
 
 GCC_ARCHIVE_URL="https://ftp.gnu.org/gnu/gcc/gcc-$GCC_VER/gcc-$GCC_VER.tar.xz"
 GCC_ARCHIVE_PATH="./gcc-$GCC_VER.tar.xz"
@@ -11,24 +12,26 @@ BINUTILS_ARCHIVE_URL="https://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VER.ta
 BINUTILS_ARCHIVE_PATH="./binutils-$BINUTILS_VER.tar.xz"
 BINUTILS_TARGET_DIR="./binutils"
 
-
-echo "Downloading GCC sources.."
-curl --request GET -L \
-     --url "$GCC_ARCHIVE_URL" \
-     --output "$GCC_ARCHIVE_PATH"
-if [ $? -ne 0 ]; then
-    echo "Failed downloading GCC archive: curl returned $?"
-    exit 1
+if [ ! -f "$GCC_ARCHIVE_PATH" ]; then
+	echo "Downloading GCC sources.."
+	curl --request GET -L \
+	     --url "$GCC_ARCHIVE_URL" \
+	     --output "$GCC_ARCHIVE_PATH"
+	if [ $? -ne 0 ]; then
+	    echo "Failed downloading GCC archive: curl returned $?"
+	    exit 1
+	fi
 fi
 
-
-echo "Downloading binutils sources.."
-curl --request GET -L \
-     --url "$BINUTILS_ARCHIVE_URL" \
-     --output "$BINUTILS_ARCHIVE_PATH"
-if [ $? -ne 0 ]; then
-    echo "Failed downloading binutils archive: curl returned $?"
-    exit 1
+if [ ! -f "$BINUTILS_ARCHIVE_PATH" ]; then
+	echo "Downloading binutils sources.."
+	curl --request GET -L \
+	     --url "$BINUTILS_ARCHIVE_URL" \
+	     --output "$BINUTILS_ARCHIVE_PATH"
+	if [ $? -ne 0 ]; then
+	    echo "Failed downloading binutils archive: curl returned $?"
+	    exit 1
+	fi
 fi
 
 if [ -d "$GCC_TARGET_DIR" ]; then

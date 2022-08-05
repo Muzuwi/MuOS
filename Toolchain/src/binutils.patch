@@ -1,7 +1,6 @@
-diff -ruN binutils/bfd/config.bfd binutils-2.36/bfd/config.bfd
---- binutils/bfd/config.bfd	2021-01-09 11:47:33.000000000 +0100
-+++ binutils-2.36/bfd/config.bfd	2021-06-22 13:47:43.090553548 +0200
-@@ -224,6 +224,19 @@
+--- binutils-2.39/bfd/config.bfd	2022-07-08 11:46:47.000000000 +0200
++++ binutils/bfd/config.bfd	2022-08-05 22:24:14.985249680 +0200
+@@ -237,6 +237,19 @@
  
  case "${targ}" in
  # START OF targmatch.h
@@ -21,23 +20,20 @@ diff -ruN binutils/bfd/config.bfd binutils-2.36/bfd/config.bfd
  #ifdef BFD64
    aarch64-*-darwin*)
      targ_defvec=aarch64_mach_o_vec
-diff -ruN binutils/config.sub binutils-2.36/config.sub
---- binutils/config.sub	2021-01-09 11:47:33.000000000 +0100
-+++ binutils-2.36/config.sub	2021-06-22 13:59:58.096973690 +0200
-@@ -1722,7 +1722,8 @@
+--- binutils-2.39/config.sub	2022-07-08 11:46:47.000000000 +0200
++++ binutils/config.sub	2022-08-05 22:24:52.798092457 +0200
+@@ -1753,7 +1753,7 @@
  	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
  	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
  	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
--	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx*)
-+	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* \
-+	     | muos* )
++	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | zephyr* | muos* \
+-	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | zephyr* \
+ 	     | fiwix* )
  		;;
  	# This one is extra strict with allowed versions
- 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
-diff -ruN binutils/gas/configure.tgt binutils-2.36/gas/configure.tgt
---- binutils/gas/configure.tgt	2021-01-09 11:47:33.000000000 +0100
-+++ binutils-2.36/gas/configure.tgt	2021-06-22 13:47:43.090553548 +0200
-@@ -258,6 +258,8 @@
+--- binutils-2.39/gas/configure.tgt	2022-07-08 11:46:47.000000000 +0200
++++ binutils/gas/configure.tgt	2022-08-05 22:24:14.985249680 +0200
+@@ -263,6 +263,8 @@
    i386-*-*nt*)				fmt=coff em=pe ;;
    i386-*-rdos*)				fmt=elf ;;
    i386-*-darwin*)			fmt=macho ;;
@@ -46,10 +42,9 @@ diff -ruN binutils/gas/configure.tgt binutils-2.36/gas/configure.tgt
  
    ia16-*-elf*)				fmt=elf ;;
  
-diff -ruN binutils/ld/configure.tgt binutils-2.36/ld/configure.tgt
---- binutils/ld/configure.tgt	2021-01-09 11:47:34.000000000 +0100
-+++ binutils-2.36/ld/configure.tgt	2021-06-22 13:47:43.090553548 +0200
-@@ -43,6 +43,15 @@
+--- binutils-2.39/ld/configure.tgt	2022-07-29 09:37:48.000000000 +0200
++++ binutils/ld/configure.tgt	2022-08-05 22:24:14.985249680 +0200
+@@ -80,6 +80,15 @@
  # Please try to keep this table more or less in alphabetic order - it
  # makes it much easier to lookup a specific archictecture.
  case "${targ}" in
@@ -65,22 +60,19 @@ diff -ruN binutils/ld/configure.tgt binutils-2.36/ld/configure.tgt
  aarch64_be-*-elf)	targ_emul=aarch64elfb
  			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b armelfb armelf"
  			;;
-diff -ruN binutils/ld/emulparams/elf_i386_muos.sh binutils-2.36/ld/emulparams/elf_i386_muos.sh
---- binutils/ld/emulparams/elf_i386_muos.sh	1970-01-01 01:00:00.000000000 +0100
-+++ binutils-2.36/ld/emulparams/elf_i386_muos.sh	2021-06-22 13:47:43.107219980 +0200
+--- binutils-2.39/ld/emulparams/elf_i386_muos.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils/ld/emulparams/elf_i386_muos.sh	2022-08-05 22:24:14.985249680 +0200
 @@ -0,0 +1,3 @@
 +. ${srcdir}/emulparams/elf_i386.sh
 +GENERATE_SHLIB_SCRIPT=yes
 +GENERATE_PIE_SCRIPT=yes
-diff -ruN binutils/ld/emulparams/elf_x86_64_muos.sh binutils-2.36/ld/emulparams/elf_x86_64_muos.sh
---- binutils/ld/emulparams/elf_x86_64_muos.sh	1970-01-01 01:00:00.000000000 +0100
-+++ binutils-2.36/ld/emulparams/elf_x86_64_muos.sh	2021-06-22 13:47:43.107219980 +0200
+--- binutils-2.39/ld/emulparams/elf_x86_64_muos.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils/ld/emulparams/elf_x86_64_muos.sh	2022-08-05 22:24:14.985249680 +0200
 @@ -0,0 +1 @@
 +. ${srcdir}/emulparams/elf_x86_64.sh
-diff -ruN binutils/ld/Makefile.am binutils-2.36/ld/Makefile.am
---- binutils/ld/Makefile.am	2021-01-09 11:47:34.000000000 +0100
-+++ binutils-2.36/ld/Makefile.am	2021-06-22 13:47:43.107219980 +0200
-@@ -289,6 +289,7 @@
+--- binutils-2.39/ld/Makefile.am	2022-07-08 11:46:48.000000000 +0200
++++ binutils/ld/Makefile.am	2022-08-05 22:24:14.985249680 +0200
+@@ -281,6 +281,7 @@
  	eelf_i386_ldso.c \
  	eelf_i386_sol2.c \
  	eelf_i386_vxworks.c \
@@ -89,8 +81,8 @@ diff -ruN binutils/ld/Makefile.am binutils-2.36/ld/Makefile.am
  	eelf_s390.c \
  	eh8300elf.c \
 @@ -457,6 +458,7 @@
- 	eelf_x86_64_cloudabi.c \
  	eelf_x86_64_fbsd.c \
+ 	eelf_x86_64_haiku.c \
  	eelf_x86_64_sol2.c \
 +	eelf_x86_64_muos.c \
  	ehppa64linux.c \

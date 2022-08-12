@@ -1,10 +1,10 @@
 include(FetchContent)
 FetchContent_Declare(
-    Catch2
+    ExternCatch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG 97c48e0c343d26d50764fafdc90b1e630fbd10ce
+    GIT_TAG 62fd660583d3ae7a7886930b413c3c570e89786c
 )
-FetchContent_MakeAvailable(Catch2)
+FetchContent_MakeAvailable(ExternCatch2)
 
 add_library(LibGeneric
     ELFParser.cpp

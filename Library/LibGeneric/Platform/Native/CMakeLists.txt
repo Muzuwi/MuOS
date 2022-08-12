@@ -1,4 +1,10 @@
-find_package(Catch2 REQUIRED)
+include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG 97c48e0c343d26d50764fafdc90b1e630fbd10ce
+)
+FetchContent_MakeAvailable(Catch2)
 
 add_library(LibGeneric
     ELFParser.cpp

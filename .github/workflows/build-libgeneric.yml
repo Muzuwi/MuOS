@@ -17,5 +17,7 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DMU_BUILD_TYPE=test ${{github.workspace}}/Library/LibGeneric/
 
     - name: Build
-      # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --target TestLibGeneric
+
+    - name: Test LibGeneric
+      run: ${{github.workspace}}/build/TestLibGeneric

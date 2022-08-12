@@ -26,9 +26,7 @@ target_compile_options(LibC
     )
 
 add_dependencies(LibC
-    LibC_CRT0
-    LibC_CRTi
-    LibC_CRTn
+    LibC-CRT
     )
 
 install(TARGETS LibC

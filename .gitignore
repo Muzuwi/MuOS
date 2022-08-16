@@ -13,6 +13,7 @@ doxy/*
 docs/*
 
 # Toolchain directory
+Toolchain/include/
 Toolchain/src/archives/
 Toolchain/src/binutils/
 Toolchain/src/gcc/

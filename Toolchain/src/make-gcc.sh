@@ -16,6 +16,9 @@ if [ ! -d build-gcc ]; then
     mkdir build-gcc
 fi
 
+mkdir -p -v /usr/local/muOS/usr/include/
+mkdir -p -v /usr/local/muOS/include/
+
 cd build-gcc
 ../gcc/configure --target=x86_64-muos \
 				 --prefix="$PREFIX" \

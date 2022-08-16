@@ -2,7 +2,6 @@ include(../../Toolchain/CMakeLists.txt)
 
 add_library(
     LibGeneric
-    ELFParser.cpp
     Platform/MuOS/Allocator-KHeap.cpp)
 
 set_target_properties(LibGeneric PROPERTIES PREFIX "")

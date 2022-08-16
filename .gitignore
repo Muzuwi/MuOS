@@ -1,21 +1,25 @@
+# Compiler output and IDE configuration
 *.o
 *.d
 *.a
 *.bin
 *.iso
 *.img
-.idea/*
-.stdir/*
-.gdb_history
+**/.idea/*
+**/cmake-build-**/**
+
+# Local dev environment
 doxy/*
 docs/*
-Toolchain/src/archives
+
+# Toolchain directory
+Toolchain/src/archives/
 Toolchain/src/binutils/
-Toolchain/src/build-binutils/
 Toolchain/src/gcc/
+Toolchain/src/build-binutils/
 Toolchain/src/build-gcc/
 !Toolchain/CMakeLists.txt
-MuOS.*
-**/cmake-build-**/**
+
+# Working directory
 Root/
 Userland/Test

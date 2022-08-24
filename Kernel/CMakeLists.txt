@@ -91,7 +91,7 @@ add_executable(KernelELF
 
     Arch/x86_64/ACPI.cpp
     Arch/x86_64/APIC.cpp
-    Device/Serial.cpp
+    Arch/x86_64/Serial.cpp
     SMP/SMP.cpp
     Process/ProcCreate.cpp
     Process/Thread.cpp

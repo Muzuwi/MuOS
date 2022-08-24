@@ -1,7 +1,7 @@
 #include <Arch/x86_64/PIT.hpp>
+#include <Arch/x86_64/Serial.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Debug/klogf.hpp>
-#include <Device/Serial.hpp>
 #include <LibGeneric/String.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>

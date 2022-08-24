@@ -4,11 +4,11 @@
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/IDT.hpp>
 #include <Arch/x86_64/PIT.hpp>
+#include <Arch/x86_64/Serial.hpp>
 #include <Bootstage/MultibootInfo.hpp>
 #include <Debug/klogf.hpp>
 #include <Debug/kpanic.hpp>
 #include <Debug/TTY.hpp>
-#include <Device/Serial.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/PMM.hpp>
 #include <Process/Process.hpp>

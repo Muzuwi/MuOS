@@ -1,6 +1,6 @@
 #include <Arch/x86_64/PortIO.hpp>
+#include <Arch/x86_64/Serial.hpp>
 #include <Debug/klogf.hpp>
-#include <Device/Serial.hpp>
 #include <string.h>
 #include <Structs/KOptional.hpp>
 

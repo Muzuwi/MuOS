@@ -22,8 +22,6 @@ public:
 	void set_directory(PhysPtr<PDPT> page_directory_ptr_table);
 };
 
-class ProcMem;
-
 class PML4 {
 	friend class VMM;
 	PML4E m_entries[512];

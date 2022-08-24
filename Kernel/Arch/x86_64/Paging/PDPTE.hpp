@@ -23,8 +23,6 @@ public:
 	void set_directory(PhysPtr<PD> page_directory);
 };
 
-class ProcMem;
-
 class PDPT {
 	friend class VMM;
 	PDPTE m_entries[512];

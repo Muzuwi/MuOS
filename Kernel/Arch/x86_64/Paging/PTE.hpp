@@ -23,8 +23,6 @@ public:
 	void set_page(PhysAddr);
 };
 
-class ProcMem;
-
 class PT {
 	friend class VMM;
 	PTE m_entries[512];

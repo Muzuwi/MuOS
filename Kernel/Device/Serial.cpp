@@ -53,7 +53,7 @@ bool Serial::try_initialize(Serial::Port port) {
 	for(unsigned i = 0; i < 30; ++i)
 		(void)register_read(port, Register::Data);
 
-	const uint8 magic = 0xDA;
+	const uint8 magic = 0x7f;
 	register_write(port, Register::Data, magic);
 	const uint8 read = register_read(port, Register::Data);
 	if(read != magic) {

@@ -12,7 +12,7 @@
 using gen::List;
 
 class VMM {
-	friend void SysDbg::sysdbg_thread();
+	friend void SysDbg::handle_command(gen::List<gen::String> const& args);
 	friend void BootAP::boot_ap_thread();
 	friend class V86;
 	friend class SlabAllocator;

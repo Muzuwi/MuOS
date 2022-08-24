@@ -1,5 +1,5 @@
-#include <ACPI/ACPI.hpp>
-#include <APIC/APIC.hpp>
+#include <Arch/x86_64/ACPI.hpp>
+#include <Arch/x86_64/APIC.hpp>
 #include <Debug/klogf.hpp>
 #include <LibGeneric/StaticVector.hpp>
 #include <Memory/Ptr.hpp>

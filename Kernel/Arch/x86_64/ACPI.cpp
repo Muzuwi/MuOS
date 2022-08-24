@@ -1,4 +1,4 @@
-#include <ACPI/ACPI.hpp>
+#include <Arch/x86_64/ACPI.hpp>
 #include <Debug/klogf.hpp>
 #include <LibGeneric/List.hpp>
 #include <Memory/Ptr.hpp>

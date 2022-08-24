@@ -89,8 +89,8 @@ add_executable(KernelELF
     Memory/Wrappers/UserPtr/UserPtrGeneric.cpp
     Memory/Wrappers/UserPtr/UserString.cpp
 
-    ACPI/ACPI.cpp
-    APIC/APIC.cpp
+    Arch/x86_64/ACPI.cpp
+    Arch/x86_64/APIC.cpp
     Device/Serial.cpp
     SMP/SMP.cpp
     Process/ProcCreate.cpp

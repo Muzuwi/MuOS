@@ -1,4 +1,4 @@
-#include <APIC/APIC.hpp>
+#include <Arch/x86_64/APIC.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
 #include <Debug/kassert.hpp>
 #include <Debug/klogf.hpp>

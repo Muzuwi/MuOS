@@ -7,7 +7,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(ExternCatch2)
 
 add_library(LibGeneric
-    ELFParser.cpp
     Platform/Native/Allocator-Native.cpp
     Optional.hpp Memory.hpp Traits.hpp)
 

@@ -72,7 +72,7 @@ add_executable(KernelELF
 
     Interrupt/IRQDispatcher.cpp
 
-    Device/PIT.cpp
+    Arch/x86_64/PIT.cpp
     Kernel/ksleep.cpp
 
     Arch/x86_64/CPU.cpp

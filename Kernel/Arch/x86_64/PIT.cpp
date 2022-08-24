@@ -1,6 +1,6 @@
+#include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
-#include <Device/PIT.hpp>
 #include <Interrupt/IRQDispatcher.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>

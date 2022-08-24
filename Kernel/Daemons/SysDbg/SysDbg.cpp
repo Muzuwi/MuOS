@@ -1,3 +1,4 @@
+#include <Arch/x86_64/PIT.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Debug/klogf.hpp>
 #include <Device/Serial.hpp>
@@ -5,8 +6,6 @@
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
-#include "Device/PIT.hpp"
-#include "Kernel/ksleep.hpp"
 
 constexpr bool is_numeric(char ch) {
 	return ch >= 0x30 && ch < 58;

@@ -1,4 +1,4 @@
-#include <Device/PIT.hpp>
+#include <Arch/x86_64/PIT.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-GCC_VER="12.1.0"
+GCC_VER="12.2.0"
 BINUTILS_VER="2.39"
 
 GCC_ARCHIVE_URL="https://ftp.gnu.org/gnu/gcc/gcc-$GCC_VER/gcc-$GCC_VER.tar.xz"

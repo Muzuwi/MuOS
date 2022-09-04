@@ -30,7 +30,7 @@ namespace gen {
 			}
 		}
 	public:
-		constexpr StaticVector()
+		constexpr StaticVector() noexcept
 		    : m_pointer(0) {}
 
 		/*

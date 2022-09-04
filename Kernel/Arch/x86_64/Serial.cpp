@@ -36,32 +36,46 @@ void Serial::_serial_irq_handler(PtraceRegs*) {
 }
 
 bool Serial::try_initialize(Serial::Port port) {
+	const uint8 magic = 0x7f;
+
+	//  Try using the scratch pad
+	register_write(port, Register::Scratch, magic);
+	const auto value = register_read(port, Register::Scratch);
+	if(value != magic) {
+		return false;
+	}
+
 	//  Set speed - 115200
-	register_write(port, Register::IrqEn, 0x0);
 	register_write(port, Register::LineControl, 0x80);//  DLAB on
 	register_write(port, Register::Data, 0x01);       //  Divisor 1
 	register_write(port, Register::IrqEn, 0x00);
 	register_write(port, Register::LineControl, 0x03);//  8N1, DLAB off
 
-	register_write(port, Register::IrqId, 0xc7);       //  FIFO enabled and cleared
-	register_write(port, Register::ModemControl, 0x0b);//  RTS/DTS set
+	register_write(port, Register::IrqEn, 0x0);
+	register_write(port, Register::IrqId, 0x01);       //  Enable FIFO
+	register_write(port, Register::IrqId, 0x06);       //  Explicitly clear both FIFOs
+	register_write(port, Register::ModemControl, 0x0b);//  RTS/DTS set, irq enabled
+
+	//  FIXME: This is faulty.
+	//  On real hardware, the loopback test for whatever reason doesn't work.
+	//  When cold-booting, it doesn't seem to pass, and after doing a reboot (! not shutdown and power on !),
+	//  it seems to come back fine (interestingly, the loopback byte seems to be sent outside of the port, is it
+	//  supposed to be like that?)
+	//  Conveniently ignore the loopback mode for now.
 
 	//  Test if the serial port actually exists
-	register_write(port, Register::ModemControl, 0x1e);//  Loopback mode
-
+	//	register_write(port, Register::ModemControl, 0x10);//  Loopback mode
 	//  Clear any potential pending data
-	for(unsigned i = 0; i < 30; ++i)
-		(void)register_read(port, Register::Data);
-
-	const uint8 magic = 0x7f;
-	register_write(port, Register::Data, magic);
-	const uint8 read = register_read(port, Register::Data);
-	if(read != magic) {
-		return false;
-	}
-
+	//	for(unsigned i = 0; i < 30; ++i)
+	//		(void)register_read(port, Register::Data);
+	//	register_write(port, Register::Data, magic);
+	//	const uint8 read = register_read(port, Register::Data);
+	//	if(read != magic) {
+	//		return false;
+	//	}
 	//  Return to normal operation mode
-	register_write(port, Register::ModemControl, 0x0F);
+	//	register_write(port, Register::ModemControl, 0x0B);
+
 	return true;
 }
 

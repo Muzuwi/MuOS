@@ -14,6 +14,7 @@
 #include <Process/Process.hpp>
 #include <SMP/SMP.hpp>
 #include <Syscalls/Syscall.hpp>
+#include "Arch/x86_64/PCI/PCI.hpp"
 
 /*
     Main kernel entrypoint
@@ -36,6 +37,7 @@ extern "C" [[noreturn]] void _ukernel_entrypoint(PhysPtr<MultibootInfo> multiboo
 
 	KHeap::instance().init();
 
+	PCI::discover();
 	Syscall::init();
 
 	klogf("[uKernel] Init done, time passed: {}ms\n", PIT::milliseconds());

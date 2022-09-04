@@ -92,19 +92,19 @@ namespace gen {
 			}
 		}
 	public:
-		Vector() noexcept
+		constexpr Vector() noexcept
 		    : m_data(nullptr)
 		    , m_buffer_size(0)
 		    , m_item_count(0) {}
 
-		Vector(Vector const& v) noexcept { from_vector(v); }
+		constexpr Vector(Vector const& v) noexcept { from_vector(v); }
 
-		Vector(Vector&& v) noexcept
+		constexpr Vector(Vector&& v) noexcept
 		    : m_data(v.m_data)
 		    , m_buffer_size(v.m_buffer_size)
 		    , m_item_count(v.m_item_count) {}
 
-		~Vector() { _deallocate_buffer(); }
+		constexpr ~Vector() { _deallocate_buffer(); }
 
 		void push_back(const T& v) {
 			_resize_if_needed();
@@ -143,9 +143,9 @@ namespace gen {
 				_buffer_reallocate(n);
 		}
 
-		T& operator[](size_t n) { return m_data[n]; }
+		constexpr T& operator[](size_t n) { return m_data[n]; }
 
-		T const& operator[](size_t n) const { return m_data[n]; }
+		constexpr T const& operator[](size_t n) const { return m_data[n]; }
 
 		T& at(size_t n) {
 			assert(n < m_item_count);

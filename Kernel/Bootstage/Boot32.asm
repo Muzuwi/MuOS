@@ -1,24 +1,5 @@
 %include "Bootstage/BootDefines.mac"
 
-;  Multiboot Header definitions
-ALIGNONPAGE equ 1 << 0
-MEMINFO equ 1 << 1
-MAGIC equ 0x1BADB002
-FLAG equ ALIGNONPAGE | MEMINFO
-CHECKSUM equ -(MAGIC + FLAG)
-
-;  Multiboot header
-section .multiboot
-align 4
-	dd MAGIC
-	dd FLAG
-	dd CHECKSUM
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-	dd 0
-
 ;  32-bit bootstrap
 section .bootstrap32
 bits 32

@@ -24,6 +24,7 @@ add_custom_target(CRTend
 #   info header. The callee is then responsible for setting up its' own stack and G/IDT
 #
 add_library(Entrypoint OBJECT
+    Bootstage/Multiboot.asm
     Bootstage/Entrypoint64.asm
     Bootstage/Boot32.asm)
 

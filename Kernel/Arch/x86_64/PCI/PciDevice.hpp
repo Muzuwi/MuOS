@@ -20,6 +20,7 @@ public:
 	uint16 vendor_id() const { return read_config(0x0) & 0xFFFFu; }
 	uint8 class_() const { return read_config(0x8) >> 24u; }
 	uint8 subclass() const { return (read_config(0x8) >> 16u) & 0xFFu; }
+	uint8 prog_if() const { return (read_config(0x8) >> 8u) & 0xFFu; }
 	uint8 header_type() const { return (read_config(0xC) >> 16u) & 0xFFu; }
 	constexpr uint8 bus() const { return m_bus; }
 	constexpr uint8 device() const { return m_device; }

@@ -2,6 +2,7 @@
 #include <Arch/Interface.hpp>
 #include <Arch/x86_64/PIT.hpp>
 #include <Debug/kpanic.hpp>
+#include <Drivers/IDE/IDE.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
 #include <SMP/SMP.hpp>
@@ -30,6 +31,8 @@
 
 	//  Initialize the kernel subsystems
 	KHeap::instance().init();
+	(void)driver::ide::init();
+
 	klogf("[uKernel] Init done, time passed: {}ms\n", PIT::milliseconds());
 	this_cpu().scheduler().bootstrap();
 	kpanic();

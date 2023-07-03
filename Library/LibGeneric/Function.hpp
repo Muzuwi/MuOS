@@ -3,6 +3,7 @@
 #include <LibGeneric/Move.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 #include <string.h>
+#include <type_traits>
 
 namespace gen {
 	template<template<typename> class Alloc = gen::Allocator>
@@ -97,6 +98,53 @@ namespace gen {
 		constexpr size_t size() const { return m_storage_size; }
 	};
 
+	template<unsigned static_storage_size>
+	class __FunctionStaticStorage {
+	public:
+		typedef char* StoragePointer;
+	private:
+		union Storage {
+			char stack_storage[static_storage_size];
+		};
+		Storage m_storage;
+
+		constexpr void move_storage(__FunctionStaticStorage&& storage) {
+			//  Copy the storage buffer from the other functor
+			//  TODO: Does this handle self-move?
+			memcpy(m_storage.stack_storage, storage.m_storage.stack_storage, storage.m_storage_size);
+		}
+
+		constexpr void clone_storage(__FunctionStaticStorage const& storage) {
+			//  Copy the storage buffer from the other functor
+			memcpy(m_storage.stack_storage, storage.m_storage.stack_storage, storage.m_storage_size);
+		}
+	public:
+		constexpr __FunctionStaticStorage() = default;
+
+		template<size_t functor_size>
+		constexpr __FunctionStaticStorage(std::integral_constant<size_t, functor_size>) noexcept
+		    : m_storage() {
+			static_assert(functor_size <= static_storage_size,
+			              "Provided functor is too big to fit inside gen::StaticFunc");
+		}
+
+		constexpr __FunctionStaticStorage(__FunctionStaticStorage&& storage) noexcept
+		    : m_storage() {
+			move_storage(storage);
+		}
+
+		constexpr __FunctionStaticStorage(__FunctionStaticStorage const& storage)
+		    : m_storage() {
+			clone_storage(storage);
+		}
+
+		constexpr ~__FunctionStaticStorage() = default;
+
+		constexpr StoragePointer get() { return m_storage.stack_storage; }
+
+		constexpr size_t size() const { return static_storage_size; }
+	};
+
 	template<typename T>
 	class Function;
 
@@ -110,7 +158,12 @@ namespace gen {
 		InvokeFunc m_invoke_func;
 		DestroyFunc m_destroy_func;
 
-		__FunctionStorage<gen::Allocator> m_storage;
+		//		__FunctionStorage<gen::Allocator> m_storage;
+		__FunctionStaticStorage<8> m_storage;
+
+		//		template<typename AnonymousFunctorType>
+		//		concept CanContainFunctor = requires(AnonymousFunctorType f) { sizeof(AnonymousFunctorType) <= storage.;
+		//}
 
 		template<typename Functor>
 		static constexpr Ret invoke_functor(Functor* fn, Args&&... args) {
@@ -137,14 +190,14 @@ namespace gen {
 		    : m_construct_func(nullptr)
 		    , m_invoke_func(nullptr)
 		    , m_destroy_func(nullptr)
-		    , m_storage(0) {}
+		    , m_storage(std::integral_constant<size_t, 0>()) {}
 
 		template<typename Functor>
 		constexpr Function(Functor f)
 		    : m_construct_func(reinterpret_cast<ConstructFunc>(construct_functor<Functor>))
 		    , m_invoke_func(reinterpret_cast<InvokeFunc>(invoke_functor<Functor>))
 		    , m_destroy_func(reinterpret_cast<DestroyFunc>(destroy_functor<Functor>))
-		    , m_storage(sizeof(Functor)) {
+		    , m_storage(std::integral_constant<size_t, sizeof(Functor)>()) {
 			m_construct_func(m_storage.get(), reinterpret_cast<char*>(&f));
 		}
 

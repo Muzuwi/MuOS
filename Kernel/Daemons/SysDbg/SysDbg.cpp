@@ -1,7 +1,9 @@
+#include <Arch/x86_64/PCI/PCI.hpp>
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/Serial.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Debug/klogf.hpp>
+#include <Drivers/IDE/IDE.hpp>
 #include <LibGeneric/String.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
@@ -124,6 +126,36 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 				klogf("[{x}]\n", dword);
 			}
 		}
+	} else if(command == "dr") {
+		auto maybe_dev = PCI::acquire_device(
+		        [](PciDevice const& device) -> bool { return device.class_() == 0x01 && device.subclass() == 0x01; });
+		if(!maybe_dev.has_value()) {
+			klogf("kdebugger({}): no PCI IDE controllers detected\n", Thread::current()->tid());
+			return;
+		}
+		auto dev = maybe_dev.unwrap();
+		kerrorf("kdebugger({}): got device id={x} vendor={x}\n", Thread::current()->tid(), dev.device_id(),
+		        dev.vendor_id());
+		auto prog_if = dev.prog_if();
+		kerrorf("prog_if={x}\n", prog_if);
+		if(prog_if & 0b0101) {
+			kerrorf("PCI native mode unsupported\n");
+			return;
+		}
+
+		uint16 primary_base = 0x1F0, primary_base_control = 0x3F6;
+		uint16 secondary_base = 0x170, secondary_base_control = 0x376;
+
+		auto try_initialize = [](uint16 base, uint16 control_base) {
+			auto drive = IdeDevice { base, control_base };
+			if(!drive.initialize()) {
+				kerrorf("failed initializing drive @ {x}, {x}\n", base, control_base);
+				return;
+			}
+		};
+
+		try_initialize(primary_base, primary_base_control);
+		try_initialize(secondary_base, secondary_base_control);
 	}
 }
 

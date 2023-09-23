@@ -1,6 +1,7 @@
 # Documentation sources
 
 This folder contains sources for the documentation.
+Latest build of the documentation is automatically deployed [here](https://muos.muzuwi.dev/).
 
 ## Requirements
 

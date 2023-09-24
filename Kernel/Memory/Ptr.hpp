@@ -1,9 +1,8 @@
 #pragma once
+#include <Arch/x86_64/LinkscriptSyms.hpp>
 #include <Debug/klogf.hpp>
 #include <stddef.h>
 #include <stdint.h>
-#include <Symbols.hpp>
-//#include <Memory/PageToken.hpp>
 
 template<class T>
 class PhysPtr {

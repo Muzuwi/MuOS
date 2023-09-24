@@ -1,11 +1,11 @@
 #include <Arch/x86_64/Boot/MultibootInfo.hpp>
+#include <Arch/x86_64/LinkscriptSyms.hpp>
 #include <Debug/klogf.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/Units.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
-#include <Symbols.hpp>
 
 PMM PMM::s_instance {};
 

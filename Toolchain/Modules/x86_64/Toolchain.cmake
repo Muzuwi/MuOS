@@ -41,27 +41,33 @@ execute_process(COMMAND "${MUOS_CC}" -print-file-name=crtend.o
 
 # Source file paths and object output paths for the kernel CRT stuff.
 set(_MU_KERNEL_CRTI_SRC "${CMAKE_CURRENT_LIST_DIR}/crti.asm")
-set(_MU_KERNEL_CRTI_OBJ "${CMAKE_CURRENT_BINARY_DIR}/ukernel_crti.o")
+set(_MU_KERNEL_CRTI_OBJ "${CMAKE_BINARY_DIR}/ukernel_crti.o")
 set(_MU_KERNEL_CRTN_SRC "${CMAKE_CURRENT_LIST_DIR}/crtn.asm")
-set(_MU_KERNEL_CRTN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/ukernel_crtn.o")
+set(_MU_KERNEL_CRTN_OBJ "${CMAKE_BINARY_DIR}/ukernel_crtn.o")
 
 # Build the crti/crtn objects
 # These are kernel-specific, and userland should probably use
 # different ones.
-# FIXME: Cache this, also this should go to the main cmake build dir, and not
-# per-target specific cache.
-message(STATUS "Building kernel crti.o..")
-execute_process(COMMAND "${MUOS_NASM}" -f elf64 -o "${_MU_KERNEL_CRTI_OBJ}" "${_MU_KERNEL_CRTI_SRC}"
-    RESULT_VARIABLE _CRTI_RET)
-if (_CRTI_RET AND NOT _CRTI_RET EQUAL 0)
-    message(FATAL_ERROR "Failed building the kernel crti.o object!")
+if (NOT EXISTS "${_MU_KERNEL_CRTI_OBJ}")
+    message(STATUS "Building kernel crti.o..")
+    execute_process(COMMAND "${MUOS_NASM}" -f elf64 -o "${_MU_KERNEL_CRTI_OBJ}" "${_MU_KERNEL_CRTI_SRC}"
+        RESULT_VARIABLE _CRTI_RET)
+    if (_CRTI_RET AND NOT _CRTI_RET EQUAL 0)
+        message(FATAL_ERROR "Failed building the kernel crti.o object!")
+    endif ()
+else ()
+    message(STATUS "Kernel crti.o object already exists: ${_MU_KERNEL_CRTI_OBJ}, skipping generation..")
 endif ()
 
-message(STATUS "Building kernel crtn.o..")
-execute_process(COMMAND "${MUOS_NASM}" -f elf64 -o "${_MU_KERNEL_CRTN_OBJ}" "${_MU_KERNEL_CRTN_SRC}"
-    RESULT_VARIABLE _CRTN_RET)
-if (_CRTN_RET AND NOT _CRTN_RET EQUAL 0)
-    message(FATAL_ERROR "Failed building the kernel crtn.o object!")
+if (NOT EXISTS "${_MU_KERNEL_CRTN_OBJ}")
+    message(STATUS "Building kernel crtn.o..")
+    execute_process(COMMAND "${MUOS_NASM}" -f elf64 -o "${_MU_KERNEL_CRTN_OBJ}" "${_MU_KERNEL_CRTN_SRC}"
+        RESULT_VARIABLE _CRTN_RET)
+    if (_CRTN_RET AND NOT _CRTN_RET EQUAL 0)
+        message(FATAL_ERROR "Failed building the kernel crtn.o object!")
+    endif ()
+else ()
+    message(STATUS "Kernel crtn.o object already exists: ${_MU_KERNEL_CRTN_OBJ}, skipping generation..")
 endif ()
 
 # Print some helpful debug info

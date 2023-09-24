@@ -1,7 +1,7 @@
 #include <Debug/kpanic.hpp>
-#include <Exception/Exception.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
+#include "Exception.hpp"
 
 static Exception::HandlerFunction s_exception_handlers[32] {
 	nullptr, nullptr, nullptr, nullptr, nullptr,

@@ -16,7 +16,6 @@ bits 64
     mov rcx, %1
     mov rdx, rax
     shr rdx, 32
-    and rax, 0x00000000FFFFFFFF
     wrmsr
 %endmacro
 

@@ -17,7 +17,6 @@ extern uint8 ap_bootstrap_end;
 void BootAP::boot_ap_thread() {
 	klogf("[BootAP({})]: Booting up APs\n", Thread::current()->tid());
 	auto* thread = SMP::ctb().current_thread();
-	auto const& process = thread->parent();
 
 	auto maybe_code_page = PMM::instance().allocate_lowmem();
 	if(!maybe_code_page.has_value()) {

@@ -1,11 +1,11 @@
 #include <Arch/x86_64/ACPI.hpp>
 #include <Arch/x86_64/APIC.hpp>
+#include <Arch/x86_64/Boot/MultibootInfo.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/IDT.hpp>
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/Serial.hpp>
-#include <Bootstage/MultibootInfo.hpp>
 #include <Debug/klogf.hpp>
 #include <Debug/kpanic.hpp>
 #include <Debug/TTY.hpp>

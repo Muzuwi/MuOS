@@ -9,8 +9,3 @@ void __kassert_impl(const char*, int, const char*, bool);
 #define assert(a)   kassert(a)
 
 #define ASSERT_NOT_REACHED() __kassert_panic(__FILE__, __LINE__, "Reached ASSERT_NOT_REACHED()")
-
-#ifdef NDEBUG
-#	define assert(a)
-#	define kassert(a)
-#endif

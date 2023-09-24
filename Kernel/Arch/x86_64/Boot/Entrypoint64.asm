@@ -1,7 +1,9 @@
-%include "Bootstage/BootDefines.mac"
+%include "BootDefines.mac"
 
-;  This will be loaded at 0x00110000 by GRUB
-;  64-bit entrypoint
+; This is the 64-bit entrypoint for the kernel. This is called by the
+; 32-bit entry, after enabling initial long mode.
+; The entire .entrypoint section will be loaded at physical address 0x00110000 by GRUB
+
 extern _ukernel_elf_size
 extern _ukernel_elf_start
 extern _ukernel_elf_end

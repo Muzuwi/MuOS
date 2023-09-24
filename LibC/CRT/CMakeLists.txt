@@ -1,5 +1,3 @@
-include(../../Toolchain/CMakeLists.txt)
-
 add_custom_command(
     OUTPUT crt0.o
     COMMAND ${CMAKE_ASM_NASM_COMPILER} -f elf64 ${CMAKE_CURRENT_SOURCE_DIR}/crt0.asm -o crt0.o

@@ -1,4 +1,4 @@
-#include <Bootstage/MultibootInfo.hpp>
+#include <Arch/x86_64/Boot/MultibootInfo.hpp>
 #include <Debug/klogf.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/PMM.hpp>
@@ -145,7 +145,7 @@ void PMM::init_deferred_allocators() {
 		thread->preempt_disable();
 	}
 	m_pmm_lock.lock();
-	auto result = [ this, count_order ]() -> auto{
+	auto result = [this, count_order]() -> auto {
 		for(auto& region : m_normal_regions) {
 			auto ret = region.allocator().allocate(count_order);
 			if(ret.has_value()) {
@@ -155,8 +155,7 @@ void PMM::init_deferred_allocators() {
 			}
 		}
 		return KOptional<PAllocation> {};
-	}
-	();
+	}();
 	m_pmm_lock.unlock();
 	if(thread) {
 		thread->preempt_enable();
@@ -194,7 +193,7 @@ void PMM::free(PAllocation const& allocation) {
 		thread->preempt_disable();
 	}
 	m_pmm_lock.lock();
-	auto result = [this]() -> auto{
+	auto result = [this]() -> auto {
 		for(auto& region : m_mem16_regions) {
 			auto ret = region.allocator().allocate(0);
 			if(ret.has_value()) {
@@ -203,8 +202,7 @@ void PMM::free(PAllocation const& allocation) {
 			}
 		}
 		return KOptional<PhysAddr> {};
-	}
-	();
+	}();
 	m_pmm_lock.unlock();
 	if(thread) {
 		thread->preempt_enable();

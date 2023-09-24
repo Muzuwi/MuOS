@@ -1,4 +1,4 @@
-%include "Bootstage/BootDefines.mac"
+%include "BootDefines.mac"
 
 bits 64
 section .text

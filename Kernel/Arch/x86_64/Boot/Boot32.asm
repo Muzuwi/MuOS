@@ -1,4 +1,9 @@
-%include "Bootstage/BootDefines.mac"
+%include "BootDefines.mac"
+
+; This is the main entrypoint for the kernel, as GRUB jumps to the _entrypoint_x32 symbol.
+; The 32-bit entrypoint provides a small single-page stack, initial GDT and null IDT
+; After setting up long mode, it jumps to _entrypoint_x64, while passing along the multiboot
+; info header. The callee is then responsible for setting up its' own stack and G/IDT
 
 ;  Multiboot Header definitions
 ALIGNONPAGE equ 1 << 0

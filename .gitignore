@@ -19,7 +19,6 @@ Toolchain/src/binutils/
 Toolchain/src/gcc/
 Toolchain/src/build-binutils/
 Toolchain/src/build-gcc/
-!Toolchain/CMakeLists.txt
 
 # Working directory
 Root/

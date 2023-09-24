@@ -39,4 +39,4 @@ public:
 	constexpr Scheduler& scheduler() { return m_sched; }
 	constexpr GDT* gdt() { return m_gdt; }
 	constexpr uint64 vid() const { return m_vid; }
-} __attribute__((packed));
+};

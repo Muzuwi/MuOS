@@ -1,4 +1,5 @@
 #include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/Interrupt/IRQDispatcher.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
 #include <Daemons/BootAP/BootAP.hpp>
 #include <Daemons/Idle/Idle.hpp>
@@ -7,7 +8,6 @@
 #include <Daemons/Testd/Testd.hpp>
 #include <Debug/kassert.hpp>
 #include <Debug/klogf.hpp>
-#include <Interrupt/IRQDispatcher.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
@@ -68,7 +68,7 @@ void Scheduler::interrupt_return_common() {
 Thread* Scheduler::create_idle_task(uint8 apic_id) {
 	static char s_buffer[64] {};
 	Format::format("Idled[{}]", s_buffer, 256, apic_id);
-	auto thread = Process::create_with_main_thread(gen::String{ s_buffer }, Process::kerneld(), Idle::idle_thread);
+	auto thread = Process::create_with_main_thread(gen::String { s_buffer }, Process::kerneld(), Idle::idle_thread);
 	return thread.get();
 }
 
@@ -90,24 +90,28 @@ void Scheduler::bootstrap() {
 	}
 
 	{
-		auto new_thread = Process::create_with_main_thread(gen::String{"Testd"}, Process::kerneld(), Testd::test_kernel_thread);
+		auto new_thread = Process::create_with_main_thread(gen::String { "Testd" }, Process::kerneld(),
+		                                                   Testd::test_kernel_thread);
 		add_thread_to_rq(new_thread.get());
 	}
 
 	{
-		auto keyboard_thread = Process::create_with_main_thread(gen::String{"Kbd"}, Process::kerneld(), Kbd::kbd_thread);
+		auto keyboard_thread =
+		        Process::create_with_main_thread(gen::String { "Kbd" }, Process::kerneld(), Kbd::kbd_thread);
 		keyboard_thread->sched_ctx().priority = 0;
 		add_thread_to_rq(keyboard_thread.get());
 		IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
 	}
 
 	{
-		auto ap_start_thread = Process::create_with_main_thread(gen::String{"BootAP"}, Process::kerneld(), BootAP::boot_ap_thread);
+		auto ap_start_thread =
+		        Process::create_with_main_thread(gen::String { "BootAP" }, Process::kerneld(), BootAP::boot_ap_thread);
 		add_thread_to_rq(ap_start_thread.get());
 	}
 
 	{
-		auto debugger_thread = Process::create_with_main_thread(gen::String{"SysDbg"}, Process::kerneld(), SysDbg::sysdbg_thread);
+		auto debugger_thread =
+		        Process::create_with_main_thread(gen::String { "SysDbg" }, Process::kerneld(), SysDbg::sysdbg_thread);
 		add_thread_to_rq(debugger_thread.get());
 	}
 

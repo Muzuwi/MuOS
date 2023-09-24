@@ -1,5 +1,5 @@
 #pragma once
-#include <Interrupt/IRQDispatcher.hpp>
+#include <Arch/x86_64/Interrupt/IRQDispatcher.hpp>
 #include <SystemTypes.hpp>
 
 namespace Kbd {

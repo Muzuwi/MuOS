@@ -1,8 +1,8 @@
+#include "IRQDispatcher.hpp"
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
-#include <Interrupt/IRQDispatcher.hpp>
 #include <LibGeneric/Algorithm.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Spinlock.hpp>

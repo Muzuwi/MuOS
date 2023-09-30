@@ -132,9 +132,9 @@ high_trampoline:
 	;  Restore multiboot table address
 	pop rdi
 
-    ;  Jump to the actual kernel
-    extern _ukernel_entrypoint
-    call _ukernel_entrypoint
+    ;  Jump to the platform entrypoint
+    extern platform_boot_entry
+    call platform_boot_entry
 
 ._lp64:
     cli

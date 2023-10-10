@@ -18,14 +18,27 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install grub-mkrescue for ISO build
+      run: apt update && apt install -qq -y grub-pc xorriso
+
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_MODULE_PATH=$GITHUB_WORKSPACE/Toolchain/Modules -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr/local/muOS -DMU_MACHINE=x86_64
 
-    - name: Build
+    - name: Build kernel executable
       run: cmake --build ${{github.workspace}}/build --target KernelELF
 
-    - name: Upload artifacts
+    - name: Build ISO
+      run: cmake --build ${{github.workspace}}/build --target BootableISO
+
+    - name: Upload kernel executable
       uses: actions/upload-artifact@v3.1.0
       with:
-        name: kernel-elf
+        name: Kernel executable (ELF with symbols)
         path: ${{github.workspace}}/Root/uKernel.bin
+
+    - name: Upload ISO
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        name: Bootable ISO
+        path: ${{github.workspace}}/Root/MuOS.iso
+

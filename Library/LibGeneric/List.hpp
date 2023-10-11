@@ -1,6 +1,6 @@
 #pragma once
 #include <LibGeneric/Allocator.hpp>
-#include <LibGeneric/BidirectionalIterator.hpp>
+#include <LibGeneric/Iterator.hpp>
 #include <stddef.h>
 
 namespace gen {

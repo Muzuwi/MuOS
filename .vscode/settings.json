@@ -1,0 +1,27 @@
+{
+    "editor.formatOnSave": true,
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.autocomplete": "disabled",
+    "clangd.checkUpdates": true,
+    "clangd.onConfigChanged": "restart",
+    "clangd.arguments": [
+        "-background-index",
+        "-header-insertion=iwyu",
+        "-header-insertion-decorators",
+        "--inlay-hints",
+        "--function-arg-placeholders",
+        "--compile-commands-dir=${workspaceFolder}/.cache/",
+        "--query-driver=/usr/local/muOS/bin/x86_64-muos-g++",
+        "--clang-tidy",
+        "--enable-config"
+    ],
+    "cmake.configureOnOpen": true,
+    "cmake.configureArgs": [
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
+        "-DCMAKE_INSTALL_PREFIX=/usr/local/muOS",
+        "-DCMAKE_MODULE_PATH=${workspaceFolder}/Toolchain/Modules",
+        "-DMU_MACHINE=x86_64",
+    ],
+    "cmake.copyCompileCommands": "${workspaceFolder}/.cache/compile_commands.json",
+    "cmake.buildDirectory": "${workspaceFolder}/cmake-build-${buildType}",
+}

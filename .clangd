@@ -1,0 +1,15 @@
+Index:
+  StandardLibrary: No
+Diagnostics:
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
+  ClangTidy:
+    Add: modernize*
+    Remove: [modernize-use-trailing-return-type, modernize-avoid-c-arrays, modernize-deprecated-headers]
+InlayHints:
+  Designators: Yes
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+Hover:
+  ShowAKA: Yes

@@ -7,6 +7,7 @@
 *.img
 **/.idea/*
 **/cmake-build-**/**
+.cache/
 
 # Local dev environment
 doxy/*

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "LibGeneric/Memory.hpp"
+#include "LibGeneric/Optional.hpp"
+#include "Structs/KOptional.hpp"
 template<class T, class ErrType>
 class KResult {
 private:
@@ -15,19 +18,34 @@ private:
 
 	Result m_result;
 public:
-	explicit KResult(const T& data) noexcept
+	constexpr explicit KResult(T data) noexcept
 	    : m_result(Result::Value) {
-		m_data._data = data;
+		gen::construct_at(&m_data._data, data);
 	}
 
-	explicit KResult(const ErrType& err_type) noexcept
+	constexpr explicit KResult(ErrType err_type) noexcept
 	    : m_result(Result::Error) {
-		m_data._error = err_type;
+		gen::construct_at(&m_data._error, err_type);
+	}
+
+	constexpr ~KResult() {
+		if(m_result == Result::Error) {
+			gen::destroy_at(&m_data._error);
+		} else {
+			gen::destroy_at(&m_data._data);
+		}
 	}
 
 	T& unwrap() { return m_data._data; }
 
 	T const& unwrap() const { return m_data._data; }
+
+	KOptional<T> move() {
+		if(m_result == Result::Error) {
+			return { gen::nullopt };
+		}
+		return KOptional<T>(m_data._data);
+	}
 
 	ErrType const& error() const { return m_data._error; }
 

@@ -7,5 +7,6 @@ namespace core {
 		Ok = 0,
 		NoMem,
 		IOFail,
+		InvalidArgument,
 	};
 }

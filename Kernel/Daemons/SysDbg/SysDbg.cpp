@@ -6,9 +6,13 @@
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
+#include <stddef.h>
 #include "Core/Error/Error.hpp"
 #include "Core/IO/BlockDevice.hpp"
+#include "Core/Object/Object.hpp"
 #include "Core/Object/Tree.hpp"
+#include "Memory/KHeap.hpp"
+#include "SystemTypes.hpp"
 
 constexpr bool is_numeric(char ch) {
 	return ch >= 0x30 && ch < 58;
@@ -134,6 +138,96 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 			auto name = bdev->name();
 			klogf("kdebugger({}):  - {}\n", thread->tid(), name.data());
 		});
+	} else if(command == "readblock") {
+		//  No parameters passed
+		if(ptr == args.end()) {
+			return;
+		}
+
+		gen::String name = *ptr;
+		ptr++;
+		if(ptr == args.end()) {
+			return;
+		}
+
+		const auto maybe_address = parse_hex(*ptr);
+		if(!maybe_address.has_value()) {
+			return;
+		}
+		ptr++;
+
+		//  Optional parameter - number of sectors to read
+		unsigned count = 1;
+		if(ptr != args.end()) {
+			const auto maybe_count = parse_hex(*ptr);
+			if(maybe_count.has_value()) {
+				count = maybe_count.unwrap();
+			}
+		}
+
+		size_t blk_start = maybe_address.unwrap();
+		size_t blk_count = count;
+		struct {
+			core::io::BlockDevice* blk;
+			gen::String blk_name;
+		} context { .blk = nullptr, .blk_name = name };
+
+		(void)core::obj::for_each_object_of_type(core::obj::ObjectType::BlockDevice,
+		                                         [&context](core::obj::KObject* obj) {
+			                                         auto* bdev = reinterpret_cast<core::io::BlockDevice*>(obj);
+			                                         if(obj->name() == context.blk_name) {
+				                                         context.blk = bdev;
+			                                         }
+		                                         });
+		if(!context.blk) {
+			kerrorf("kdebugger({}): could not find blk with name: {}\n", thread->tid(), name.data());
+			return;
+		}
+
+		size_t sector_size = 0;
+		if(const auto err = context.blk->blksize(sector_size); err != core::Error::Ok) {
+			kerrorf("kdebugger({}): could not read sector size, error={}\n", thread->tid(), static_cast<size_t>(err));
+			return;
+		}
+		size_t sector_count = 0;
+		if(const auto err = context.blk->blkcount(sector_count); err != core::Error::Ok) {
+			kerrorf("kdebugger({}): could not read sector count, error={}\n", thread->tid(), static_cast<size_t>(err));
+			return;
+		}
+
+		klogf("kdebugger({}): sectors={}, sector_size={}\n", thread->tid(), sector_count, sector_size);
+
+		auto buf_size = sector_size * count;
+		auto* buffer = (uint8*)KHeap::instance().chunk_alloc(buf_size);
+		if(!buffer) {
+			klogf("kdebugger({}): failed to allocate buffer of size\n", thread->tid(), buf_size);
+			return;
+		}
+
+		if(const auto err = context.blk->read(gen::move(buffer), gen::move(buf_size), gen::move(blk_start),
+		                                      gen::move(blk_count));
+		   err != core::Error::Ok) {
+			kerrorf("kdebugger({}): could not read sectors, error={}\n", thread->tid(), static_cast<size_t>(err));
+			return;
+		}
+
+		klogf("{} {} {}\n", context.blk_name.data(), blk_start, blk_count);
+
+		const size_t bytes_per_row = 16;
+
+		for(auto i = 0; i < buf_size; i += bytes_per_row) {
+			klogf("[kdebugger({})]: #{x} | ", thread->tid(), (blk_start * sector_size + i));
+			for(auto j = i; (j < (i + bytes_per_row)) && (j < buf_size); j++) {
+				klogf("{x} ", buffer[j]);
+			}
+			klogf("\n");
+		}
+
+		KHeap::instance().chunk_free(buffer);
+		//  readblock ide@01f0:03f6 2 2
+		//  readblock ide@01f0:03f6 80000 1
+		//  readblock ide@01f0:03f6 7ffff 1
+		//  readblock ide@01f0:03f6 7ffff 2
 	}
 }
 

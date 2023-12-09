@@ -7,12 +7,14 @@
 #include <Memory/VMM.hpp>
 #include <SMP/SMP.hpp>
 #include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
+#include "Core/Error/Error.hpp"
 #include "Daemons/Kbd/Kbd.hpp"
 #include "Daemons/SysDbg/SysDbg.hpp"
 #include "Daemons/Testd/Testd.hpp"
 #include "Debug/kassert.hpp"
 #include "Debug/klogf.hpp"
 #include "LibGeneric/String.hpp"
+#include "Memory/KHeap.hpp"
 #include "Process/Process.hpp"
 
 /** Start the kernel and boot into userland

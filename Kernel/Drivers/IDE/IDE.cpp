@@ -25,20 +25,28 @@ static gen::String format_name(uint16 ctl_port, uint16 dev_port) {
  * 	Probe the specified I/O ports for an ATA PIO drive.
  */
 static void ide_probe(uint16 disk_control, uint16 device_control) {
-	auto drive = IdeDevice { disk_control, device_control };
-	if(!drive.initialize()) {
+	//  FIXME/LEAK: Currently we're leaking both of the objects as there's no
+	//  way to clean them up.
+	auto* drive = KHeap::make<IdeDevice>(disk_control, device_control);
+	if(!drive) {
+		kerrorf("[driver::ide] IdeDevice allocation failed\n");
+		return;
+	}
+
+	if(!drive->initialize()) {
 		kerrorf("[driver::ide] Failed initializing drive @ IO {x}, {x}\n", disk_control, device_control);
 		return;
 	}
 
-	auto* alloc = reinterpret_cast<core::io::BlockDevice*>(KHeap::allocate(sizeof(core::io::BlockDevice)));
-	if(!alloc) {
+	auto* blk = KHeap::make<core::io::BlockDevice>(format_name(disk_control, device_control));
+	if(!blk) {
 		kerrorf("[driver::ide] Allocating BlockDevice failed\n");
 		return;
 	}
 
-	auto* object = gen::construct_at(alloc, format_name(disk_control, device_control));
-	if(const auto err = core::obj::attach(object); err != core::Error::Ok) {
+	gen::construct_at(&blk->read, [drive](char*, size_t, core::io::block_count_t) -> core::Error {});
+
+	if(const auto err = core::obj::attach(blk); err != core::Error::Ok) {
 		kerrorf("[driver::ide] BlockDevice object attach failed, core::Error: {x}\n", static_cast<size_t>(err));
 		return;
 	}

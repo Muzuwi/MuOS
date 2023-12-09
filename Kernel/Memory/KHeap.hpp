@@ -3,6 +3,7 @@
 #include <LibGeneric/StaticVector.hpp>
 #include <Memory/Allocators/ChunkAllocator.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
+#include "LibGeneric/Memory.hpp"
 
 class KHeap {
 	template<class T>
@@ -70,4 +71,14 @@ public:
 	static inline void* allocate(size_t size) { return instance().chunk_alloc(size); }
 
 	static inline void free(void* ptr, size_t = 0) { return instance().chunk_free(ptr); }
+
+	template<class T, class... Args>
+	static inline T* make(Args&&... args) {
+		auto* storage = allocate(sizeof(T));
+		if(!storage) {
+			return nullptr;
+		}
+		auto* obj = reinterpret_cast<T*>(storage);
+		return gen::construct_at(obj, gen::forward<Args>(args)...);
+	}
 };

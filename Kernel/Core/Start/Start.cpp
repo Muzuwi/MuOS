@@ -9,6 +9,8 @@
 #include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
 #include "Daemons/Kbd/Kbd.hpp"
 #include "Daemons/SysDbg/SysDbg.hpp"
+#include "Daemons/Testd/Testd.hpp"
+#include "Debug/kassert.hpp"
 #include "Debug/klogf.hpp"
 #include "LibGeneric/String.hpp"
 #include "Process/Process.hpp"
@@ -58,6 +60,7 @@
  * a separate late_init kernel process.
  */
 [[noreturn, maybe_unused]] void core::start::late_init() {
+	//  Initialize drivers
 	(void)driver::ide::init();
 
 	//  Spawn the kernel serial debugger
@@ -72,6 +75,15 @@
 	kbd->sched_ctx().priority = 0;
 	this_cpu().scheduler().run_here(kbd);
 	IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
+
+	//  Spawn a demo userland "init" thread
+	//  This is just a quick test to see if jumping to ring 3
+	//  works properly, doesn't actually do any meaningful work.
+	auto userland_init = Process::init();
+	kassert(userland_init->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4()));
+	auto init_thread = Thread::create_in_process(userland_init, Testd::userland_test_thread);
+	init_thread->sched_ctx().priority = 10;
+	this_cpu().scheduler().run_here(init_thread);
 
 	klogf("[start::late_init] Late init completed\n");
 	this_cpu().scheduler().sleep();

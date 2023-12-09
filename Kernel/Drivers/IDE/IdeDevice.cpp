@@ -7,6 +7,10 @@
 
 using namespace driver::ide;
 
+//  FIXME: Driver hangs when a request for partial out-of-bound
+//  sectors is sent (so for example, read of 2 sectors starting at
+//  `m_sectors-1`.
+
 /**
  * 	Try initializing the specified drive.
  * 	This performs detection of the drive's addressing mode and attempts to read
@@ -39,6 +43,7 @@ bool IdeDevice::initialize() {
 	auto sectors = read_sector_count();
 	klogf("[driver::ide] Using mode: {}, sectors: {}\n", (m_mode == AddressingMode::LBA28 ? "LBA28" : "LBA48"),
 	      sectors);
+	m_sectors = sectors;
 
 	return true;
 }

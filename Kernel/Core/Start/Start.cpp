@@ -41,7 +41,10 @@
 	//  safe to use more advanced locking primitives
 	auto thread =
 	        Process::create_with_main_thread(gen::String { "late_init" }, Process::kerneld(), core::start::late_init);
+	auto ap_boot =
+	        Process::create_with_main_thread(gen::String { "boot_cpu" }, Process::kerneld(), BootAP::boot_ap_thread);
 	this_cpu().scheduler().run_here(thread);
+	this_cpu().scheduler().run_here(ap_boot);
 	this_cpu().scheduler().bootstrap();
 	kpanic();
 }

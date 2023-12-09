@@ -1,12 +1,25 @@
 #include <Arch/x86_64/PCI/PCI.hpp>
 #include <Arch/x86_64/PCI/PciDevice.hpp>
 #include <Arch/x86_64/PortIO.hpp>
+#include <Core/Error/Error.hpp>
+#include <Core/IO/BlockDevice.hpp>
+#include <Core/Object/Tree.hpp>
 #include <Debug/klogf.hpp>
 #include <Drivers/IDE/IDE.hpp>
+#include <LibFormat/Format.hpp>
+#include <LibGeneric/Memory.hpp>
+#include <Memory/KHeap.hpp>
+#include <Structs/KFunction.hpp>
 #include <SystemTypes.hpp>
-#include "Core/Error/Error.hpp"
+#include "LibGeneric/String.hpp"
 
 using namespace driver::ide;
+
+static gen::String format_name(uint16 ctl_port, uint16 dev_port) {
+	char output[16];
+	Format::format("ide@{x}:{x}", output, sizeof(output), ctl_port, dev_port);
+	return gen::String { output };
+}
 
 /**
  * 	Probe the specified I/O ports for an ATA PIO drive.
@@ -17,7 +30,18 @@ static void ide_probe(uint16 disk_control, uint16 device_control) {
 		kerrorf("[driver::ide] Failed initializing drive @ IO {x}, {x}\n", disk_control, device_control);
 		return;
 	}
-	//  FIXME: Register the drive somewhere
+
+	auto* alloc = reinterpret_cast<core::io::BlockDevice*>(KHeap::allocate(sizeof(core::io::BlockDevice)));
+	if(!alloc) {
+		kerrorf("[driver::ide] Allocating BlockDevice failed\n");
+		return;
+	}
+
+	auto* object = gen::construct_at(alloc, format_name(disk_control, device_control));
+	if(const auto err = core::obj::attach(object); err != core::Error::Ok) {
+		kerrorf("[driver::ide] BlockDevice object attach failed, core::Error: {x}\n", static_cast<size_t>(err));
+		return;
+	}
 }
 
 /**

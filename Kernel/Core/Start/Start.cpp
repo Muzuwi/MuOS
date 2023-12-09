@@ -6,6 +6,9 @@
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
 #include <SMP/SMP.hpp>
+#include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
+#include "Daemons/Kbd/Kbd.hpp"
+#include "Daemons/SysDbg/SysDbg.hpp"
 #include "Debug/klogf.hpp"
 #include "LibGeneric/String.hpp"
 #include "Process/Process.hpp"
@@ -56,6 +59,19 @@
  */
 [[noreturn, maybe_unused]] void core::start::late_init() {
 	(void)driver::ide::init();
+
+	//  Spawn the kernel serial debugger
+	auto serial_dbg =
+	        Process::create_with_main_thread(gen::String { "sys_dbg" }, Process::kerneld(), SysDbg::sysdbg_thread);
+	this_cpu().scheduler().run_here(serial_dbg);
+
+	//  Spawn a demo thread that reads from the keyboard
+	//  FIXME: Remove this, especially that we have to register the IRQ
+	//  handler on our own instead of the thread doing it's own work.
+	auto kbd = Process::create_with_main_thread(gen::String { "debug_keyboard" }, Process::kerneld(), Kbd::kbd_thread);
+	kbd->sched_ctx().priority = 0;
+	this_cpu().scheduler().run_here(kbd);
+	IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
 
 	klogf("[start::late_init] Late init completed\n");
 	this_cpu().scheduler().sleep();

@@ -6,6 +6,9 @@
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <SMP/SMP.hpp>
+#include "Core/Error/Error.hpp"
+#include "Core/IO/BlockDevice.hpp"
+#include "Core/Object/Tree.hpp"
 
 constexpr bool is_numeric(char ch) {
 	return ch >= 0x30 && ch < 58;
@@ -124,6 +127,13 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 				klogf("[{x}]\n", dword);
 			}
 		}
+	} else if(command == "db") {
+		klogf("kdebugger({}): Block devices:\n", thread->tid());
+		(void)core::obj::for_each_object_of_type(core::obj::ObjectType::BlockDevice, [thread](core::obj::KObject* obj) {
+			auto* bdev = reinterpret_cast<core::io::BlockDevice*>(obj);
+			auto name = bdev->name();
+			klogf("kdebugger({}):  - {}\n", thread->tid(), name.data());
+		});
 	}
 }
 

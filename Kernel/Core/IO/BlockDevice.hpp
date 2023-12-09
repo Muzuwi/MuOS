@@ -9,9 +9,8 @@ namespace core::io {
 	using block_t = size_t;
 	using block_count_t = size_t;
 
-	using SignatureBlockDeviceRead = core::Error(char*, size_t, block_count_t);
-	using SignatureBlockDeviceSeek = core::Error(block_t);
-	using SignatureBlockDeviceWrite = core::Error(char const*, size_t, block_count_t);
+	using SignatureBlockDeviceRead = core::Error(char*, size_t, block_t, block_count_t);
+	using SignatureBlockDeviceWrite = core::Error(char const*, size_t, block_t, block_count_t);
 	using SignatureBlockDeviceBlockSize = core::Error(size_t&);
 	using SignatureBlockDeviceBlockCount = core::Error(block_count_t&);
 
@@ -19,7 +18,6 @@ namespace core::io {
 		constexpr BlockDevice(gen::String name)
 		    : KObject(core::obj::ObjectType::BlockDevice, name) {}
 
-		KFunction<SignatureBlockDeviceSeek> seek {};
 		KFunction<SignatureBlockDeviceRead> read {};
 		KFunction<SignatureBlockDeviceWrite> write {};
 		KFunction<SignatureBlockDeviceBlockSize> blksize {};

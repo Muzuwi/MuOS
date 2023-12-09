@@ -1,6 +1,7 @@
 #pragma once
 #include <Core/Error/Error.hpp>
 #include <LibGeneric/Vector.hpp>
+#include <Locks/KMutex.hpp>
 #include <stddef.h>
 #include <SystemTypes.hpp>
 
@@ -95,10 +96,11 @@ namespace driver::ide {
 
 class driver::ide::IdeDevice {
 public:
-	constexpr IdeDevice(uint16 disk_control, uint16 device_control) noexcept
+	IdeDevice(uint16 disk_control, uint16 device_control) noexcept
 	    : m_disk_base_port(disk_control)
 	    , m_device_base_port(device_control) {}
 
+	core::Error access(uint64 base_sector, uint16 count, uint8* buf, driver::ide::Direction dir);
 	[[nodiscard]] constexpr uint32 sector_size() const { return m_sector_size; }
 	[[nodiscard]] constexpr uint64 sectors() const { return m_sectors; }
 	bool initialize();
@@ -110,6 +112,7 @@ private:
 	gen::Vector<uint8> m_identity {};
 	driver::ide::AddressingMode m_mode {};
 	uint64 m_sectors { 0 };
+	KMutex m_lock {};
 
 	constexpr uint8 read_identity_u8(size_t offset) const { return m_identity[offset]; }
 
@@ -143,7 +146,6 @@ private:
 	uint64 read_sector_count();
 	uint8 wait_until_ready();
 
-	bool access(uint64 base_sector, uint16 count, uint8* buf, driver::ide::Direction dir);
-	bool access_lba28(uint32 base_sector, uint16 count, uint8* buf, driver::ide::Direction dir);
-	bool access_lba48(uint64 base_sector, uint16 count, uint8* buf, driver::ide::Direction dir);
+	core::Error access_lba28(uint32 base_sector, uint16 count, uint8* buf, driver::ide::Direction dir);
+	core::Error access_lba48(uint64 base_sector, uint16 count, uint8* buf, driver::ide::Direction dir);
 };

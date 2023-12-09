@@ -16,30 +16,32 @@
 
 using namespace driver::ide;
 
-static gen::String format_name(uint16 ctl_port, uint16 dev_port) {
+static gen::String format_name(uint16 ctl_port, uint16 dev_port, DriveSelect which) {
 	char output[16];
-	Format::format("ide@{x}:{x}", output, sizeof(output), ctl_port, dev_port);
+	Format::format("ide@{x}:{x}:{}", output, sizeof(output), ctl_port, dev_port,
+	               which == driver::ide::DriveSelect::Master ? "master" : "slave");
 	return gen::String { output };
 }
 
 /**
  * 	Probe the specified I/O ports for an ATA PIO drive.
  */
-static void ide_probe(uint16 disk_control, uint16 device_control) {
+static void ide_probe(uint16 disk_control, uint16 device_control, driver::ide::DriveSelect which) {
 	//  FIXME/LEAK: Currently we're leaking both of the objects as there's no
 	//  way to clean them up.
-	auto* drive = KHeap::make<IdeDevice>(disk_control, device_control);
+	auto* drive = KHeap::make<IdeDevice>(disk_control, device_control, which);
 	if(!drive) {
 		kerrorf("[driver::ide] IdeDevice allocation failed\n");
 		return;
 	}
 
 	if(!drive->initialize()) {
-		kerrorf("[driver::ide] Failed initializing drive @ IO {x}, {x}\n", disk_control, device_control);
+		kerrorf("[driver::ide] Failed initializing drive @ {x}:{x}:{}\n", disk_control, device_control,
+		        which == driver::ide::DriveSelect::Master ? 'm' : 's');
 		return;
 	}
 
-	auto* blk = KHeap::make<core::io::BlockDevice>(format_name(disk_control, device_control));
+	auto* blk = KHeap::make<core::io::BlockDevice>(format_name(disk_control, device_control, which));
 	if(!blk) {
 		kerrorf("[driver::ide] Allocating BlockDevice failed\n");
 		return;
@@ -76,6 +78,8 @@ static void ide_probe(uint16 disk_control, uint16 device_control) {
 		kerrorf("[driver::ide] BlockDevice object attach failed, core::Error: {x}\n", static_cast<size_t>(err));
 		return;
 	}
+	auto name = blk->name();
+	klogf("[driver::ide] Successfully attached block device '{}'\n", name.data());
 }
 
 /**
@@ -101,8 +105,10 @@ core::Error driver::ide::init() {
 
 	uint16 primary_base = 0x1F0, primary_base_control = 0x3F6;
 	uint16 secondary_base = 0x170, secondary_base_control = 0x376;
-	ide_probe(primary_base, primary_base_control);
-	ide_probe(secondary_base, secondary_base_control);
+	ide_probe(primary_base, primary_base_control, DriveSelect::Master);
+	ide_probe(primary_base, primary_base_control, DriveSelect::Slave);
+	ide_probe(secondary_base, secondary_base_control, DriveSelect::Master);
+	ide_probe(secondary_base, secondary_base_control, DriveSelect::Slave);
 
 	return core::Error::Ok;
 }

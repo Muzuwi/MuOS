@@ -96,9 +96,10 @@ namespace driver::ide {
 
 class driver::ide::IdeDevice {
 public:
-	IdeDevice(uint16 disk_control, uint16 device_control) noexcept
+	IdeDevice(uint16 disk_control, uint16 device_control, driver::ide::DriveSelect which) noexcept
 	    : m_disk_base_port(disk_control)
-	    , m_device_base_port(device_control) {}
+	    , m_device_base_port(device_control)
+	    , m_which(which) {}
 
 	core::Error access(uint64 base_sector, uint16 count, uint8* buf, size_t buflen, driver::ide::Direction dir);
 	[[nodiscard]] constexpr uint32 sector_size() const { return m_sector_size; }

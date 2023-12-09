@@ -97,18 +97,17 @@ core::Error driver::ide::init() {
 
 	auto dev = maybe_dev.unwrap();
 	auto prog_if = dev.prog_if();
-	kerrorf("[driver::ide] PCI IDE controller with device_id={x}, vendor_id={x}\n", dev.device_id(), dev.vendor_id());
-	if(prog_if & 0b0101) {
-		kerrorf("[driver::ide] PCI native mode unsupported, controller incompatible\n");
-		return core::Error::Ok;
+	klogf("[driver::ide] PCI IDE controller with device_id={x}, vendor_id={x}\n", dev.device_id(), dev.vendor_id());
+
+	if(!(prog_if & 0b0001)) {
+		uint16 primary_base = 0x1F0, primary_base_control = 0x3F6;
+		ide_probe(primary_base, primary_base_control, DriveSelect::Master);
+		ide_probe(primary_base, primary_base_control, DriveSelect::Slave);
 	}
-
-	uint16 primary_base = 0x1F0, primary_base_control = 0x3F6;
-	uint16 secondary_base = 0x170, secondary_base_control = 0x376;
-	ide_probe(primary_base, primary_base_control, DriveSelect::Master);
-	ide_probe(primary_base, primary_base_control, DriveSelect::Slave);
-	ide_probe(secondary_base, secondary_base_control, DriveSelect::Master);
-	ide_probe(secondary_base, secondary_base_control, DriveSelect::Slave);
-
+	if(!(prog_if & 0b0100)) {
+		uint16 secondary_base = 0x170, secondary_base_control = 0x376;
+		ide_probe(secondary_base, secondary_base_control, DriveSelect::Master);
+		ide_probe(secondary_base, secondary_base_control, DriveSelect::Slave);
+	}
 	return core::Error::Ok;
 }

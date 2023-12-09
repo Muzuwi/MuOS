@@ -1,17 +1,17 @@
 #include <Arch/x86_64/CPU.hpp>
-#include <Arch/x86_64/Interrupt/IRQDispatcher.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
-#include <Daemons/BootAP/BootAP.hpp>
-#include <Daemons/Idle/Idle.hpp>
-#include <Daemons/Kbd/Kbd.hpp>
-#include <Daemons/SysDbg/SysDbg.hpp>
-#include <Daemons/Testd/Testd.hpp>
 #include <Debug/kassert.hpp>
 #include <Debug/klogf.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include <SMP/SMP.hpp>
+
+[[noreturn]] static void _idle_thread() {
+	while(true) {
+		asm volatile("hlt");
+	}
+}
 
 void Scheduler::tick() {
 	auto* thread = SMP::ctb().current_thread();
@@ -66,9 +66,9 @@ void Scheduler::interrupt_return_common() {
  *  Creates an idle task for the AP with the specified APIC ID
  */
 Thread* Scheduler::create_idle_task(uint8 apic_id) {
-	static char s_buffer[64] {};
-	Format::format("Idled[{}]", s_buffer, 256, apic_id);
-	auto thread = Process::create_with_main_thread(gen::String { s_buffer }, Process::kerneld(), Idle::idle_thread);
+	char s_buffer[64] {};
+	Format::format("idle[{}]", s_buffer, sizeof(s_buffer), apic_id);
+	auto thread = Process::create_with_main_thread(gen::String { s_buffer }, Process::kerneld(), _idle_thread);
 	return thread.get();
 }
 
@@ -77,47 +77,14 @@ Thread* Scheduler::create_idle_task(uint8 apic_id) {
  */
 void Scheduler::bootstrap() {
 	CPU::irq_disable();
-	klogf("[Scheduler] Bootstrapping AP {}\n", SMP::ctb().apic_id());
 
-	m_ap_idle = create_idle_task(SMP::ctb().apic_id());
-	{
-		auto new_process = Process::init();
-		kassert(new_process->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4()));
+	const auto apic_id = SMP::ctb().apic_id();
+	klogf("[Scheduler] Bootstrapping AP {}\n", apic_id);
+	m_ap_idle = create_idle_task(apic_id);
 
-		auto new_thread = Thread::create_in_process(new_process, Testd::userland_test_thread);
-		new_thread->sched_ctx().priority = 10;
-		add_thread_to_rq(new_thread.get());
-	}
-
-	{
-		auto new_thread = Process::create_with_main_thread(gen::String { "Testd" }, Process::kerneld(),
-		                                                   Testd::test_kernel_thread);
-		add_thread_to_rq(new_thread.get());
-	}
-
-	{
-		auto keyboard_thread =
-		        Process::create_with_main_thread(gen::String { "Kbd" }, Process::kerneld(), Kbd::kbd_thread);
-		keyboard_thread->sched_ctx().priority = 0;
-		add_thread_to_rq(keyboard_thread.get());
-		IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
-	}
-
-	{
-		auto ap_start_thread =
-		        Process::create_with_main_thread(gen::String { "BootAP" }, Process::kerneld(), BootAP::boot_ap_thread);
-		add_thread_to_rq(ap_start_thread.get());
-	}
-
-	{
-		auto debugger_thread =
-		        Process::create_with_main_thread(gen::String { "SysDbg" }, Process::kerneld(), SysDbg::sysdbg_thread);
-		add_thread_to_rq(debugger_thread.get());
-	}
-
-	uint8 _dummy_val[sizeof(Thread)] = {};
 	//  Huge hack - use dummy buffer on the stack when switching for the first time,
 	//  as we don't care about saving garbage data
+	uint8 _dummy_val[sizeof(Thread)] = {};
 	CPU::switch_to(reinterpret_cast<Thread*>(&_dummy_val), m_ap_idle);
 }
 

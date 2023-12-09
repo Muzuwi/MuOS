@@ -3,6 +3,7 @@
 #include <LibGeneric/Spinlock.hpp>
 #include <Scheduler/RunQueue.hpp>
 #include <SystemTypes.hpp>
+#include "LibGeneric/SharedPtr.hpp"
 
 class Thread;
 
@@ -28,4 +29,5 @@ public:
 	void block();
 	void sleep();
 	void dump_statistics();
+	void run_here(gen::SharedPtr<Thread>);
 };

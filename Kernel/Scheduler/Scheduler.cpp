@@ -6,6 +6,7 @@
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include <SMP/SMP.hpp>
+#include "LibGeneric/SharedPtr.hpp"
 
 [[noreturn]] static void _idle_thread() {
 	while(true) {
@@ -199,6 +200,18 @@ void Scheduler::wake_up(Thread* thread) {
 	if(thread->priority() <= current->priority()) {
 		current->reschedule();
 	}
+}
+
+/**
+ * 	Run the specified thread within this scheduler
+ *	The intention of this is to allow remote APs to run certain
+ *	threads on the AP this scheduler is tied with.
+ */
+void Scheduler::run_here(SharedPtr<Thread> thread) {
+	if(!thread) {
+		return;
+	}
+	add_thread_to_rq(thread.get());
 }
 
 void Scheduler::dump_statistics() {

@@ -6,6 +6,9 @@
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
 #include <SMP/SMP.hpp>
+#include "Debug/klogf.hpp"
+#include "LibGeneric/String.hpp"
+#include "Process/Process.hpp"
 
 /** Start the kernel and boot into userland
  *
@@ -29,11 +32,31 @@
 	}
 	klogf("[uKernel] Platform init done\n");
 
-	//  Initialize the kernel subsystems
+	//  Initialize required kernel subsystems
 	KHeap::instance().init();
-	(void)driver::ide::init();
+	klogf("[uKernel] Early init done, time passed: {}ms\n", PIT::milliseconds());
 
-	klogf("[uKernel] Init done, time passed: {}ms\n", PIT::milliseconds());
+	//  Prepare the next stage of initialization
+	//  Late init is called within a multitasking environment, so it's
+	//  safe to use more advanced locking primitives
+	auto thread =
+	        Process::create_with_main_thread(gen::String { "late_init" }, Process::kerneld(), core::start::late_init);
+	this_cpu().scheduler().run_here(thread);
 	this_cpu().scheduler().bootstrap();
 	kpanic();
+}
+
+/**
+ * Perform late initialization of device drivers.
+ * Late init is called within a proper multitasking environment within
+ * a separate late_init kernel process.
+ */
+[[noreturn, maybe_unused]] void core::start::late_init() {
+	(void)driver::ide::init();
+
+	klogf("[start::late_init] Late init completed\n");
+	this_cpu().scheduler().sleep();
+	//  We should never be awoken, but put a safe guard anyway
+	while(true)
+		;
 }

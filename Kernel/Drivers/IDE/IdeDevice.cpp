@@ -168,8 +168,15 @@ void IdeDevice::write_sector(uint8* buf) {
  * spanning `count` sectors. Depending on `dir`, this can be either
  * a read or write.
  */
-core::Error IdeDevice::access(uint64 base_sector, uint16 count, uint8* buf, Direction dir) {
+core::Error IdeDevice::access(uint64 base_sector, uint16 count, uint8* buf, size_t buf_len, Direction dir) {
 	gen::LockGuard lock { m_lock };
+
+	//  Sanity check input buffers
+	const auto required_size = count * sector_size();
+	if(buf_len < required_size) {
+		return core::Error::InvalidArgument;
+	}
+
 	switch(m_mode) {
 		case AddressingMode::LBA28: {
 			return access_lba28(base_sector, count, buf, dir);

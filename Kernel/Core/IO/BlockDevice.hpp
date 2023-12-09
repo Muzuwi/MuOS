@@ -9,8 +9,8 @@ namespace core::io {
 	using block_t = size_t;
 	using block_count_t = size_t;
 
-	using SignatureBlockDeviceRead = core::Error(char*, size_t, block_t, block_count_t);
-	using SignatureBlockDeviceWrite = core::Error(char const*, size_t, block_t, block_count_t);
+	using SignatureBlockDeviceRead = core::Error(uint8*, size_t, block_t, block_count_t);
+	using SignatureBlockDeviceWrite = core::Error(uint8 const*, size_t, block_t, block_count_t);
 	using SignatureBlockDeviceBlockSize = core::Error(size_t&);
 	using SignatureBlockDeviceBlockCount = core::Error(block_count_t&);
 

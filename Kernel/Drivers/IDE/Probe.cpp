@@ -9,6 +9,7 @@
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Memory.hpp>
 #include <Memory/KHeap.hpp>
+#include <stddef.h>
 #include <Structs/KFunction.hpp>
 #include <SystemTypes.hpp>
 #include "LibGeneric/String.hpp"
@@ -45,11 +46,23 @@ static void ide_probe(uint16 disk_control, uint16 device_control) {
 	}
 
 	gen::construct_at(&blk->read,
-	                  [drive](char* dest, size_t dest_len, core::io::block_t blk,
-	                          core::io::block_count_t blkcount) -> core::Error { return core::Error::Ok; });
+	                  [drive](uint8* dest, size_t dest_len, core::io::block_t blk,
+	                          core::io::block_count_t blkcount) -> core::Error {
+		                  if(blkcount > 0xFFFF) {
+			                  return core::Error::InvalidArgument;
+		                  }
+		                  return drive->access(blk, blkcount, dest, dest_len, Direction::Read);
+	                  });
 	gen::construct_at(&blk->write,
-	                  [drive](char const* src, size_t src_len, core::io::block_t blk,
-	                          core::io::block_count_t blkcount) -> core::Error { return core::Error::Ok; });
+	                  [drive](uint8 const* src, size_t src_len, core::io::block_t blk,
+	                          core::io::block_count_t blkcount) -> core::Error {
+		                  if(blkcount > 0xFFFF) {
+			                  return core::Error::InvalidArgument;
+		                  }
+		                  //  Evil const_cast, the buffer isn't modified however as we're doing a write
+		                  auto* src_without_const = const_cast<uint8*>(src);
+		                  return drive->access(blk, blkcount, src_without_const, src_len, Direction::Write);
+	                  });
 	gen::construct_at(&blk->blksize, [drive](size_t& output) -> core::Error {
 		output = drive->sector_size();
 		return core::Error::Ok;

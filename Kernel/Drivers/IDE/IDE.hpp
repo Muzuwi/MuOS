@@ -100,7 +100,7 @@ public:
 	    : m_disk_base_port(disk_control)
 	    , m_device_base_port(device_control) {}
 
-	core::Error access(uint64 base_sector, uint16 count, uint8* buf, driver::ide::Direction dir);
+	core::Error access(uint64 base_sector, uint16 count, uint8* buf, size_t buflen, driver::ide::Direction dir);
 	[[nodiscard]] constexpr uint32 sector_size() const { return m_sector_size; }
 	[[nodiscard]] constexpr uint64 sectors() const { return m_sectors; }
 	bool initialize();

@@ -1,10 +1,10 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
+#include <Core/MP/MP.hpp>
 #include <Debug/klogf.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
-#include <SMP/SMP.hpp>
 
 KHeap KHeap::s_instance {};
 
@@ -43,7 +43,7 @@ void KHeap::dump_stats() {
  *  functions in userland)
  */
 void* KHeap::chunk_alloc(size_t size) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();
@@ -62,7 +62,7 @@ void* KHeap::chunk_alloc(size_t size) {
  *  Frees an object allocated using chunk_alloc.
  */
 void KHeap::chunk_free(void* ptr) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();
@@ -80,7 +80,7 @@ void KHeap::chunk_free(void* ptr) {
  *  Slabs use predetermined object sizes to speed up allocations of commonly used structs.
  */
 void* KHeap::slab_alloc(size_t size) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();
@@ -113,7 +113,7 @@ void* KHeap::slab_alloc(size_t size) {
  *  Frees an object allocated by a slab allocator.
  */
 void KHeap::slab_free(void* ptr, size_t size) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();

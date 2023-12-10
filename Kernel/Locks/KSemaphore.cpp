@@ -1,8 +1,9 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
+#include <Core/MP/MP.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <Locks/KSemaphore.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
+#include <Scheduler/Scheduler.hpp>
 
 KSemaphore::KSemaphore(uint64 initial_value)
     : m_lock()
@@ -24,10 +25,10 @@ void KSemaphore::wait() {
 		}
 
 		//  Go to sleep, after we're woken up
-		m_queue.push_back(SMP::ctb().current_thread());
+		m_queue.push_back(this_cpu()->current_thread());
 	}
 	//  FIXME: Lost wake-up problem
-	SMP::ctb().scheduler().block();
+	this_cpu()->scheduler->block();
 }
 
 void KSemaphore::signal() {
@@ -37,7 +38,7 @@ void KSemaphore::signal() {
 	if(!m_queue.empty()) {
 		auto* thread = m_queue.front();
 		m_queue.pop_front();
-		SMP::ctb().scheduler().wake_up(thread);
+		this_cpu()->scheduler->wake_up(thread);
 		return;
 	}
 	const auto current = m_value.load(MemoryOrdering::SeqCst);

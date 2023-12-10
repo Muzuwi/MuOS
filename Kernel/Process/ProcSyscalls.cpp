@@ -1,8 +1,8 @@
+#include <Core/MP/MP.hpp>
 #include <Debug/klogf.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
 
 pid_t Process::getpid() {
 	return Thread::current()->parent()->pid();
@@ -19,7 +19,7 @@ void Process::klog(UserString str) {
 }
 
 uint64 Process::heap_alloc(size_t region_size) {
-	auto thread = SMP::ctb().current_thread();
+	auto thread = this_cpu()->current_thread();
 	auto retval = thread->parent()->vmm().allocate_user_heap(region_size);
 
 	klogf("Thread[tid={}]: heap_alloc={}\n", thread->tid(), Format::ptr(retval));

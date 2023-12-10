@@ -1,15 +1,15 @@
 #include <Arch/x86_64/V86.hpp>
+#include <Core/MP/MP.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/Ptr.hpp>
 #include <Memory/VMM.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
 
 extern "C" void vm86_irq(PhysAddr, PhysAddr, uint64 irq, V86Regs&);
 
 void V86::run_irq(uint8 irq, V86Regs& regs) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 	auto const& process = thread->parent();
 
 	auto maybe_code_page = PMM::instance().allocate_lowmem();

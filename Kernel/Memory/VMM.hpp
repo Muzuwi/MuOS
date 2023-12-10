@@ -1,5 +1,4 @@
 #pragma once
-#include <Daemons/BootAP/BootAP.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
@@ -13,7 +12,6 @@ using gen::List;
 
 class VMM {
 	friend void SysDbg::handle_command(gen::List<gen::String> const& args);
-	friend void BootAP::boot_ap_thread();
 	friend class V86;
 	friend class SlabAllocator;
 	friend class KHeap;
@@ -51,8 +49,6 @@ class VMM {
 	PDE* ensure_pd(void* addr, LeakAllocatedPage);
 	PTE* ensure_pt(void* addr, LeakAllocatedPage);
 
-	bool addrmap(void* vaddr, PhysAddr, VMappingFlags flags);
-	bool addrunmap(void* vaddr);
 	bool map(VMapping const&);
 	bool unmap(VMapping const&);
 public:
@@ -78,4 +74,7 @@ public:
 	static void initialize_kernel_vm();
 	static constexpr unsigned kernel_stack_size() { return 0x4000; }
 	static constexpr unsigned user_stack_size() { return 0x4000; }
+
+	bool addrmap(void* vaddr, PhysAddr, VMappingFlags flags);
+	bool addrunmap(void* vaddr);
 };

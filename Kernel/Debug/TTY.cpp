@@ -1,8 +1,8 @@
 #include <Arch/x86_64/VGA.hpp>
+#include <Core/MP/MP.hpp>
 #include <Debug/TTY.hpp>
 #include <Locks/KMutex.hpp>
 #include <Process/Process.hpp>
-#include <SMP/SMP.hpp>
 #include <stddef.h>
 #include <string.h>
 
@@ -15,13 +15,13 @@ void TTY::init() {
 }
 
 void TTY::prints(const char* data) {
-	//	if(SMP::ctb().current_thread())
+	//	if(this_cpu()->current_thread())
 	//		s_tty_lock.lock();
 
 	for(size_t i = 0; i < strlen(data); i++)
 		VGA::putch(data[i]);
 
-	//	if(SMP::ctb().current_thread())
+	//	if(this_cpu()->current_thread())
 	//		s_tty_lock.unlock();
 }
 

@@ -5,7 +5,7 @@ section .text
 ;  Global syscall entrypoint
 global _ukernel_syscall_entry:
 _ukernel_syscall_entry:
-    ;  Switch to kernel GS (CTB)
+    ;  Switch to kernel GS (arch::mp::ExecutionEnvironment)
     swapgs
 
     ;  Temporarily save user stack to CTB scratch space

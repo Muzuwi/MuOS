@@ -1,11 +1,12 @@
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/Serial.hpp>
+#include <Core/MP/MP.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <Debug/klogf.hpp>
 #include <LibGeneric/String.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
+#include <Scheduler/Scheduler.hpp>
 #include <stddef.h>
 #include "Core/Error/Error.hpp"
 #include "Core/IO/BlockDevice.hpp"
@@ -86,12 +87,12 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		KHeap::instance().dump_stats();
 	} else if(command == "ds") {
 		klogf("kdebugger({}): Scheduler statistics\n", thread->tid());
-		SMP::ctb().scheduler().dump_statistics();
+		this_cpu()->scheduler->dump_statistics();
 	} else if(command == "dc") {
 		klogf("kdebugger({}): attached CPUs\n", thread->tid());
-		for(auto const& cpu : SMP::attached_aps()) {
-			klogf("... CPU #{}, APIC ID={}\n", cpu->vid(), cpu->apic_id());
-		}
+		//  for(auto const& cpu : SMP::attached_aps()) {
+		//  klogf("... CPU #{}, APIC ID={}\n", cpu->vid(), cpu->apic_id());
+		//  }
 	} else if(command == "xp" || command == "xpd") {
 		//  No parameters passed
 		if(ptr == args.end()) {

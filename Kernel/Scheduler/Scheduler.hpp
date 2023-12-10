@@ -1,14 +1,11 @@
 #pragma once
-#include <Daemons/BootAP/BootAP.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <Scheduler/RunQueue.hpp>
 #include <SystemTypes.hpp>
-#include "LibGeneric/SharedPtr.hpp"
 
 class Thread;
 
 class Scheduler {
-	friend void BootAP::boot_ap_thread();
 	friend class SMP;
 
 	gen::Spinlock m_scheduler_lock;
@@ -16,11 +13,10 @@ class Scheduler {
 	Thread* m_ap_idle;
 
 	static unsigned pri_to_quants(uint8_t priority);
-	Thread* create_idle_task(uint8 apic_id);
 	void add_thread_to_rq(Thread*);
 	void schedule_new();
 public:
-	void bootstrap();
+	void bootstrap(Thread* = nullptr);
 	void tick();
 	void schedule();
 	void interrupt_return_common();
@@ -29,5 +25,7 @@ public:
 	void block();
 	void sleep();
 	void dump_statistics();
-	void run_here(gen::SharedPtr<Thread>);
+	void run_here(Thread*);
+
+	static Thread* create_idle_task(size_t);
 };

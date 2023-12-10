@@ -3,15 +3,19 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/IDT.hpp>
+#include <Arch/x86_64/MP/Boot.hpp>
+#include <Arch/x86_64/MP/ExecutionEnvironment.hpp>
 #include <Arch/x86_64/PCI/PCI.hpp>
 #include <Arch/x86_64/Serial.hpp>
+#include <Core/Error/Error.hpp>
+#include <Core/MP/MP.hpp>
 #include <Core/Start/Start.hpp>
 #include <Debug/klogf.hpp>
 #include <Debug/TTY.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
-#include <SMP/SMP.hpp>
 #include <Syscalls/Syscall.hpp>
+#include <SystemTypes.hpp>
 #include "ACPI.hpp"
 #include "APIC.hpp"
 
@@ -28,29 +32,41 @@ extern "C" [[noreturn, maybe_unused]] void platform_boot_entry(void* context) {
 }
 
 core::Error arch::platform_early_init() {
+	//  Initialize the execution environment
+	//  This must be done as soon as possible
+	void* env = arch::mp::create_environment();
+	CPU::set_gs_base(env);
+	CPU::set_kernel_gs_base(env);
+	this_execution_environment()->gdt.load();
+	IDT::init();
+	//  Force reload GSBASE after changing GDT
+	CPU::set_gs_base(env);
+	CPU::set_kernel_gs_base(env);
+
 	TTY::init();
 	Serial::init();
-	klogf_static("[uKernel64] Hello, world!\n");
-
-	IDT::init();
-	GDT::init_base_ap_gdt();
 	CPU::initialize_features();
-	SMP::reload_boot_ctb();
-	CPU::irq_enable();
-
 	PMM::instance().init_regions(s_multiboot_context);
-	VMM::initialize_kernel_vm();
-	PMM::instance().init_deferred_allocators();
 
 	return core::Error::Ok;
 }
 
 core::Error arch::platform_init() {
+	CPU::irq_enable();
+
 	PCI::discover();
 	Syscall::init();
 	ACPI::parse_tables();
 	APIC::discover();
-	SMP::attach_boot_ap();
+	arch::mp::boot_aps();
 
 	return core::Error::Ok;
+}
+
+void arch::mp::environment_set(void* env) {
+	this_execution_environment()->environment = static_cast<core::mp::Environment*>(env);
+}
+
+void* arch::mp::environment_get() {
+	return this_execution_environment()->environment;
 }

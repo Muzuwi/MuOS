@@ -1,12 +1,13 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
+#include <Core/MP/MP.hpp>
 #include <Debug/kassert.hpp>
 #include <Debug/klogf.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
-#include <SMP/SMP.hpp>
 #include "LibGeneric/SharedPtr.hpp"
+#include "LibGeneric/String.hpp"
 
 [[noreturn]] static void _idle_thread() {
 	while(true) {
@@ -15,7 +16,7 @@
 }
 
 void Scheduler::tick() {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 	if(!thread) {
 		return;
 	}
@@ -51,7 +52,7 @@ void Scheduler::tick() {
 }
 
 void Scheduler::interrupt_return_common() {
-	auto* current = SMP::ctb().current_thread();
+	auto* current = this_cpu()->current_thread();
 	if(!current) {
 		return;
 	}
@@ -64,11 +65,11 @@ void Scheduler::interrupt_return_common() {
 }
 
 /*
- *  Creates an idle task for the AP with the specified APIC ID
+ *  Creates an idle task for the AP with the specified custom platform identifier
  */
-Thread* Scheduler::create_idle_task(uint8 apic_id) {
+Thread* Scheduler::create_idle_task(size_t identifier) {
 	char s_buffer[64] {};
-	Format::format("idle[{}]", s_buffer, sizeof(s_buffer), apic_id);
+	Format::format("idle[{}]", s_buffer, sizeof(s_buffer), identifier);
 	auto thread = Process::create_with_main_thread(gen::String { s_buffer }, Process::kerneld(), _idle_thread);
 	return thread.get();
 }
@@ -76,12 +77,14 @@ Thread* Scheduler::create_idle_task(uint8 apic_id) {
 /*
  *  Creates the idle task for the current AP and enters it, kickstarting the scheduler on the current AP
  */
-void Scheduler::bootstrap() {
+void Scheduler::bootstrap(Thread* ap_idle) {
 	CPU::irq_disable();
 
-	const auto apic_id = SMP::ctb().apic_id();
-	klogf("[Scheduler] Bootstrapping AP {}\n", apic_id);
-	m_ap_idle = create_idle_task(apic_id);
+	if(!ap_idle) {
+		const auto node_id = this_cpu()->node_id;
+		ap_idle = create_idle_task(node_id);
+	}
+	m_ap_idle = ap_idle;
 
 	//  Huge hack - use dummy buffer on the stack when switching for the first time,
 	//  as we don't care about saving garbage data
@@ -119,7 +122,7 @@ void Scheduler::add_thread_to_rq(Thread* thread) {
  */
 void Scheduler::schedule() {
 	IRQDisabler irq_disabler {};
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	m_scheduler_lock.lock();
 	m_rq.remove_active(thread);
@@ -135,7 +138,7 @@ void Scheduler::schedule() {
  */
 void Scheduler::sleep() {
 	IRQDisabler irq_disabler {};
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 	thread->set_state(TaskState::Sleeping);
 
 	m_scheduler_lock.lock();
@@ -151,7 +154,7 @@ void Scheduler::sleep() {
  */
 void Scheduler::block() {
 	IRQDisabler irq_disabler {};
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 	thread->set_state(TaskState::Blocking);
 
 	m_scheduler_lock.lock();
@@ -165,7 +168,7 @@ void Scheduler::block() {
  *  Schedules a new task to run and switches to it
  */
 void Scheduler::schedule_new() {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	//  Find next runnable task
 	m_scheduler_lock.lock();
@@ -196,7 +199,7 @@ void Scheduler::wake_up(Thread* thread) {
 	m_rq.add_inactive(thread);
 	m_scheduler_lock.unlock();
 
-	auto* current = SMP::ctb().current_thread();
+	auto* current = this_cpu()->current_thread();
 	if(thread->priority() <= current->priority()) {
 		current->reschedule();
 	}
@@ -207,11 +210,11 @@ void Scheduler::wake_up(Thread* thread) {
  *	The intention of this is to allow remote APs to run certain
  *	threads on the AP this scheduler is tied with.
  */
-void Scheduler::run_here(SharedPtr<Thread> thread) {
+void Scheduler::run_here(Thread* thread) {
 	if(!thread) {
 		return;
 	}
-	add_thread_to_rq(thread.get());
+	add_thread_to_rq(thread);
 }
 
 void Scheduler::dump_statistics() {

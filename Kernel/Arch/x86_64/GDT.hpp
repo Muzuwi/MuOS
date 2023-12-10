@@ -1,12 +1,11 @@
 #pragma once
 
+#include <Arch/x86_64/CPU.hpp>
 #include <LibGeneric/Utility.hpp>
 #include <SystemTypes.hpp>
 
 #define TSS_RSP0 (4)
 #define TSS_IOPB (0x66)
-
-class ControlBlock;
 
 struct GDT {
 public:
@@ -74,11 +73,14 @@ public:
 
 	static constexpr unsigned get_user_base_seg() { return 3 * 8; }
 
-	static void init_base_ap_gdt();
-
-	static void init_ap_gdt(ControlBlock*);
-
 	void set_irq_stack(void* stack) {
 		*reinterpret_cast<uint64*>(&m_tss.data[TSS_RSP0]) = reinterpret_cast<uint64>(stack);
+	}
+
+	/**	Load the current GDT
+	 */
+	void load() {
+		CPU::lgdt(&m_descriptor);
+		CPU::ltr(GDT::tss_sel);
 	}
 };

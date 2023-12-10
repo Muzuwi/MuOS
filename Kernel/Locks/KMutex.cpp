@@ -1,7 +1,8 @@
+#include <Core/MP/MP.hpp>
 #include <Debug/kassert.hpp>
 #include <Locks/KMutex.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
+#include <Scheduler/Scheduler.hpp>
 
 KMutex::KMutex() noexcept
     : m_owner(nullptr)
@@ -22,7 +23,7 @@ void KMutex::unlock() {
 bool KMutex::_lock() {
 	//  Successfully acquired the lock
 	if(m_spinlock.try_lock()) {
-		m_owner = SMP::ctb().current_thread();
+		m_owner = this_cpu()->current_thread();
 		return true;
 	}
 
@@ -33,7 +34,7 @@ bool KMutex::_unlock() {
 	if(!m_owner)
 		return false;
 
-	auto thread = SMP::ctb().current_thread();
+	auto thread = this_cpu()->current_thread();
 	if(thread != m_owner)
 		return false;
 
@@ -47,7 +48,7 @@ bool KMutex::_unlock() {
 }
 
 void KMutex::waiter_try_wake_up() {
-	auto thread = SMP::ctb().current_thread();
+	auto thread = this_cpu()->current_thread();
 	thread->preempt_disable();
 
 	m_waiters_lock.lock();
@@ -57,7 +58,7 @@ void KMutex::waiter_try_wake_up() {
 
 		auto* thread = mutex_waiter.m_waiter;
 		kassert(thread->state() == TaskState::Blocking);
-		SMP::ctb().scheduler().wake_up(thread);
+		this_cpu()->scheduler->wake_up(thread);
 	}
 	m_waiters_lock.unlock();
 
@@ -65,7 +66,7 @@ void KMutex::waiter_try_wake_up() {
 }
 
 void KMutex::wait() {
-	auto thread = SMP::ctb().current_thread();
+	auto thread = this_cpu()->current_thread();
 	thread->preempt_disable();
 
 	m_waiters_lock.lock();
@@ -73,7 +74,7 @@ void KMutex::wait() {
 	m_waiters_lock.unlock();
 
 	//  FIXME_SMP: Race condition when different core would try waking up a process while we haven't been preempted
-	SMP::ctb().scheduler().block();
+	this_cpu()->scheduler->block();
 
 	thread->preempt_enable();
 }

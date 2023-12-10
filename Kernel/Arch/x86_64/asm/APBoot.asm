@@ -150,9 +150,8 @@ ap_long_entry:
     pop rdx
     pop rcx
 
-    ;  FIXME: Looks nasty, but friend definitions don't like extern "C" functions, so use a static class func instead
-    extern _ZN3SMP13ap_entrypointEP12ControlBlockP6Thread8PhysAddrS4_
-    call _ZN3SMP13ap_entrypointEP12ControlBlockP6Thread8PhysAddrS4_
+    extern _ap_entrypoint
+    call _ap_entrypoint
 .halt:
     hlt
     jmp .halt

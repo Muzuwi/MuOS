@@ -1,11 +1,11 @@
 #include <Arch/x86_64/Boot/MultibootInfo.hpp>
 #include <Arch/x86_64/LinkscriptSyms.hpp>
+#include <Core/MP/MP.hpp>
 #include <Debug/klogf.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/Units.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
 
 PMM PMM::s_instance {};
 
@@ -139,7 +139,7 @@ void PMM::init_deferred_allocators() {
  *  Normal pool regions
  */
 [[nodiscard]] KOptional<PAllocation> PMM::allocate(size_t count_order) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();
@@ -165,7 +165,7 @@ void PMM::init_deferred_allocators() {
 }
 
 void PMM::free(PAllocation const& allocation) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();
@@ -187,7 +187,7 @@ void PMM::free(PAllocation const& allocation) {
  *  Lowmem pool regions
  */
 [[nodiscard]] KOptional<PhysAddr> PMM::allocate_lowmem() {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();
@@ -212,7 +212,7 @@ void PMM::free(PAllocation const& allocation) {
 }
 
 void PMM::free_lowmem(PhysAddr addr) {
-	auto* thread = SMP::ctb().current_thread();
+	auto* thread = this_cpu()->current_thread();
 
 	if(thread) {
 		thread->preempt_disable();

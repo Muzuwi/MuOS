@@ -1,8 +1,9 @@
 #include <Arch/x86_64/CPU.hpp>
+#include <Core/MP/MP.hpp>
 #include <Debug/klogf.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
+#include <Scheduler/Scheduler.hpp>
 #include "Exception.hpp"
 
 static void dump_registers(PtraceRegs* pt) {
@@ -15,7 +16,7 @@ static void dump_registers(PtraceRegs* pt) {
 }
 
 Exception::Response Exception::handle_uncaught(PtraceRegs* pt, uint8 vector) {
-	const auto thread = SMP::ctb().current_thread();
+	const auto thread = this_cpu()->current_thread();
 
 	kerrorf_static("[Exception] Unhandled exception vector={x}\n", vector);
 	dump_registers(pt);
@@ -35,13 +36,13 @@ Exception::Response Exception::handle_uncaught(PtraceRegs* pt, uint8 vector) {
 	kerrorf_static("Thread(tid={}): Uncaught exception - killing\n", thread->tid());
 	thread->set_state(TaskState::Leaving);
 	thread->reschedule();
-	SMP::ctb().scheduler().schedule();
+	this_cpu()->scheduler->schedule();
 
 	return Exception::Response::TerminateThread;
 }
 
 Exception::Response Exception::handle_page_fault(PtraceRegs* pt, uint8) {
-	const auto thread = SMP::ctb().current_thread();
+	const auto thread = this_cpu()->current_thread();
 
 	dump_registers(pt);
 

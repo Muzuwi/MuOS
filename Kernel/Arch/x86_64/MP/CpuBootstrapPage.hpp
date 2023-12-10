@@ -1,13 +1,11 @@
 #pragma once
-
 #include <SystemTypes.hpp>
-
-class ControlBlock;
+#include "ExecutionEnvironment.hpp"
 
 class Thread;
 
 //  Keep this in sync with the one in APBoot.asm
-struct APBoostrap {
+struct CpuBootstrapPage {
 	uint64 state_flag;
 	uint64 cr3;
 	void* rsp;
@@ -31,6 +29,6 @@ struct APBoostrap {
 		uint64 offset;
 	} __attribute__((packed)) idtr;
 
-	ControlBlock* ap_ctb;
+	arch::mp::ExecutionEnvironment* ap_environment;
 	Thread* idle_task;
 } __attribute__((packed));

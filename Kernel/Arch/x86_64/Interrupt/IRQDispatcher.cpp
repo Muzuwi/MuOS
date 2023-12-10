@@ -3,11 +3,11 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
+#include <Core/MP/MP.hpp>
 #include <LibGeneric/Algorithm.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <Scheduler/Scheduler.hpp>
-#include <SMP/SMP.hpp>
 
 using gen::LockGuard;
 using gen::Spinlock;
@@ -26,7 +26,7 @@ extern "C" void _kernel_irq_dispatch(uint8_t irq, PtraceRegs* interrupt_trap_fra
 
 	IRQDispatcher::dispatch_irq(irq, interrupt_trap_frame);
 
-	SMP::ctb().scheduler().interrupt_return_common();
+	this_cpu()->scheduler->interrupt_return_common();
 }
 
 void IRQDispatcher::dispatch_irq(uint8_t irq, PtraceRegs* interrupt_trap_frame) {

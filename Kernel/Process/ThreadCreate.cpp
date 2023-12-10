@@ -1,11 +1,13 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
+#include <Arch/x86_64/MP/ExecutionEnvironment.hpp>
+#include <Core/MP/MP.hpp>
 #include <Process/PidAllocator.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
 #include <string.h>
+#include "Arch/Interface.hpp"
 
 SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*kernel_exec)()) {
 	auto thread = SharedPtr {
@@ -45,17 +47,20 @@ SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*ke
 	prev->m_kernel_gs_base = CPU::get_kernel_gs_base();
 
 	//  Set new process as current in CTB
-	SMP::ctb().set_thread(next);
+	this_cpu()->set_thread(next);
 
-	//  Reset IRQ stack in the TSS
-	SMP::ctb().gdt()->set_irq_stack(next->m_kernel_stack_bottom);
+	//  x86_64: Reset IRQ stack in the TSS
+	this_execution_environment()->gdt.set_irq_stack(next->m_kernel_stack_bottom);
+	//  x86_64: Set the thread pointer in ExecutionEnvironment
+	this_execution_environment()->thread = next;
 
 	//  Restore saved kernel gs base of next process
 	CPU::set_kernel_gs_base((void*)next->m_kernel_gs_base);
 
 	//  Set the GS base to point to the current AP's CTB
 	//  FIXME: Realistically only need to do this once, at AP boot
-	CPU::set_gs_base((void*)(&SMP::ctb()));
+	//  arch::mp::environment_set(void*);
+	//  CPU::set_gs_base((void*)(&SMP::ctb()));
 
 	next->set_state(TaskState::Running);
 }

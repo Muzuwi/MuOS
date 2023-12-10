@@ -1,6 +1,7 @@
+#include <Core/MP/MP.hpp>
 #include <Debug/kpanic.hpp>
 #include <Process/Thread.hpp>
-#include <SMP/SMP.hpp>
+#include <Scheduler/Scheduler.hpp>
 #include "Exception.hpp"
 
 static Exception::HandlerFunction s_exception_handlers[32] {
@@ -23,9 +24,9 @@ extern "C" void _kernel_exception_entrypoint(size_t vector, PtraceRegs* interrup
 	if(response == Exception::Response::KernelPanic) {
 		kpanic();
 	} else if(response == Exception::Response::TerminateThread) {
-		const auto thread = SMP::ctb().current_thread();
+		const auto thread = this_cpu()->current_thread();
 		thread->set_state(TaskState::Leaving);
 		thread->reschedule();
-		SMP::ctb().scheduler().block();
+		this_cpu()->scheduler->block();
 	}
 }

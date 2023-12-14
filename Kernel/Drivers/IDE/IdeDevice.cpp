@@ -179,6 +179,8 @@ core::Error IdeDevice::access(uint64 base_sector, uint16 count, uint8* buf, size
 	//  Sanity check input buffers
 	const auto required_size = count * sector_size();
 	if(buf_len < required_size) {
+		kerrorf("[drivers::ide] Input buffer of size {x} is too small for read operation of {} sectors ({x})\n",
+		        buf_len, count, required_size);
 		return core::Error::InvalidArgument;
 	}
 

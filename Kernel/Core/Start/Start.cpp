@@ -1,6 +1,7 @@
 #include "Start.hpp"
 #include <Arch/Interface.hpp>
 #include <Arch/x86_64/PIT.hpp>
+#include <Core/FS/Ext2/Ext2FS.hpp>
 #include <Core/MP/MP.hpp>
 #include <Debug/kpanic.hpp>
 #include <Drivers/IDE/IDE.hpp>
@@ -9,12 +10,16 @@
 #include <Scheduler/Scheduler.hpp>
 #include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
 #include "Core/Error/Error.hpp"
+#include "Core/IO/BlockDevice.hpp"
 #include "Core/Log/Logger.hpp"
+#include "Core/Object/Object.hpp"
+#include "Core/Object/Tree.hpp"
 #include "Daemons/Kbd/Kbd.hpp"
 #include "Daemons/SysDbg/SysDbg.hpp"
 #include "Daemons/Testd/Testd.hpp"
 #include "Debug/kassert.hpp"
 #include "LibFormat/Formatters/Pointer.hpp"
+#include "LibGeneric/List.hpp"
 #include "LibGeneric/String.hpp"
 #include "Memory/KHeap.hpp"
 #include "Process/Process.hpp"
@@ -69,6 +74,20 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 [[noreturn, maybe_unused]] void core::start::late_init() {
 	//  Initialize drivers
 	(void)driver::ide::init();
+
+	//  Initialize FS
+	gen::List<core::io::BlockDevice*> blks {};
+	(void)core::obj::for_each_object_of_type(obj::ObjectType::BlockDevice, [&blks](obj::KObject* obj) {
+		blks.push_back(reinterpret_cast<core::io::BlockDevice*>(obj));
+	});
+	for(auto& block_device : blks) {
+		auto name = block_device->name();
+		::log.info("Probing for ext2 filesystem on {}..", name.data());
+		const auto err = core::fs::ext2::Ext2Fs::probe(block_device);
+		if(err != Error::Ok) {
+			::log.error("Probing failed: error {}", static_cast<uintptr_t>(err));
+		}
+	}
 
 	//  Spawn the kernel serial debugger
 	auto serial_dbg =

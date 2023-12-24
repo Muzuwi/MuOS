@@ -8,6 +8,7 @@ set(MUOS_CXX_FLAGS
     -Wall
     -Wextra
     -Werror=unused-result
+    -Werror=return-type
     --std=c++2a
     $<$<CONFIG:Debug>:-ggdb -g>
     $<$<CONFIG:Release>:-O2>

@@ -7,11 +7,11 @@
 #include <Arch/x86_64/MP/ExecutionEnvironment.hpp>
 #include <Arch/x86_64/PCI/PCI.hpp>
 #include <Arch/x86_64/Serial.hpp>
+#include <Arch/x86_64/VGAConsole.hpp>
 #include <Core/Error/Error.hpp>
 #include <Core/MP/MP.hpp>
 #include <Core/Start/Start.hpp>
 #include <Debug/klogf.hpp>
-#include <Debug/TTY.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
 #include <Syscalls/Syscall.hpp>
@@ -43,7 +43,7 @@ core::Error arch::platform_early_init() {
 	CPU::set_gs_base(env);
 	CPU::set_kernel_gs_base(env);
 
-	TTY::init();
+	(void)vgacon::init();
 	Serial::init();
 	CPU::initialize_features();
 	PMM::instance().init_regions(s_multiboot_context);

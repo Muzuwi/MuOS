@@ -3,6 +3,8 @@ Index:
 Diagnostics:
   UnusedIncludes: Strict
   MissingIncludes: Strict
+  Includes:
+    IgnoreHeader: cmath|cstdint|cstddef
   ClangTidy:
     Add: modernize*
     Remove: [modernize-use-trailing-return-type, modernize-avoid-c-arrays, modernize-deprecated-headers]

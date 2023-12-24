@@ -18,6 +18,7 @@
 #include <SystemTypes.hpp>
 #include "ACPI.hpp"
 #include "APIC.hpp"
+#include "Arch/x86_64/SerialConsole.hpp"
 
 static PhysPtr<MultibootInfo> s_multiboot_context;
 
@@ -45,6 +46,7 @@ core::Error arch::platform_early_init() {
 
 	(void)vgacon::init();
 	Serial::init();
+	(void)serialcon::init();
 	CPU::initialize_features();
 	PMM::instance().init_regions(s_multiboot_context);
 

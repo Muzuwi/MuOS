@@ -1,4 +1,3 @@
-#include <Debug/klogf.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
@@ -14,13 +13,11 @@ KBox<const char> UserString::copy_to_kernel() {
 	while(size < str_max_size) {
 		auto region = vmm.find_vmapping(user_ptr + size);
 		if(!region.has_value()) {
-			kerrorf("Thread[tid={}] - tried copying string from unaccessible memory", Thread::current()->tid());
 			return KBox<const char> {};
 		}
 
 		auto page = region.unwrap()->page_for(user_ptr + size);
 		if(!page.has_value()) {
-			kerrorf("Thread[tid={}] - tried reading from unmapped memory", Thread::current()->tid());
 			return KBox<const char> {};
 		}
 
@@ -32,7 +29,6 @@ KBox<const char> UserString::copy_to_kernel() {
 
 		size++;
 		if(size == str_max_size) {
-			kerrorf("Thread[tid={}] - max string size exceeded during copy", Thread::current()->tid());
 			return KBox<const char> {};
 		}
 	}

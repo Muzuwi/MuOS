@@ -1,8 +1,10 @@
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/Serial.hpp>
-#include <Debug/klogf.hpp>
+#include <Core/Log/Logger.hpp>
 #include <string.h>
 #include <Structs/KOptional.hpp>
+
+CREATE_LOGGER("x86_64::i8250", core::log::LogLevel::Debug);
 
 //  FIXME: Only support COM0 for now
 
@@ -83,7 +85,7 @@ void Serial::init() {
 	auto do_init = [](Serial::Port port) {
 		if(try_initialize(port)) {
 			set_debugger_port(port);
-			klogf_static("[Serial] Initialized COM{}, speed 115200, 8N1, IRQ 4\n", (unsigned)port);
+			log.info("Initialized COM{}, speed 115200, 8N1, IRQ 4", (unsigned)port);
 		}
 	};
 

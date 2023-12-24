@@ -1,7 +1,6 @@
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/IDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
-#include <Debug/klogf.hpp>
 
 static IDT_Entry interrupt_descr_table[IDT_INTS_COUNT] = {};
 
@@ -83,7 +82,6 @@ void IDT::init() {
 	IDTR.limit = sizeof(interrupt_descr_table);
 	IDTR.base = reinterpret_cast<uint64_t>(interrupt_descr_table);
 	init_ap();
-	//  klogf_static("[IDT] registered interrupt handlers\n");
 }
 
 void IDT::init_ap() {

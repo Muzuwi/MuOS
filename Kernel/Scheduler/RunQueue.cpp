@@ -1,7 +1,10 @@
+#include <Core/Log/Logger.hpp>
 #include <LibGeneric/Algorithm.hpp>
 #include <Process/Process.hpp>
 #include <Scheduler/RunQueue.hpp>
 #include "Arch/x86_64/IRQDisabler.hpp"
+
+CREATE_LOGGER("scheduler", core::log::LogLevel::Debug);
 
 bool RunQueue::PriorityComparator::operator()(Thread* const& lhs, Thread* const& rhs) {
 	return lhs->priority() <= rhs->priority();
@@ -34,14 +37,14 @@ void RunQueue::swap() {
 
 void RunQueue::dump_statistics() {
 	IRQDisabler irq_disabler {};
-	klogf_static("Active queue:\n");
+	log.debug("Active queue:");
 	for(auto const& thread : *m_active) {
-		klogf_static("Thread{{{}}}, TID{{{}}}, Priority{{{}}}, Quant{{{}}}\n", Format::ptr(&thread), thread->tid(),
-		             thread->priority(), thread->sched_ctx().quants_left);
+		log.debug("Thread{{{}}}, TID{{{}}}, Priority{{{}}}, Quant{{{}}}", Format::ptr(&thread), thread->tid(),
+		          thread->priority(), thread->sched_ctx().quants_left);
 	}
-	klogf_static("Inactive queue:\n");
+	log.debug("Inactive queue:");
 	for(auto const& thread : *m_inactive) {
-		klogf_static("Thread{{{}}}, TID{{{}}}, Priority{{{}}}, Quant{{{}}}\n", Format::ptr(&thread), thread->tid(),
-		             thread->priority(), thread->sched_ctx().quants_left);
+		log.debug("Thread{{{}}}, TID{{{}}}, Priority{{{}}}, Quant{{{}}}", Format::ptr(&thread), thread->tid(),
+		          thread->priority(), thread->sched_ctx().quants_left);
 	}
 }

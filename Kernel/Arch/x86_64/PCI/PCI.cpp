@@ -1,9 +1,11 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
 #include <Arch/x86_64/PCI/PCI.hpp>
 #include <Arch/x86_64/PCI/PciDevice.hpp>
-#include <Debug/klogf.hpp>
+#include <Core/Log/Logger.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <SystemTypes.hpp>
+
+CREATE_LOGGER("x86_64::pci", core::log::LogLevel::Debug);
 
 gen::StaticVector<PCI::PciDeviceLock, 512> PCI::s_devices {};
 gen::Spinlock PCI::s_devices_lock {};
@@ -42,26 +44,26 @@ void PCI::probe_device(uint8 bus, uint8 device) {
 }
 
 void PCI::register_device(PciDevice device) {
-	klogf("[PCI] {x}:{x}:{x} - Device={x}, Vendor={x}, Class={x}, Subclass={x}\n", device.bus(), device.device(),
-	      device.function(), device.device_id(), device.vendor_id(), device.class_(), device.subclass());
-	klogf("[PCI] ... {} - {}\n", PCI::class_string(device.class_()),
-	      PCI::subclass_string(device.class_(), device.subclass()));
+	log.info("{x}:{x}:{x} - Device={x}, Vendor={x}, Class={x}, Subclass={x}", device.bus(), device.device(),
+	         device.function(), device.device_id(), device.vendor_id(), device.class_(), device.subclass());
+	log.info("|- {} - {}", PCI::class_string(device.class_()),
+	         PCI::subclass_string(device.class_(), device.subclass()));
 	const auto header_type = device.header_type();
 	const auto type = header_type & 0x7Fu;
 
 	if(type == 0) {
-		klogf("[PCI] ... BAR0={x}, BAR1={x}, BAR2={x}\n", device.read_config(0x10), device.read_config(0x14),
-		      device.read_config(0x18));
-		klogf("[PCI] ... BAR3={x}, BAR4={x}, BAR5={x}\n", device.read_config(0x1c), device.read_config(0x20),
-		      device.read_config(0x24));
+		log.info("|- BAR0={x}, BAR1={x}, BAR2={x}", device.read_config(0x10), device.read_config(0x14),
+		         device.read_config(0x18));
+		log.info("|- BAR3={x}, BAR4={x}, BAR5={x}", device.read_config(0x1c), device.read_config(0x20),
+		         device.read_config(0x24));
 	} else if(type == 1) {
-		klogf("[PCI] ... BAR0={x}, BAR1={x}\n", device.read_config(0x10), device.read_config(0x14));
+		log.info("|- BAR0={x}, BAR1={x}", device.read_config(0x10), device.read_config(0x14));
 	} else {
-		klogf("[PCI] ... Unrecognized header type - {}\n", device.header_type());
+		log.info("|- Unrecognized header type - {}", device.header_type());
 	}
 
 	if(header_type & 0x80u) {
-		klogf("[PCI] ... Multi-function device\n");
+		log.info("|- Multi-function device");
 	}
 
 	add_device(device);

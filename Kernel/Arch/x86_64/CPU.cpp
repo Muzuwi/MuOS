@@ -2,28 +2,31 @@
 #include <Arch/x86_64/CPUID.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
-#include <Debug/klogf.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Debug/kpanic.hpp>
 #include <Process/Process.hpp>
 #include <Syscalls/Syscall.hpp>
 #include <SystemTypes.hpp>
 
+CREATE_LOGGER("x86_64::cpu", core::log::LogLevel::Debug);
+
+static auto l1 = core::log::create_logger("abc", core::log::LogLevel::Debug);
+
 void CPU::initialize_features() {
 	uint32_t new_efer { 0x500 };//  Long-Mode enable + Long-mode active
 
-	klogf_static("[CPU] Support ");
+	log.info("Supported CPU features:");
 	if(CPUID::has_NXE()) {
-		klogf_static("NXE ");
+		log.info("|- NXE");
 		new_efer |= (1u << 11);
 	}
 	if(CPUID::has_SEP()) {
-		klogf_static("SEP ");
+		log.info("|- SEP");
 		new_efer |= 1;
 	}
 	if(CPUID::has_LAPIC()) {
-		klogf_static("LAPIC ");
+		log.info("|- LAPIC");
 	}
-	klogf_static("\n");
 
 	wrmsr(0xC0000080, (uint64_t)new_efer);
 

@@ -104,3 +104,5 @@ namespace core::log {
 inline core::log::Logger core::log::create_logger(char const* tag, LogLevel default_log_level) {
 	return { tag, default_log_level };
 }
+
+#define CREATE_LOGGER(tag, minimum_level) static auto log = ::core::log::create_logger(tag, minimum_level)

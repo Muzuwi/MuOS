@@ -1,12 +1,14 @@
 #include <Arch/x86_64/CPU.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Daemons/Testd/Testd.hpp>
-#include <Debug/klogf.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 
+CREATE_LOGGER("userland_test", core::log::LogLevel::Debug);
+
 void Testd::test_kernel_thread() {
 	while(true) {
-		klogf("Thread2(pid={}, tid={}) woke up\n", Thread::current()->parent()->pid(), Thread::current()->tid());
+		log.debug("Thread2(pid={}, tid={}) woke up", Thread::current()->parent()->pid(), Thread::current()->tid());
 		Thread::current()->msleep(2000);
 	}
 }
@@ -31,17 +33,17 @@ void Testd::userland_test_thread() {
 		                    0x00, 0x00, 0x48, 0xC7, 0xC0, 0xFE, 0x00, 0x00, 0x00, 0x0F, 0x05, 0xEB, 0xEE };
 	auto* shellcode_location = (uint8*)0x100000;
 
-	klogf("Thread({}): mapping shellcode\n", current->tid());
+	log.debug("Thread({}): mapping shellcode", current->tid());
 	auto mapping = VMapping::create((void*)shellcode_location, 0x1000, VM_READ | VM_WRITE | VM_EXEC, MAP_SHARED);
 	kassert(current->parent()->vmm().insert_vmapping(gen::move(mapping)));
 
-	klogf("Thread({}): copying shellcode\n", current->tid());
+	log.debug("Thread({}): copying shellcode", current->tid());
 	for(auto& b : bytes) {
 		*shellcode_location = b;
 		shellcode_location++;
 	}
 
-	klogf("Thread({}): jumping to user\n", current->tid());
+	log.debug("Thread({}): jumping to user", current->tid());
 	PtraceRegs regs = PtraceRegs::user_default();
 	regs.rip = 0x100000;
 	regs.rsp = (uint64)user_stack;

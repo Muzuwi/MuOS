@@ -1,11 +1,13 @@
 #include <Arch/x86_64/PortIO.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Daemons/Kbd/Kbd.hpp>
-#include <Debug/klogf.hpp>
 #include <Locks/KSemaphore.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Structs/StaticRing.hpp>
 #include <SystemTypes.hpp>
+
+CREATE_LOGGER("test::kbd", core::log::LogLevel::Debug);
 
 static StaticRing<uint8, 1024> s_keyboard_buffer {};
 static KSemaphore s_keyboard_semaphore;
@@ -15,7 +17,7 @@ void Kbd::kbd_thread() {
 		s_keyboard_semaphore.wait();
 		while(!s_keyboard_buffer.empty()) {
 			auto byte = s_keyboard_buffer.try_pop();
-			klogf("Kbd({}): Byte {x}\n", Thread::current()->tid(), byte.unwrap());
+			log.debug("Kbd({}): Byte {x}", Thread::current()->tid(), byte.unwrap());
 		}
 	}
 }

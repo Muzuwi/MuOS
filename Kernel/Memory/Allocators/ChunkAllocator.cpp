@@ -1,8 +1,10 @@
-#include <Debug/klogf.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Debug/kpanic.hpp>
 #include <LibGeneric/Allocator.hpp>
 #include <Memory/Allocators/ChunkAllocator.hpp>
 #include <string.h>
+
+CREATE_LOGGER("heap::chunk", core::log::LogLevel::Debug);
 
 ChunkAllocator::ChunkAllocator(void* virtual_start, size_t size)
     : m_chunk_list(new(virtual_start) Chunk(size - sizeof(Chunk)))
@@ -13,7 +15,6 @@ void* ChunkAllocator::allocate(size_t size) {
 	auto chunk = find_free_chunk(size);
 	if(chunk) {
 		mark_chunk_allocated(*chunk, size);
-		//		klogf_static("Alloc {} -> {}\n", size, chunk->alloc_ptr());
 		return chunk->alloc_ptr();
 	}
 	return nullptr;
@@ -31,14 +32,14 @@ void ChunkAllocator::free(void* ptr) {
 
 	//  Tried freeing an object from an offset pointer
 	if(ptr != chunk->alloc_ptr()) {
-		kerrorf_static("Partial free of pointer {} detected!\n", ptr);
+		log.fatal("Partial free of pointer {} detected!", ptr);
 		dump_allocator();
 		kpanic();
 	}
 
 	//  Tried double-freeing
 	if(chunk->m_state == ChunkState::Free) {
-		kerrorf_static("Double free of pointer {} detected!\n", ptr);
+		log.fatal("Double free of pointer {} detected!", ptr);
 		dump_allocator();
 		kpanic();
 	}
@@ -116,9 +117,9 @@ void ChunkAllocator::dump_allocator() {
 
 	auto* current = m_chunk_list;
 	while(current) {
-		kerrorf_static("Chunk({}): {} <-> {}, size{{{}}}, state{{{}}}, next{{{}}}\n", Format::ptr(current),
-		               current->alloc_ptr(), current->alloc_end_ptr(), current->m_size, state_str(current->m_state),
-		               Format::ptr(current->m_next));
+		log.debug("Chunk({}): {} <-> {}, size{{{}}}, state{{{}}}, next{{{}}}", Format::ptr(current),
+		          current->alloc_ptr(), current->alloc_end_ptr(), current->m_size, state_str(current->m_state),
+		          Format::ptr(current->m_next));
 		current = current->m_next;
 	}
 }

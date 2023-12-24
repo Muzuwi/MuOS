@@ -11,7 +11,6 @@
 #include <Core/Error/Error.hpp>
 #include <Core/MP/MP.hpp>
 #include <Core/Start/Start.hpp>
-#include <Debug/klogf.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
 #include <Syscalls/Syscall.hpp>

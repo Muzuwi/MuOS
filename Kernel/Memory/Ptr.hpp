@@ -1,6 +1,5 @@
 #pragma once
 #include <Arch/x86_64/LinkscriptSyms.hpp>
-#include <Debug/klogf.hpp>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -84,11 +83,7 @@ public:
 	    : m_ptr(nullptr) {}
 
 	explicit PhysAddr(void* addr) noexcept
-	    : m_ptr(addr) {
-		if((uint64_t)addr & 0xffff000000000000) {
-			kerrorf_static("Warning: PhysAddr constructed with a potentially virtual pointer [{}]\n", addr);
-		}
-	}
+	    : m_ptr(addr) {}
 
 	template<class T>
 	PhysPtr<T> as() {

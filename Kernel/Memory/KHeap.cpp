@@ -1,20 +1,21 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
-#include <Debug/klogf.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
 
 KHeap KHeap::s_instance {};
+CREATE_LOGGER("kheap", core::log::LogLevel::Debug);
 
 void KHeap::init() {
-	klogf_static("[KHeap] Initializing kernel allocators..\n");
+	log.info("Initializing kernel allocators..");
 
 	const auto size = 1 * Units::MiB;
 	auto chunk_space = VMM::allocate_kernel_heap(size);
 	kassert(chunk_space != nullptr);
-	klogf_static("[KHeap] ChunkAllocator({}), size {}\n", chunk_space, size);
+	log.debug("ChunkAllocator({}), size {}", chunk_space, size);
 	m_chunk_allocator = ChunkAllocator { chunk_space, size };
 
 	for(unsigned i = 0; i < 2; ++i) {
@@ -31,8 +32,8 @@ void KHeap::dump_stats() {
 	m_chunk_allocator.dump_allocator();
 	for(auto& size_slabs : m_slab_allocators) {
 		for(auto& v : size_slabs) {
-			klogf_static("Slab({}): size={}, free={}, used={}\n", v.pool_base(), v.object_size(), v.objects_free(),
-			             v.objects_used());
+			log.debug("Slab({}): size={}, free={}, used={}", v.pool_base(), v.object_size(), v.objects_free(),
+			          v.objects_used());
 		}
 	}
 	m_heap_lock.unlock();
@@ -146,8 +147,7 @@ SlabAllocator* KHeap::slab_grow(size_t requested_size) {
 		return nullptr;
 	}
 	auto slab = maybe_slab.unwrap();
-	klogf_static("[KHeap] SlabAllocator({}), size {}, objects {}\n", slab.pool_base(), slab.object_size(),
-	             slab.objects_free());
+	log.debug("SlabAllocator({}), size {}, objects {}", slab.pool_base(), slab.object_size(), slab.objects_free());
 
 	auto& list = m_slab_allocators[index_for_size(requested_size)];
 	list.push_back(gen::move(slab));

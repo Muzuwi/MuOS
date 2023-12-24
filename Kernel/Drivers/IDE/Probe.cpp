@@ -2,8 +2,8 @@
 #include <Arch/x86_64/PCI/PciDevice.hpp>
 #include <Core/Error/Error.hpp>
 #include <Core/IO/BlockDevice.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Core/Object/Tree.hpp>
-#include <Debug/klogf.hpp>
 #include <Drivers/IDE/IDE.hpp>
 #include <LibFormat/Format.hpp>
 #include <LibGeneric/LockGuard.hpp>
@@ -15,6 +15,7 @@
 #include "LibGeneric/String.hpp"
 
 using namespace driver::ide;
+CREATE_LOGGER("x86_64::ide::probe", core::log::LogLevel::Debug);
 
 static gen::String format_name(uint16 ctl_port, uint16 dev_port, DriveSelect which) {
 	char output[16];
@@ -31,19 +32,19 @@ static void ide_probe(uint16 disk_control, uint16 device_control, driver::ide::D
 	//  way to clean them up.
 	auto* drive = KHeap::make<IdeDevice>(disk_control, device_control, which);
 	if(!drive) {
-		kerrorf("[driver::ide] IdeDevice allocation failed\n");
+		log.error("probe: IdeDevice allocation failed\n");
 		return;
 	}
 
 	if(!drive->initialize()) {
-		kerrorf("[driver::ide] Failed initializing drive @ {x}:{x}:{}\n", disk_control, device_control,
-		        which == driver::ide::DriveSelect::Master ? 'm' : 's');
+		log.warning("probe: Failed initializing drive @ {x}:{x}:{}", disk_control, device_control,
+		            which == driver::ide::DriveSelect::Master ? 'm' : 's');
 		return;
 	}
 
 	auto* blk = KHeap::make<core::io::BlockDevice>(format_name(disk_control, device_control, which));
 	if(!blk) {
-		kerrorf("[driver::ide] Allocating BlockDevice failed\n");
+		log.error("probe: Allocating BlockDevice failed");
 		return;
 	}
 
@@ -75,11 +76,11 @@ static void ide_probe(uint16 disk_control, uint16 device_control, driver::ide::D
 	});
 
 	if(const auto err = core::obj::attach(blk); err != core::Error::Ok) {
-		kerrorf("[driver::ide] BlockDevice object attach failed, core::Error: {x}\n", static_cast<size_t>(err));
+		log.error("probe: BlockDevice object attach failed, core::Error: {x}", static_cast<size_t>(err));
 		return;
 	}
 	auto name = blk->name();
-	klogf("[driver::ide] Successfully attached block device '{}'\n", name.data());
+	log.info("probe: Successfully attached block device '{}'", name.data());
 }
 
 /**
@@ -91,13 +92,13 @@ core::Error driver::ide::init() {
 	auto maybe_dev = PCI::acquire_device(
 	        [](PciDevice const& device) -> bool { return device.class_() == 0x01 && device.subclass() == 0x01; });
 	if(!maybe_dev.has_value()) {
-		klogf("[driver::ide] detect: No PCI IDE controllers detected\n");
+		log.warning("init: No PCI IDE controllers detected");
 		return core::Error::Ok;
 	}
 
 	auto dev = maybe_dev.unwrap();
 	auto prog_if = dev.prog_if();
-	klogf("[driver::ide] PCI IDE controller with device_id={x}, vendor_id={x}\n", dev.device_id(), dev.vendor_id());
+	log.info("init: PCI IDE controller with device_id={x}, vendor_id={x}", dev.device_id(), dev.vendor_id());
 
 	if(!(prog_if & 0b0001)) {
 		uint16 primary_base = 0x1F0, primary_base_control = 0x3F6;

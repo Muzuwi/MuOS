@@ -1,8 +1,8 @@
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/Serial.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
-#include <Debug/klogf.hpp>
 #include <LibGeneric/String.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
@@ -14,6 +14,8 @@
 #include "Core/Object/Tree.hpp"
 #include "Memory/KHeap.hpp"
 #include "SystemTypes.hpp"
+
+CREATE_LOGGER("sysbdg", core::log::LogLevel::Debug);
 
 constexpr bool is_numeric(char ch) {
 	return ch >= 0x30 && ch < 58;
@@ -70,28 +72,28 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 	ptr++;
 
 	if(command == "dvm") {
-		klogf("kdebugger({}): process vmapping dump\n", thread->tid());
+		log.info("kdebugger({}): process vmapping dump", thread->tid());
 		for(auto& mapping : process->vmm().m_mappings) {
-			klogf("{} - {} [{}{}{}{}][{}]\n", Format::ptr(mapping->addr()), Format::ptr(mapping->end()),
-			      (mapping->flags() & VM_READ) ? 'R' : '-', (mapping->flags() & VM_WRITE) ? 'W' : '-',
-			      (mapping->flags() & VM_EXEC) ? 'X' : '-', (mapping->flags() & VM_KERNEL) ? 'K' : 'U',
-			      (mapping->type() == MAP_SHARED) ? 'S' : 'P');
+			log.info("{} - {} [{}{}{}{}][{}]", Format::ptr(mapping->addr()), Format::ptr(mapping->end()),
+			         (mapping->flags() & VM_READ) ? 'R' : '-', (mapping->flags() & VM_WRITE) ? 'W' : '-',
+			         (mapping->flags() & VM_EXEC) ? 'X' : '-', (mapping->flags() & VM_KERNEL) ? 'K' : 'U',
+			         (mapping->type() == MAP_SHARED) ? 'S' : 'P');
 		}
 	} else if(command == "dp") {
-		klogf("kdebugger({}): Kernel-mode process tree dump\n", thread->tid());
+		log.info("kdebugger({}): Kernel-mode process tree dump", thread->tid());
 		SysDbg::dump_process(Process::kerneld());
-		klogf("kdebugger({}): User-mode process tree dump\n", thread->tid());
+		log.info("kdebugger({}): User-mode process tree dump", thread->tid());
 		SysDbg::dump_process(Process::init());
 	} else if(command == "da") {
-		klogf("kdebugger({}): Kernel heap allocator statistics\n", thread->tid());
+		log.info("kdebugger({}): Kernel heap allocator statistics", thread->tid());
 		KHeap::instance().dump_stats();
 	} else if(command == "ds") {
-		klogf("kdebugger({}): Scheduler statistics\n", thread->tid());
+		log.info("kdebugger({}): Scheduler statistics", thread->tid());
 		this_cpu()->scheduler->dump_statistics();
 	} else if(command == "dc") {
-		klogf("kdebugger({}): attached CPUs\n", thread->tid());
+		log.info("kdebugger({}): attached CPUs", thread->tid());
 		//  for(auto const& cpu : SMP::attached_aps()) {
-		//  klogf("... CPU #{}, APIC ID={}\n", cpu->vid(), cpu->apic_id());
+		//  log.info("... CPU #{}, APIC ID={}", cpu->vid(), cpu->apic_id());
 		//  }
 	} else if(command == "xp" || command == "xpd") {
 		//  No parameters passed
@@ -118,26 +120,26 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		for(unsigned i = 0; i < count; ++i) {
 			if(command == "xp") {
 				const auto physical = PhysPtr<uint8>(reinterpret_cast<uint8*>(address + i));
-				klogf("kdebugger({}): [{x}] = ", thread->tid(), address + i);
+				log.info("kdebugger({}): [{x}] = ", thread->tid(), address + i);
 
 				const auto byte = *physical;
 
-				klogf("[{x}]\n", byte);
+				log.info("[{x}]", byte);
 			} else {
 				const auto physical = PhysPtr<uint32>(reinterpret_cast<uint32*>(address + i * 4));
-				klogf("kdebugger({}): [{x}] = ", thread->tid(), address + i * 4);
+				log.info("kdebugger({}): [{x}] = ", thread->tid(), address + i * 4);
 
 				const auto dword = *physical;
 
-				klogf("[{x}]\n", dword);
+				log.info("[{x}]", dword);
 			}
 		}
 	} else if(command == "db") {
-		klogf("kdebugger({}): Block devices:\n", thread->tid());
+		log.info("kdebugger({}): Block devices:", thread->tid());
 		(void)core::obj::for_each_object_of_type(core::obj::ObjectType::BlockDevice, [thread](core::obj::KObject* obj) {
 			auto* bdev = reinterpret_cast<core::io::BlockDevice*>(obj);
 			auto name = bdev->name();
-			klogf("kdebugger({}):  - {}\n", thread->tid(), name.data());
+			log.info("kdebugger({}):  - {}", thread->tid(), name.data());
 		});
 	} else if(command == "readblock") {
 		//  No parameters passed
@@ -181,47 +183,47 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 			                                         }
 		                                         });
 		if(!context.blk) {
-			kerrorf("kdebugger({}): could not find blk with name: {}\n", thread->tid(), name.data());
+			log.error("kdebugger({}): could not find blk with name: {}", thread->tid(), name.data());
 			return;
 		}
 
 		size_t sector_size = 0;
 		if(const auto err = context.blk->blksize(sector_size); err != core::Error::Ok) {
-			kerrorf("kdebugger({}): could not read sector size, error={}\n", thread->tid(), static_cast<size_t>(err));
+			log.error("kdebugger({}): could not read sector size, error={}", thread->tid(), static_cast<size_t>(err));
 			return;
 		}
 		size_t sector_count = 0;
 		if(const auto err = context.blk->blkcount(sector_count); err != core::Error::Ok) {
-			kerrorf("kdebugger({}): could not read sector count, error={}\n", thread->tid(), static_cast<size_t>(err));
+			log.error("kdebugger({}): could not read sector count, error={}", thread->tid(), static_cast<size_t>(err));
 			return;
 		}
 
-		klogf("kdebugger({}): sectors={}, sector_size={}\n", thread->tid(), sector_count, sector_size);
+		log.info("kdebugger({}): sectors={}, sector_size={}", thread->tid(), sector_count, sector_size);
 
 		auto buf_size = sector_size * count;
 		auto* buffer = (uint8*)KHeap::instance().chunk_alloc(buf_size);
 		if(!buffer) {
-			klogf("kdebugger({}): failed to allocate buffer of size\n", thread->tid(), buf_size);
+			log.info("kdebugger({}): failed to allocate buffer of size", thread->tid(), buf_size);
 			return;
 		}
 
 		if(const auto err = context.blk->read(gen::move(buffer), gen::move(buf_size), gen::move(blk_start),
 		                                      gen::move(blk_count));
 		   err != core::Error::Ok) {
-			kerrorf("kdebugger({}): could not read sectors, error={}\n", thread->tid(), static_cast<size_t>(err));
+			log.error("kdebugger({}): could not read sectors, error={}", thread->tid(), static_cast<size_t>(err));
 			return;
 		}
 
-		klogf("{} {} {}\n", context.blk_name.data(), blk_start, blk_count);
+		log.info("{} {} {}", context.blk_name.data(), blk_start, blk_count);
 
 		const size_t bytes_per_row = 16;
 
 		for(auto i = 0; i < buf_size; i += bytes_per_row) {
-			klogf("[kdebugger({})]: #{x} | ", thread->tid(), (blk_start * sector_size + i));
+			log.info("[kdebugger({})]: #{x} | ", thread->tid(), (blk_start * sector_size + i));
 			for(auto j = i; (j < (i + bytes_per_row)) && (j < buf_size); j++) {
-				klogf("{x} ", buffer[j]);
+				log.info("{x} ", buffer[j]);
 			}
-			klogf("\n");
+			log.info("");
 		}
 
 		KHeap::instance().chunk_free(buffer);
@@ -233,7 +235,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 }
 
 void SysDbg::sysdbg_thread() {
-	klogf("kdebugger({}): started\n", Thread::current()->tid());
+	log.info("kdebugger({}): started", Thread::current()->tid());
 	gen::String current {};
 	gen::List<gen::String> parameters {};
 	while(true) {
@@ -262,14 +264,14 @@ void SysDbg::sysdbg_thread() {
 					if(!parameters.empty()) {
 						int i = 0;
 						for(auto& param : parameters) {
-							klogf("arg[{}] = '{}'\n", i++, param.data());
+							log.info("arg[{}] = '{}'", i++, param.data());
 						}
 
 						const auto start = PIT::milliseconds();
 						handle_command(parameters);
 						const auto end = PIT::milliseconds();
 
-						klogf("kdebugger({}): Command handling took {}ms\n", Thread::current()->tid(), end - start);
+						log.info("kdebugger({}): Command handling took {}ms", Thread::current()->tid(), end - start);
 					}
 					current.clear();
 					parameters.clear();
@@ -290,11 +292,11 @@ void SysDbg::sysdbg_thread() {
 				}
 			}
 
-			klogf("kdebugger({}) #: ", Thread::current()->tid());
+			log.info("kdebugger({}) #: ", Thread::current()->tid());
 			for(auto& param : parameters) {
-				klogf("{} ", param.data());
+				log.info("{} ", param.data());
 			}
-			klogf("{}\n", current.data());
+			log.info("{}", current.data());
 		}
 	}
 }
@@ -305,29 +307,29 @@ void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth) {
 	}
 
 	auto print_header = [depth, process] {
-		klogf("... ");
+		log.info("... ");
 		for(unsigned i = 0; i < depth; ++i) {
-			klogf("    ");
+			log.info("    ");
 		}
-		klogf("Process({}): ", process->pid());
+		log.info("Process({}): ", process->pid());
 	};
 
 	print_header();
-	klogf("Name {{'{}'}}\n", process->m_simple_name.data());
+	log.info("Name {{'{}'}}", process->m_simple_name.data());
 	print_header();
-	klogf("PML4 {{{}}}\n", Format::ptr(process->vmm().pml4().get()));
+	log.info("PML4 {{{}}}", Format::ptr(process->vmm().pml4().get()));
 	print_header();
-	klogf("Flags {{privilege({}), randomize_vm({})}}\n", process->flags().privilege == User ? "User" : "Kernel",
-	      process->flags().randomize_vm);
+	log.info("Flags {{privilege({}), randomize_vm({})}}", process->flags().privilege == User ? "User" : "Kernel",
+	         process->flags().randomize_vm);
 	{
 		print_header();
-		klogf("VMM {{\n");
+		log.info("VMM {{");
 		print_header();
-		klogf("... VMapping count {{{}}}\n", process->vmm().m_mappings.size());
+		log.info("... VMapping count {{{}}}", process->vmm().m_mappings.size());
 		print_header();
-		klogf("... Kernel-used pages {{{}}}\n", process->vmm().m_kernel_pages.size());
+		log.info("... Kernel-used pages {{{}}}", process->vmm().m_kernel_pages.size());
 		print_header();
-		klogf("}}\n");
+		log.info("}}");
 	}
 
 	auto state_str = [](TaskState state) -> char const* {
@@ -343,21 +345,21 @@ void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth) {
 	};
 
 	print_header();
-	klogf("Threads {{\n");
+	log.info("Threads {{");
 	for(auto& thread : process->m_threads) {
 		print_header();
-		klogf("... Thread({}), SP{{{}}}, PML4{{{}}}, State{{{}}}, PreemptCount{{{}}}, Pri{{{}}}\n", thread->tid(),
-		      Format::ptr(thread->m_kernel_stack_bottom), Format::ptr(thread->m_pml4.get()), state_str(thread->state()),
-		      thread->preempt_count(), thread->priority());
+		log.info("... Thread({}), SP{{{}}}, PML4{{{}}}, State{{{}}}, PreemptCount{{{}}}, Pri{{{}}}", thread->tid(),
+		         Format::ptr(thread->m_kernel_stack_bottom), Format::ptr(thread->m_pml4.get()),
+		         state_str(thread->state()), thread->preempt_count(), thread->priority());
 	}
 	print_header();
-	klogf("}}\n");
+	log.info("}}");
 
 	print_header();
-	klogf("Children {{\n");
+	log.info("Children {{");
 	for(auto& child : process->m_children) {
 		dump_process(child, depth + 1);
 	}
 	print_header();
-	klogf("}}\n");
+	log.info("}}");
 }

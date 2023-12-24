@@ -1,15 +1,24 @@
 #include <Arch/x86_64/PortIO.hpp>
 #include <Core/Error/Error.hpp>
-#include <Debug/klogf.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Drivers/IDE/IDE.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <SystemTypes.hpp>
+#include "LibFormat/Format.hpp"
+#include "LibGeneric/String.hpp"
 
 using namespace driver::ide;
+CREATE_LOGGER("x86_64::ide", core::log::LogLevel::Debug);
 
 //  FIXME: Driver hangs when a request for partial out-of-bound
 //  sectors is sent (so for example, read of 2 sectors starting at
 //  `m_sectors-1`.
+
+void append_hex(gen::String& str, uint8 byte) {
+	char buf[8];
+	Format::format("{x}", buf, sizeof(buf), byte);
+	str += buf;
+}
 
 /**
  * 	Try initializing the specified drive.
@@ -21,28 +30,27 @@ bool IdeDevice::initialize() {
 	if(!rc) {
 		return false;
 	}
-	klogf("[driver::ide] ide: successfully read identity space\n");
+	log.debug("Successfully read identity space");
 
 	for(auto i = 0; i < 32; i++) {
-		klogf("[driver::ide] ");
+		gen::String current_line {};
 		for(auto j = 0; j < 16; j++) {
-			klogf("{x}", m_identity[i * 16 + j]);
+			append_hex(current_line, m_identity[i * 16 + j]);
 		}
-		klogf("\n");
+		log.debug("{}", current_line.data());
 	}
 
 	auto supported_addressing = detect_addressing();
 	if(supported_addressing & AddressingSupportSet::FeatureLBA28) {
-		klogf("[driver::ide]  supports LBA28\n");
+		log.debug("  supports LBA28");
 		m_mode = AddressingMode::LBA28;
 	}
 	if(supported_addressing & AddressingSupportSet::FeatureLBA48) {
-		klogf("[driver::ide]  supports LBA48\n");
+		log.debug("  supports LBA48");
 		m_mode = AddressingMode::LBA48;
 	}
 	auto sectors = read_sector_count();
-	klogf("[driver::ide] Using mode: {}, sectors: {}\n", (m_mode == AddressingMode::LBA28 ? "LBA28" : "LBA48"),
-	      sectors);
+	log.info("Using mode: {}, sectors: {}", (m_mode == AddressingMode::LBA28 ? "LBA28" : "LBA48"), sectors);
 	m_sectors = sectors;
 
 	return true;
@@ -104,7 +112,7 @@ uint64 IdeDevice::read_sector_count() {
 			return read_identity_u64(100 * 2);
 		}
 		default: {
-			kerrorf("[driver::ide] Invalid addressing mode: {}\n", static_cast<size_t>(m_mode));
+			log.error("Invalid addressing mode: {}", static_cast<size_t>(m_mode));
 			return 0;
 		}
 	}
@@ -179,8 +187,8 @@ core::Error IdeDevice::access(uint64 base_sector, uint16 count, uint8* buf, size
 	//  Sanity check input buffers
 	const auto required_size = count * sector_size();
 	if(buf_len < required_size) {
-		kerrorf("[drivers::ide] Input buffer of size {x} is too small for read operation of {} sectors ({x})\n",
-		        buf_len, count, required_size);
+		log.warning("Input buffer of size {x} is too small for read operation of {} sectors ({x})", buf_len, count,
+		            required_size);
 		return core::Error::InvalidArgument;
 	}
 
@@ -222,7 +230,7 @@ core::Error IdeDevice::access_lba48(uint64 base_sector, uint16 count, uint8* buf
 		if(wait_until_ready() & AtaStatus::Error) {
 			//  FIXME: Retry the access N amount of times
 			const auto current_lba = base_sector + done;
-			kerrorf("[driver::ide] Error bit set, disk access to LBA {x} failed!\n", current_lba);
+			log.error("Error bit set, disk access to LBA {x} failed!", current_lba);
 			return core::Error::IOFail;
 		}
 

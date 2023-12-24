@@ -1,5 +1,7 @@
-#include <Debug/klogf.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Debug/kpanic.hpp>
+
+CREATE_LOGGER("assert", core::log::LogLevel::Debug);
 
 unsigned long __stack_chk_guard;
 //  FIXME: Would be great if the canary was randomized
@@ -8,6 +10,6 @@ extern "C" void __stack_chk_guard_setup(void) {
 }
 
 extern "C" void __stack_chk_fail(void) {
-	kerrorf_static("[uKernel] Stack corruption detected, panic!\n");
+	log.fatal("Stack corruption detected!");
 	kpanic();
 }

@@ -9,15 +9,17 @@
 #include <Scheduler/Scheduler.hpp>
 #include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
 #include "Core/Error/Error.hpp"
+#include "Core/Log/Logger.hpp"
 #include "Daemons/Kbd/Kbd.hpp"
 #include "Daemons/SysDbg/SysDbg.hpp"
 #include "Daemons/Testd/Testd.hpp"
 #include "Debug/kassert.hpp"
-#include "Debug/klogf.hpp"
 #include "LibFormat/Formatters/Pointer.hpp"
 #include "LibGeneric/String.hpp"
 #include "Memory/KHeap.hpp"
 #include "Process/Process.hpp"
+
+CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 
 /** Start the kernel and boot into userland
  *
@@ -28,14 +30,14 @@
 	//  init'd as soon as possible
 	if(const auto err = arch::platform_early_init(); err != core::Error::Ok) {
 		//  FIXME: Better error handling, break into debugger?
-		kerrorf_static("[core::start] Platform early init failed with error code: {}\n", static_cast<size_t>(err));
+		::log.fatal("Platform early init failed with error code: {}", static_cast<size_t>(err));
 		kpanic();
 	}
-	klogf_static("[core::start] Platform early init done\n");
+	::log.info("Platform early init done");
 
 	auto* env = core::mp::create_environment();
 	arch::mp::environment_set(env);
-	klogf_static("[core::start] Kernel starting on node={} with environment={x}\n", env->node_id, Format::ptr(env));
+	::log.info("Kernel starting on node={} with environment={x}", env->node_id, Format::ptr(env));
 
 	//  Initialize required kernel subsystems
 	VMM::initialize_kernel_vm();
@@ -45,11 +47,11 @@
 	//  Handles further platform initialization tasks
 	if(const auto err = arch::platform_init(); err != core::Error::Ok) {
 		//  FIXME: Better error handling, break into debugger?
-		kerrorf_static("[core::start] Platform init failed with error code: {}\n", static_cast<size_t>(err));
+		::log.fatal("Platform init failed with error code: {}", static_cast<size_t>(err));
 		kpanic();
 	}
-	klogf("[core::start] Platform init done\n");
-	klogf("[core::start] Kernel init done, time passed: {}ms\n", PIT::milliseconds());
+	::log.info("Platform init done");
+	::log.info("Kernel init done, time passed: {}ms", PIT::milliseconds());
 
 	//  Prepare the next stage of initialization
 	//  Late init is called within a multitasking environment, so it's
@@ -90,7 +92,7 @@
 	init_thread->sched_ctx().priority = 10;
 	this_cpu()->scheduler->run_here(init_thread.get());
 
-	klogf("[start::late_init] Late init completed\n");
+	::log.info("Late init completed");
 	this_cpu()->scheduler->sleep();
 	//  We should never be awoken, but put a safe guard anyway
 	while(true)

@@ -2,7 +2,7 @@
 #include <Arch/x86_64/IRQDisabler.hpp>
 #include <Core/MP/MP.hpp>
 #include <Debug/kassert.hpp>
-#include <Debug/klogf.hpp>
+#include <LibFormat/Format.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>

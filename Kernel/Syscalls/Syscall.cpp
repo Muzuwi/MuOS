@@ -1,6 +1,8 @@
-#include <Debug/klogf.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Process/Process.hpp>
 #include <Syscalls/Syscall.hpp>
+
+CREATE_LOGGER("syscall", core::log::LogLevel::Debug);
 
 template<typename... Args>
 static uint64_t call(void* ptr, Args... args) {
@@ -32,11 +34,11 @@ void Syscall::init() {
 	auto id = (uint8_t)regs->rax;
 	auto& handler = s_syscall_functions[id];
 	if(!handler._ptr) {
-		klogf("[Syscall] Invalid syscall to nonexistent function ID={}\n", id);
+		log.error("Invalid syscall to nonexistent function ID={}", id);
 		return;
 	}
 
-	klogf("Thread({}): syscall={}\n", Thread::current()->tid(), id);
+	log.debug("Thread({}): syscall={}", Thread::current()->tid(), id);
 
 	auto argc = handler._argc;
 	auto ptr = handler._ptr;
@@ -69,7 +71,7 @@ void Syscall::init() {
 			break;
 		}
 		default: {
-			kerrorf("[Syscall] Corrupted argc={} for syscall_id={}\n", argc, id);
+			log.error("Corrupted argc={} for syscall_id={}", argc, id);
 			return;
 		}
 	}

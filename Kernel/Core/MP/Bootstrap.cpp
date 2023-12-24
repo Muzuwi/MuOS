@@ -1,9 +1,11 @@
 #include <Arch/Interface.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
-#include <Debug/klogf.hpp>
 #include <Memory/KHeap.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
+
+CREATE_LOGGER("core::mp", ::core::log::LogLevel::Debug);
 
 /** Bootstrap the current node for running the scheduler.
  *  This prepares the current node to run the scheduler main loop and
@@ -20,7 +22,7 @@
 		auto* core_env = core::mp::create_environment();
 		arch::mp::environment_set(core_env);
 	}
-	klogf("[core::mp] Bootstrapping node {}\n", this_cpu()->node_id);
+	::log.info("Bootstrapping node {}", this_cpu()->node_id);
 
 	//  Allocate a scheduler for the node
 	this_cpu()->scheduler = KHeap::make<Scheduler>();

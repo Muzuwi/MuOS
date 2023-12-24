@@ -1,39 +1,41 @@
 #include <Arch/x86_64/CPU.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
-#include <Debug/klogf.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include "Exception.hpp"
 
+CREATE_LOGGER("x86_64::exception", core::log::LogLevel::Debug);
+
 static void dump_registers(PtraceRegs* pt) {
-	kerrorf_static("rax={x} rbx={x} rcx={x} rdx={x}\n", pt->rax, pt->rbx, pt->rcx, pt->rdx);
-	kerrorf_static("rsi={x} rdi={x} rbp={x} rip={x}\n", pt->rsi, pt->rdi, pt->rbp, pt->rip);
-	kerrorf_static(" r8={x}  r9={x} r10={x} r11={x}\n", pt->r8, pt->r9, pt->r10, pt->r11);
-	kerrorf_static("r12={x} r13={x} r14={x} r15={x}\n", pt->r12, pt->r13, pt->r14, pt->r15);
-	kerrorf_static("rsp={x} rflags={x} cs={x} origin={x}\n", pt->rsp, pt->rflags, pt->cs, pt->origin);
-	kerrorf_static("gsbase={x}  kgsbase={x}\n", CPU::get_gs_base(), CPU::get_kernel_gs_base());
+	log.error("rax={x} rbx={x} rcx={x} rdx={x}", pt->rax, pt->rbx, pt->rcx, pt->rdx);
+	log.error("rsi={x} rdi={x} rbp={x} rip={x}", pt->rsi, pt->rdi, pt->rbp, pt->rip);
+	log.error(" r8={x}  r9={x} r10={x} r11={x}", pt->r8, pt->r9, pt->r10, pt->r11);
+	log.error("r12={x} r13={x} r14={x} r15={x}", pt->r12, pt->r13, pt->r14, pt->r15);
+	log.error("rsp={x} rflags={x} cs={x} origin={x}", pt->rsp, pt->rflags, pt->cs, pt->origin);
+	log.error("gsbase={x}  kgsbase={x}", CPU::get_gs_base(), CPU::get_kernel_gs_base());
 }
 
 Exception::Response Exception::handle_uncaught(PtraceRegs* pt, uint8 vector) {
 	const auto thread = this_cpu()->current_thread();
 
-	kerrorf_static("[Exception] Unhandled exception vector={x}\n", vector);
+	log.error("Unhandled exception vector={x}", vector);
 	dump_registers(pt);
 
 	if(!thread) {
-		kerrorf_static("Kernel Panic - unhandled exception in kernel mode\n");
+		log.fatal("Kernel Panic - unhandled exception in kernel mode");
 		return Response::KernelPanic;
 	}
 
 	if(thread->parent()->flags().privilege == Kernel) {
-		kerrorf_static("Kernel Panic - unhandled exception in kernel-mode process\n");
+		log.fatal("Kernel Panic - unhandled exception in kernel-mode process");
 		return Response::KernelPanic;
 	}
 
-	kerrorf_static("in thread(tid={}), process(pid={})\n", thread->tid(), thread->parent()->pid());
-	kerrorf_static("task_frame={x}, stack_frame={x}\n", Format::ptr(thread->irq_task_frame()), Format::ptr(pt));
-	kerrorf_static("Thread(tid={}): Uncaught exception - killing\n", thread->tid());
+	log.error("in thread(tid={}), process(pid={})", thread->tid(), thread->parent()->pid());
+	log.error("task_frame={x}, stack_frame={x}", Format::ptr(thread->irq_task_frame()), Format::ptr(pt));
+	log.error("Thread(tid={}): Uncaught exception - killing", thread->tid());
 	thread->set_state(TaskState::Leaving);
 	thread->reschedule();
 	this_cpu()->scheduler->schedule();
@@ -47,15 +49,15 @@ Exception::Response Exception::handle_page_fault(PtraceRegs* pt, uint8) {
 	dump_registers(pt);
 
 	if(!thread) {
-		kerrorf_static("Kernel Panic - page fault in kernel mode\n");
+		log.fatal("Kernel Panic - page fault in kernel mode");
 		return Response::KernelPanic;
 	}
 
 	if(thread->parent()->flags().privilege == User) {
-		kerrorf_static("Thread(tid={}): Page fault - killing\n", thread->tid());
+		log.error("Thread(tid={}): Page fault - killing", thread->tid());
 		return Response::TerminateThread;
 	}
 
-	kerrorf_static("Kernel Panic - page fault in kernel-mode process\n");
+	log.fatal("Kernel Panic - page fault in kernel-mode process");
 	return Exception::Response::KernelPanic;
 }

@@ -2,8 +2,8 @@
 #include <Arch/x86_64/APIC.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/MP/CpuBootstrapPage.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Debug/kassert.hpp>
-#include <Debug/klogf.hpp>
 #include <Kernel/ksleep.hpp>
 #include <Memory/PMM.hpp>
 #include <Process/Process.hpp>
@@ -18,29 +18,31 @@
 extern uint8 ap_bootstrap_start;
 extern uint8 ap_bootstrap_end;
 
+CREATE_LOGGER("x86_64::ap_boot", core::log::LogLevel::Debug);
+
 /**	Boot all APs available on the machine and walk them through to kernel mode
  */
 void arch::mp::boot_aps() {
-	klogf_static("[arch::x86_64] Bringing up other APs\n");
+	log.info("Bringing up other APs");
 
 	auto maybe_code_page = PMM::instance().allocate_lowmem();
 	if(!maybe_code_page.has_value()) {
-		kerrorf_static("[arch::x86_64] AP bringup error - code page lowmem alloc failed\n");
+		log.error("AP bringup error - code page lowmem alloc failed");
 		return;
 	}
 	auto maybe_data_page = PMM::instance().allocate_lowmem();
 	if(!maybe_data_page.has_value()) {
-		kerrorf_static("[arch::x86_64] AP bringup error - data page lowmem alloc failed\n");
+		log.error("AP bringup error - data page lowmem alloc failed");
 		return;
 	}
 
 	auto code_page = maybe_code_page.unwrap();
 	auto data_page = maybe_data_page.unwrap();
-	klogf("[arch::x86_64] Code={}, Data={}\n", code_page.get(), data_page.get());
+	log.debug("Code={}, Data={}", code_page.get(), data_page.get());
 
 	const uint8 ipi_vector = (uintptr_t)code_page.get() / 0x1000;
 	if(!(ipi_vector < 0xA0 || ipi_vector > 0xBF)) {
-		kerrorf_static("[arch::x86_64] AP bringup error - Allocated page lands on unsupported IPI vector\n");
+		log.error("AP bringup error - Allocated page lands on unsupported IPI vector");
 		return;
 	}
 
@@ -48,7 +50,7 @@ void arch::mp::boot_aps() {
 		if(ap_id == APIC::ap_bootstrap_id()) {
 			continue;
 		}
-		klogf_static("[arch::x86_64] Bringing up AP {x}...\n", ap_id);
+		log.info("Bringing up AP {x}...", ap_id);
 
 		memcpy(code_page.get_mapped(), static_cast<void const*>(&ap_bootstrap_start),
 		       &ap_bootstrap_end - &ap_bootstrap_start);
@@ -105,15 +107,15 @@ void arch::mp::boot_aps() {
 
 		while(*data_page.template as<uint64 volatile>() < 1)
 			;
-		klogf_static("[arch::x86_64] AP {x} started - waiting for long mode\n", ap_id);
+		log.debug("AP {x} started - waiting for long mode", ap_id);
 		while(*data_page.template as<uint64 volatile>() < 2)
 			;
-		klogf_static("[arch::x86_64] AP {x}: up\n", ap_id);
+		log.info("AP {x}: up", ap_id);
 		//  The AP is responsible for unmapping the lowmem pages - after entering long mode,
 		//  they should not attempt to access the bootstrap pages
 	}
 
-	klogf_static("[arch::x86_64] AP bringup completed\n");
+	log.info("AP bringup completed");
 	PMM::instance().free_lowmem(code_page);
 	PMM::instance().free_lowmem(data_page);
 }
@@ -138,6 +140,6 @@ extern "C" void _ap_entrypoint(arch::mp::ExecutionEnvironment* env, Thread* idle
 	idle_task->parent()->vmm().addrunmap(code_page.get());
 	idle_task->parent()->vmm().addrunmap(data_page.get());
 
-	klogf_static("[arch::x86_64] APIC node {x} up\n", env->apic_id);
+	log.debug("APIC node {x} up", env->apic_id);
 	core::mp::bootstrap_this_node(idle_task);
 }

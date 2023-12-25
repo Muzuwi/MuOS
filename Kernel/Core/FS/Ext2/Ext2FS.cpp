@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <Structs/KOptional.hpp>
 #include <SystemTypes.hpp>
+#include "LibGeneric/ScopeGuard.hpp"
 
 using namespace core::fs::ext2;
 CREATE_LOGGER("fs::ext2", core::log::LogLevel::Debug);
@@ -180,11 +181,13 @@ core::Error Ext2Fs::read_superblock() {
 	if(!table) {
 		return Error::NoMem;
 	}
+	DEFER {
+		KHeap::instance().chunk_free(table);
+	};
 	for(auto idx = 0; idx < table_size_in_blocks; ++idx) {
 		if(const auto err = read_block(m_BGDT_block + idx, reinterpret_cast<uint8*>(table), buf_size, m_block_size,
 		                               m_block_size * idx);
 		   err != Error::Ok) {
-			KHeap::instance().chunk_free(table);
 			return Error::IOFail;
 		}
 	}
@@ -192,14 +195,12 @@ core::Error Ext2Fs::read_superblock() {
 	for(auto i = 0; i < m_block_group_count; ++i) {
 		auto* bgd = KHeap::make<BlockGroupDescriptor>();
 		if(!bgd) {
-			KHeap::instance().chunk_free(table);
 			return Error::NoMem;
 		}
 		memcpy(bgd, reinterpret_cast<BlockGroupDescriptor*>(table) + i, sizeof(BlockGroupDescriptor));
 		m_block_group_descriptors.push_back(bgd);
 	}
 
-	KHeap::instance().chunk_free(table);
 	return core::Error::Ok;
 }
 
@@ -230,6 +231,10 @@ core::Error Ext2Fs::read_block(nblock_t block, uint8* dest, size_t destlen, size
 	if(!device_buffer) {
 		return core::Error::NoMem;
 	}
+	DEFER {
+		KHeap::instance().chunk_free(device_buffer);
+	};
+
 	auto* buf = static_cast<uint8*>(device_buffer);
 	size_t buflen = m_block_size;
 
@@ -237,13 +242,11 @@ core::Error Ext2Fs::read_block(nblock_t block, uint8* dest, size_t destlen, size
 	                              gen::move(how_many_device_blocks));
 	if(err != Error::Ok) {
 		::log.error("read_block failed: Reading from block device returned error ({})", static_cast<size_t>(err));
-		KHeap::instance().chunk_free(device_buffer);
 		return core::Error::IOFail;
 	}
 
 	memcpy(dest + offset, buf, n);
 
-	KHeap::instance().chunk_free(device_buffer);
 	return core::Error::Ok;
 }
 
@@ -270,17 +273,18 @@ core::Error Ext2Fs::read_inode(ninode_t ninode, Inode& output) {
 	if(!buf) {
 		return core::Error::NoMem;
 	}
+	DEFER {
+		KHeap::free(buf);
+	};
 
 	const auto err = read_block(inode_in_block, static_cast<uint8*>(buf), m_block_size, m_block_size, 0);
 	if(err != Error::Ok) {
-		KHeap::free(buf, m_block_size);
 		return core::Error::IOFail;
 	}
 
 	auto* inode_ptr = static_cast<uint8*>(buf);
 	inode_ptr += index_in_block * sizeof(Inode);
 	memcpy(&output, inode_ptr, sizeof(Inode));
-	KHeap::free(buf, m_block_size);
 
 	return core::Error::Ok;
 }
@@ -357,10 +361,12 @@ core::Error Ext2Fs::read_contents_singly_indirect(nblock_t nblock, uint8* dest, 
 	if(!block_pointers) {
 		return core::Error::NoMem;
 	}
+	DEFER {
+		KHeap::free(block_pointers);
+	};
 
 	const auto err = read_block(nblock, static_cast<uint8*>(block_pointers), m_block_size, m_block_size, 0);
 	if(err != Error::Ok) {
-		KHeap::free(block_pointers);
 		return core::Error::IOFail;
 	}
 
@@ -376,12 +382,10 @@ core::Error Ext2Fs::read_contents_singly_indirect(nblock_t nblock, uint8* dest, 
 			::log.warning(
 			        "BUG: Block {x} read operation at offset {x} with copy size {x} would overflow max buffer size of {x}",
 			        nblock, offset, copy_size, destlen);
-			KHeap::free(block_pointers);
 			return core::Error::InvalidArgument;
 		}
 
 		if(const auto err = read_block(data_block, dest, destlen, copy_size, offset); err != Error::Ok) {
-			KHeap::free(block_pointers);
 			return core::Error::IOFail;
 		}
 		written += copy_size;
@@ -389,7 +393,6 @@ core::Error Ext2Fs::read_contents_singly_indirect(nblock_t nblock, uint8* dest, 
 		bytes_left -= copy_size;
 	}
 
-	KHeap::free(block_pointers);
 	return core::Error::Ok;
 }
 
@@ -400,10 +403,12 @@ core::Error Ext2Fs::read_contents_doubly_indirect(nblock_t nblock, uint8* dest, 
 	if(!block_pointers) {
 		return core::Error::NoMem;
 	}
+	DEFER {
+		KHeap::free(block_pointers);
+	};
 
 	const auto err = read_block(nblock, static_cast<uint8*>(block_pointers), m_block_size, m_block_size, 0);
 	if(err != Error::Ok) {
-		KHeap::free(block_pointers);
 		return core::Error::IOFail;
 	}
 
@@ -418,12 +423,10 @@ core::Error Ext2Fs::read_contents_doubly_indirect(nblock_t nblock, uint8* dest, 
 			::log.error(
 			        "ERROR: During doubly indirect read: Reading single indirect block data pointer {x} returned an error ({})",
 			        data_block, static_cast<uintptr_t>(err));
-			KHeap::free(block_pointers);
 			return core::Error::IOFail;
 		}
 	}
 
-	KHeap::free(block_pointers);
 	return core::Error::Ok;
 }
 
@@ -434,10 +437,12 @@ core::Error Ext2Fs::read_contents_triply_indirect(nblock_t nblock, uint8* dest, 
 	if(!block_pointers) {
 		return core::Error::NoMem;
 	}
+	DEFER {
+		KHeap::free(block_pointers);
+	};
 
 	const auto err = read_block(nblock, static_cast<uint8*>(block_pointers), m_block_size, m_block_size, 0);
 	if(err != Error::Ok) {
-		KHeap::free(block_pointers);
 		return core::Error::IOFail;
 	}
 
@@ -452,75 +457,9 @@ core::Error Ext2Fs::read_contents_triply_indirect(nblock_t nblock, uint8* dest, 
 			::log.error(
 			        "ERROR: During triply indirect read: Reading doubly indirect block data pointer {x} returned an error ({})",
 			        data_block, static_cast<uintptr_t>(err));
-			KHeap::free(block_pointers);
 			return core::Error::IOFail;
 		}
 	}
 
-	KHeap::free(block_pointers);
 	return core::Error::Ok;
 }
-
-//  void Ext2FS::dump_inode(size_t inode_num) {
-//  	auto type_str = [](uint16_t type) -> char const* {
-//  		type &= 0xf000u;
-//  		switch(type) {
-//  			case FIFO: return "FIFO";
-//  			case CharacterDevice: return "CharacterDevice";
-//  			case Directory: return "Directory";
-//  			case BlockDevice: return "BlockDevice";
-//  			case Regular: return "Regular";
-//  			case SymbolicLink: return "SymbolicLink";
-//  			case Socket: return "Socket";
-//  			default: return "NaN";
-//  		}
-//  	};
-
-//  	auto& inode = *get_inode(inode_num);
-//  	if(inode_num == 2) {
-//  		std::cout << "Inode " << inode_num << ":\n";
-//  		std::cout << "Type: " << type_str(inode.m_type) << "/ " << std::hex << inode.m_type << std::dec << "\n";
-//  		std::cout << "UID/GID: " << inode.m_UID << "/" << inode.m_GID << "\n";
-//  		std::cout << "Created: " << inode.m_created << "\n";
-//  		std::cout << "Size: " << inode.get_size() << "\n";
-//  	}
-
-//  	if(inode.get_size() == 0) {
-//  		std::cout << "Inode does not have any contents\n";
-//  		return;
-//  	}
-
-//  	auto* content_buffer = new Buffer(inode.get_size());
-//  	assert(get_inode_contents(inode_num, *content_buffer));
-
-//  	if(inode.is_directory()) {
-//  		std::cout << "Entries:\n";
-
-//  		auto* dir_entry = content_buffer->raw_ptr<DirectoryEntry>();
-//  		unsigned i = 0;
-//  		while(content_buffer->contains(dir_entry)) {
-//  			if(dir_entry->m_type_or_name_length != 0) {
-//  				std::string str { (char*)(&dir_entry->m_name) };
-//  				str.resize(dir_entry->m_name_len_minor);
-
-//  				std::cout << "\t\t'/" << str << "' -- ";
-//  				std::cout << "Inode: " << dir_entry->m_inode << "\n";
-//  				if(i > 1 && dir_entry->m_inode != inode_num && !get_inode(dir_entry->m_inode)->is_directory()) {
-//  					dump_inode(dir_entry->m_inode);
-//  				}
-//  			}
-
-//  			i++;
-//  			dir_entry = reinterpret_cast<DirectoryEntry*>((uint64_t)dir_entry + dir_entry->m_entry_size);
-//  		}
-//  	} else {
-//  		const size_t size = content_buffer->size();
-//  		std::cout << "Inode is a file! File size: " << size << "\n";
-
-//  		std::ofstream file { "inode" + std::to_string(inode_num) };
-//  		file.write(content_buffer->raw_ptr<char>(), content_buffer->size());
-//  		file.close();
-//  	}
-
-//  	delete content_buffer;
-//  }

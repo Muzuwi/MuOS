@@ -232,6 +232,10 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		//  readblock ide@01f0:03f6 80000 1
 		//  readblock ide@01f0:03f6 7ffff 1
 		//  readblock ide@01f0:03f6 7ffff 2
+	} else if(command == "df") {
+		log.fatal("Crashing..");
+		int v = *(int*)(1 - 1);
+		(void)v;
 	}
 }
 

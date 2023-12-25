@@ -3,8 +3,8 @@
 #include <Core/Log/Logger.hpp>
 #include <Drivers/IDE/IDE.hpp>
 #include <LibGeneric/LockGuard.hpp>
+#include <Structs/KString.hpp>
 #include <SystemTypes.hpp>
-#include "LibFormat/Format.hpp"
 #include "LibGeneric/String.hpp"
 
 using namespace driver::ide;
@@ -13,12 +13,6 @@ CREATE_LOGGER("x86_64::ide", core::log::LogLevel::Debug);
 //  FIXME: Driver hangs when a request for partial out-of-bound
 //  sectors is sent (so for example, read of 2 sectors starting at
 //  `m_sectors-1`.
-
-void append_hex(gen::String& str, uint8 byte) {
-	char buf[8];
-	Format::format("{x}", buf, sizeof(buf), byte);
-	str += buf;
-}
 
 /**
  * 	Try initializing the specified drive.
@@ -35,7 +29,7 @@ bool IdeDevice::initialize() {
 	for(auto i = 0; i < 32; i++) {
 		gen::String current_line {};
 		for(auto j = 0; j < 16; j++) {
-			append_hex(current_line, m_identity[i * 16 + j]);
+			str::append_hex(current_line, m_identity[i * 16 + j]);
 		}
 		log.debug("{}", current_line.data());
 	}

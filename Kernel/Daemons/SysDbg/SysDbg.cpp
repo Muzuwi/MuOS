@@ -8,6 +8,7 @@
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include <stddef.h>
+#include <Structs/KString.hpp>
 #include "Core/Error/Error.hpp"
 #include "Core/IO/BlockDevice.hpp"
 #include "Core/Object/Object.hpp"
@@ -15,7 +16,7 @@
 #include "Memory/KHeap.hpp"
 #include "SystemTypes.hpp"
 
-CREATE_LOGGER("sysbdg", core::log::LogLevel::Debug);
+CREATE_LOGGER("sysdbg", core::log::LogLevel::Debug);
 
 constexpr bool is_numeric(char ch) {
 	return ch >= 0x30 && ch < 58;
@@ -219,11 +220,11 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		const size_t bytes_per_row = 16;
 
 		for(auto i = 0; i < buf_size; i += bytes_per_row) {
-			log.info("[kdebugger({})]: #{x} | ", thread->tid(), (blk_start * sector_size + i));
+			gen::String current_line {};
 			for(auto j = i; (j < (i + bytes_per_row)) && (j < buf_size); j++) {
-				log.info("{x} ", buffer[j]);
+				str::append_hex(current_line, buffer[j]);
 			}
-			log.info("");
+			log.info("[kdebugger({})]: #{x} | {}", thread->tid(), (blk_start * sector_size + i), current_line.data());
 		}
 
 		KHeap::instance().chunk_free(buffer);

@@ -1,7 +1,9 @@
+#include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/Serial.hpp>
 #include <Arch/x86_64/SerialConsole.hpp>
 #include <Core/Error/Error.hpp>
 #include <Core/Log/Logger.hpp>
+#include <LibFormat/Format.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
 static serialcon::SerialConsole s_console {};
@@ -34,8 +36,17 @@ static void write_message(core::log::LogLevel level, char const* message) {
 	Serial::write_debugger_str("\x1b[0m\n");
 }
 
+static void write_timestamp() {
+	char buf[16];
+	Format::format("+{}ms", buf, sizeof(buf), PIT::milliseconds());
+	Serial::write_debugger_str("\x1b[32m[");
+	Serial::write_debugger_str(buf);
+	Serial::write_debugger_str("]\x1b[0m");
+}
+
 void serialcon::SerialConsole::push(core::log::LogLevel level, const char* tag, const char* message) {
 	gen::LockGuard lg { m_lock };
+	write_timestamp();
 	write_tag(tag);
 	write_message(level, message);
 }

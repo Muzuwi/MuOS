@@ -1,31 +1,25 @@
 #pragma once
+#include <Debug/kpanic.hpp>
+#include <LibGeneric/Memory.hpp>
+#include <LibGeneric/Optional.hpp>
 
-#include "LibGeneric/Memory.hpp"
-#include "LibGeneric/Optional.hpp"
-#include "Structs/KOptional.hpp"
+/**	Object representing a value of T or ErrType.
+ */
 template<class T, class ErrType>
 class KResult {
-private:
-	enum class Result {
-		Value,
-		Error
-	};
-
-	union {
-		T _data;
-		ErrType _error;
-	} m_data;
-
-	Result m_result;
 public:
+	/**	Construct a KResult containing data
+	 */
 	constexpr explicit KResult(T data) noexcept
 	    : m_result(Result::Value) {
-		gen::construct_at(&m_data._data, data);
+		gen::construct_at(&m_data._data, gen::move(data));
 	}
 
+	/**	Construct a KResult containing an error
+	 */
 	constexpr explicit KResult(ErrType err_type) noexcept
 	    : m_result(Result::Error) {
-		gen::construct_at(&m_data._error, err_type);
+		gen::construct_at(&m_data._error, gen::move(err_type));
 	}
 
 	constexpr ~KResult() {
@@ -36,19 +30,64 @@ public:
 		}
 	}
 
-	T& unwrap() { return m_data._data; }
-
-	T const& unwrap() const { return m_data._data; }
-
-	KOptional<T> move() {
-		if(m_result == Result::Error) {
-			return { gen::nullopt };
+	/**	Return the contained data by moving it out of the KResult.
+	 *	This performs a safety check at runtime. If the KResult does not contain
+	 * 	a value, a kernel panic is triggered.
+	 * 	WARNING: The KResult is left in an unspecified state. Calling any methods on
+	 * 	the KResult after the move results in undefined behavior.
+	 */
+	constexpr T destructively_move_data() {
+		if(m_result != Result::Value) {
+			kpanic();
 		}
-		return KOptional<T>(m_data._data);
+		//  TODO: This could store the moved state to verify the object is not
+		//		  moved from at runtime.
+		return gen::move(m_data._data);
 	}
 
-	ErrType const& error() const { return m_data._error; }
+	/**	Return a copy of the contained data in the KResult.
+	 *	This performs a safety check at runtime. If the KResult does not contain
+	 * 	a value, a kernel panic is triggered.
+	 */
+	constexpr T data() const {
+		if(m_result != Result::Value) {
+			kpanic();
+		}
+		return m_data._data;
+	}
 
-	bool has_error() const { return m_result == Result::Error; }
-	bool has_value() const { return m_result == Result::Value; }
+	/**	Return a copy of the error contained in the KResult.
+	 *	This performs a safety check at runtime. If the KResult does not contain
+	 * 	an error, a kernel panic is triggered.
+	 */
+	constexpr ErrType error() const {
+		if(m_result != Result::Error) {
+			kpanic();
+		}
+		return m_data._error;
+	}
+
+	/**	Check if the KResult contains an error.
+	 */
+	[[nodiscard]] constexpr bool has_error() const { return m_result == Result::Error; }
+
+	/**	Check if the KResult contains a value.
+	 */
+	[[nodiscard]] constexpr bool has_value() const { return m_result == Result::Value; }
+
+	/**	Implicit bool conversion, equivalent to has_value()
+	 */
+	constexpr operator bool() const { return has_value(); }
+private:
+	enum class Result {
+		Value,
+		Error,
+	};
+
+	union {
+		T _data;
+		ErrType _error;
+	} m_data;
+
+	Result m_result;
 };

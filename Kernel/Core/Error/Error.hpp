@@ -1,4 +1,5 @@
 #pragma once
+#include <Structs/KResult.hpp>
 
 namespace core {
 	/**	Common kernel error enumeration.
@@ -9,4 +10,7 @@ namespace core {
 		IOFail,
 		InvalidArgument,
 	};
+
+	template<typename T>
+	using Result = KResult<T, Error>;
 }

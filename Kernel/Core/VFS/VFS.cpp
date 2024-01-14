@@ -5,6 +5,7 @@
 #include "Core/Log/Logger.hpp"
 #include "Core/VFS/Ramfs.hpp"
 #include "Debug/kpanic.hpp"
+#include "LibGeneric/Algorithm.hpp"
 #include "LibGeneric/Memory.hpp"
 #include "LibGeneric/String.hpp"
 #include "Memory/KHeap.hpp"
@@ -59,6 +60,9 @@ static auto pop_component(gen::String path) {
 	}
 	//	Keep adding component chars until a path separator
 	for(; idx < path.size(); ++idx) {
+		if(path[idx] == '/') {
+			break;
+		}
 		current_component += path[idx];
 	}
 	//  Leftover path values
@@ -82,6 +86,11 @@ static core::Result<KRefPtr<core::vfs::DirectoryEntry>> follow(KRefPtr<core::vfs
 	auto dentry = start;
 	do {
 		auto [component, new_path] = pop_component(path);
+		//  Weirdness probably
+		if(component.empty()) {
+			return core::Error::InvalidArgument;
+		}
+
 		//  One of the path components does not exist
 		if(dentry->type == core::vfs::DirectoryEntry::Type::Negative) {
 			//  FIXME: Add errors for FS
@@ -95,24 +104,37 @@ static core::Result<KRefPtr<core::vfs::DirectoryEntry>> follow(KRefPtr<core::vfs
 			return core::Error::InvalidArgument;
 		}
 
-		auto new_dentry = core::vfs::dentry_alloc();
-		if(!new_dentry) {
-			return core::Error::NoMem;
-		}
-		new_dentry->name = component;
+		//  Check if we already have a dentry cached for this component
+		auto it = gen::find_if(dentry->children,
+		                       [&component](KRefPtr<core::vfs::DirectoryEntry> p) { return p->name == component; });
 
-		auto directory_inode = static_cast<KRefPtr<core::vfs::Directory>>(dentry->inode);
-		auto result = directory_inode->lookup(component);
-		//  An error occured
-		if(!result) {
-			log.error("Directory inode lookup failed: {}", static_cast<size_t>(result.error()));
-			return core::Error::IOFail;
-		}
+		core::vfs::DirectoryEntry* new_dentry;
+		if(it != dentry->children.end()) {
+			//  Already cached
+			new_dentry = *it;
+			log.debug("Dentry cached: {}", component.data());
+		} else {
+			//  We have to reach out to the filesystem to lookup the inode
+			new_dentry = core::vfs::dentry_alloc();
+			if(!new_dentry) {
+				return core::Error::NoMem;
+			}
+			new_dentry->name = component;
 
-		new_dentry->inode = result.destructively_move_data();
-		//  No error, but the inode just doesn't exist
-		if(!new_dentry->inode) {
-			new_dentry->type = core::vfs::DirectoryEntry::Type::Negative;
+			auto directory_inode = static_cast<KRefPtr<core::vfs::Directory>>(dentry->inode);
+			auto result = directory_inode->lookup(component);
+			//  An error occured
+			if(!result) {
+				log.error("Directory inode lookup failed: {}", static_cast<size_t>(result.error()));
+				return core::Error::IOFail;
+			}
+
+			new_dentry->inode = result.destructively_move_data();
+			//  No error, but the inode just doesn't exist
+			if(!new_dentry->inode) {
+				new_dentry->type = core::vfs::DirectoryEntry::Type::Negative;
+			}
+			dentry->children.push_back(new_dentry);
 		}
 
 		dentry = new_dentry;
@@ -134,6 +156,16 @@ core::Error core::vfs::init() {
 
 	auto name = s_filesystem->name();
 	::log.info("Mounted root filesystem: {}", name.data());
+
+	auto maybe_dentry = follow(s_root, gen::String { "foo/bar/baz" });
+	if(!maybe_dentry) {
+		::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
+	}
+
+	auto maybe_dentry2 = follow(s_root, gen::String { "foo/bar/baz" });
+	if(!maybe_dentry2) {
+		::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
+	}
 
 	return core::Error::Ok;
 }

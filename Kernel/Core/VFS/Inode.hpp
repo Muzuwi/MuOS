@@ -37,6 +37,8 @@ namespace core::vfs {
 		} type;
 		//  Inode
 		KRefPtr<Inode> inode;
+		//  Children dentries of the dentry
+		gen::List<KRefPtr<DirectoryEntry>> children;
 	};
 
 	//  ======================================

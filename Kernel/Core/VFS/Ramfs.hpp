@@ -16,8 +16,12 @@ class RamfsDirectory : public core::vfs::Directory {
 public:
 	RamfsDirectory() = default;
 
-	core::Result<KRefPtr<Inode>> lookup(gen::String) override {
-		//  stfu
+	core::Result<KRefPtr<Inode>> lookup(gen::String name) override {
+		if(name == "foo" || name == "bar") {
+			return KHeap::make<RamfsDirectory>();
+		} else if(name == "baz") {
+			return KHeap::make<RamfsFile>();
+		}
 		return core::Error::IOFail;
 	}
 };

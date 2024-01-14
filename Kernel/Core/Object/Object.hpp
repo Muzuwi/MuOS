@@ -7,6 +7,7 @@
 namespace core::obj {
 	enum class ObjectType : uint64 {
 		BlockDevice = 0,
+		FileSystem
 	};
 
 	class KObject {

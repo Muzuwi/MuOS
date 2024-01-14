@@ -10,14 +10,14 @@ class KResult {
 public:
 	/**	Construct a KResult containing data
 	 */
-	constexpr explicit KResult(T data) noexcept
+	constexpr KResult(T data) noexcept
 	    : m_result(Result::Value) {
 		gen::construct_at(&m_data._data, gen::move(data));
 	}
 
 	/**	Construct a KResult containing an error
 	 */
-	constexpr explicit KResult(ErrType err_type) noexcept
+	constexpr KResult(ErrType err_type) noexcept
 	    : m_result(Result::Error) {
 		gen::construct_at(&m_data._error, gen::move(err_type));
 	}

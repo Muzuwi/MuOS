@@ -10,6 +10,7 @@
 #include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
 #include "Core/Error/Error.hpp"
 #include "Core/Log/Logger.hpp"
+#include "Core/VFS/VFS.hpp"
 #include "Daemons/Kbd/Kbd.hpp"
 #include "Daemons/SysDbg/SysDbg.hpp"
 #include "Daemons/Testd/Testd.hpp"
@@ -69,6 +70,7 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 [[noreturn, maybe_unused]] void core::start::late_init() {
 	//  Initialize drivers
 	(void)driver::ide::init();
+	(void)vfs::init();
 
 	//  Spawn the kernel serial debugger
 	auto serial_dbg =

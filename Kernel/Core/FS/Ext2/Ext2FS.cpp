@@ -72,6 +72,9 @@ core::Error core::fs::ext2::Ext2Fs::probe(core::io::BlockDevice* bdev) {
 	::log.debug("RootInode: Size: {x}", inode.get_size());
 
 	auto* buf = static_cast<uint8*>(KHeap::instance().chunk_alloc(inode.get_size()));
+	DEFER {
+		KHeap::instance().chunk_free(buf);
+	};
 	if(!buf) {
 		return core::Error::NoMem;
 	}
@@ -79,59 +82,12 @@ core::Error core::fs::ext2::Ext2Fs::probe(core::io::BlockDevice* bdev) {
 		return Error::IOFail;
 	}
 
-	KOptional<ninode_t> where_sparse {};
-
 	auto* ptr = buf;
 	while(ptr < (buf + inode.get_size())) {
 		auto* dentry = reinterpret_cast<DirectoryEntry*>(ptr);
 		::log.debug("/{} @ inode {x}", dentry->name, dentry->inode);
 		ptr += dentry->entry_size;
-		if(gen::String { dentry->name } == "sparse.img") {
-			where_sparse = dentry->inode;
-		}
 	}
-
-	if(!where_sparse.has_value()) {
-		return Error::IOFail;
-	}
-
-	if(const auto err = fs->read_inode(where_sparse.unwrap(), inode); err != Error::Ok) {
-		return Error::IOFail;
-	}
-	::log.debug("Sparse - Type: {x}", type_str(inode.type));
-	::log.debug("Sparse - UID={} GID={}", inode.UID, inode.GID);
-	::log.debug("Sparse - Created: {x}", inode.created);
-	::log.debug("Sparse - Size: {x}", inode.get_size());
-	::log.debug("Sparse - Direct Block Pointers:");
-	for(auto i = 0; i < 12; ++i) {
-		::log.debug("{x} ", inode.direct_block_pointers[i]);
-	}
-	::log.debug("");
-
-	::log.debug("Sparse - Singly Indirect Block Pointer {x}:", inode.singly_indirect_block_ptr);
-	::log.debug("Sparse - Doubly Indirect Block Pointer {x}:", inode.doubly_indirect_block_ptr);
-	::log.debug("Sparse - Triply Indirect Block Pointer {x}:", inode.triply_indirect_block_ptr);
-	if(inode.singly_indirect_block_ptr != 0) {
-		const size_t pointers_per_block = fs->m_block_size / sizeof(uint32);
-		auto* block_pointers = KHeap::allocate(fs->m_block_size);
-		if(!block_pointers) {
-			return core::Error::NoMem;
-		}
-
-		const auto err = fs->read_block(inode.singly_indirect_block_ptr, static_cast<uint8*>(block_pointers),
-		                                fs->m_block_size, fs->m_block_size, 0);
-		if(err != Error::Ok) {
-			KHeap::free(block_pointers);
-			return core::Error::IOFail;
-		}
-
-		for(size_t i = 0; i < pointers_per_block; ++i) {
-			const uint32 data_block = *(static_cast<uint32*>(block_pointers) + i);
-			::log.debug("{x} ", data_block);
-		}
-		KHeap::free(block_pointers);
-	}
-
 	return core::Error::Ok;
 }
 

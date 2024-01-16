@@ -152,6 +152,12 @@ static core::Result<KRefPtr<core::vfs::DirectoryEntry>> follow(KRefPtr<core::vfs
 	return dentry;
 }
 
+/**	Lookup a file or directory in the root filesystem
+ */
+core::Result<KRefPtr<core::vfs::DirectoryEntry>> core::vfs::lookup(gen::String path) {
+	return follow(s_root, path);
+}
+
 core::Error core::vfs::init() {
 	core::vfs::FileSystem* rootfs = nullptr;
 	(void)core::obj::for_each_object_of_type(core::obj::ObjectType::FileSystem, [&rootfs](core::obj::KObject* obj) {
@@ -174,33 +180,6 @@ core::Error core::vfs::init() {
 	s_root = result.destructively_move_data();
 	auto name = s_filesystem->name();
 	::log.info("Mounted root filesystem: {}", name.data());
-
-	auto maybe_dentry = follow(s_root, gen::String { "foo/bar/xd" });
-	if(!maybe_dentry) {
-		::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
-	}
-
-	//  s_filesystem = KHeap::make<Ramfs>();
-
-	//  auto result = s_filesystem->mount();
-	//  if(!result) {
-	//  	::log.fatal("Mounting root filesystem failed: {}", static_cast<size_t>(result.error()));
-	//  	kpanic();
-	//  }
-	//  s_root = result.destructively_move_data();
-
-	//  auto name = s_filesystem->name();
-	//  ::log.info("Mounted root filesystem: {}", name.data());
-
-	//  auto maybe_dentry = follow(s_root, gen::String { "foo/bar/baz" });
-	//  if(!maybe_dentry) {
-	//  	::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
-	//  }
-
-	//  auto maybe_dentry2 = follow(s_root, gen::String { "foo/bar/baz" });
-	//  if(!maybe_dentry2) {
-	//  	::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
-	//  }
 
 	return core::Error::Ok;
 }

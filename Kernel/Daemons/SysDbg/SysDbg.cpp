@@ -14,6 +14,7 @@
 #include "Core/Object/Object.hpp"
 #include "Core/Object/Tree.hpp"
 #include "Core/VFS/Inode.hpp"
+#include "Core/VFS/VFS.hpp"
 #include "Memory/KHeap.hpp"
 #include "SystemTypes.hpp"
 
@@ -150,6 +151,26 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 			auto name = bdev->name();
 			log.info("kdebugger({}):  - {}", thread->tid(), name.data());
 		});
+	} else if(command == "vfsfollow") {
+		//  No parameters passed
+		if(ptr == args.end()) {
+			return;
+		}
+		gen::String name = *ptr;
+
+		auto result = core::vfs::lookup(name);
+		if(!result) {
+			log.error("Path lookup failed: {}", static_cast<size_t>(result.error()));
+		} else {
+			auto dentry = result.destructively_move_data();
+			auto name = gen::String(dentry->name);
+			log.debug("Got dentry with name: {} state: {}", name.data(),
+			          dentry->type == core::vfs::DirectoryEntry::Type::Negative ? "Negative" : "Positive");
+			if(dentry->inode) {
+				log.debug("Inode type: {}", dentry->inode->type() == core::vfs::InodeType::File ? "File" : "Directory");
+			}
+		}
+
 	} else if(command == "readblock") {
 		//  No parameters passed
 		if(ptr == args.end()) {

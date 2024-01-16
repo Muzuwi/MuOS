@@ -7,4 +7,6 @@ namespace core::vfs {
 
 	DirectoryEntry* dentry_alloc();
 	void dentry_free(DirectoryEntry*);
+
+	core::Result<KRefPtr<core::vfs::DirectoryEntry>> lookup(gen::String path);
 }

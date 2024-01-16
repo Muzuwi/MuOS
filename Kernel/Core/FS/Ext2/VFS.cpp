@@ -14,13 +14,29 @@ using namespace core::fs::ext2;
 
 CREATE_LOGGER("fs::ext2::vfs", core::log::LogLevel::Debug);
 
-core::Result<KRefPtr<VfsDirectory>> Ext2Fs::make_vfs_directory_for_inode(ninode_t inode) {
-	//  FIXME: No sanity checks if inode is actually a directory
-	auto vfsdir = KHeap::make<VfsDirectory>(this, inode);
-	if(!vfsdir) {
-		return core::Error::NoMem;
+core::Result<KRefPtr<core::vfs::Inode>> Ext2Fs::make_vfs_inode(ninode_t ninode) {
+	Inode inode;
+	const auto err = read_inode(ninode, inode);
+	if(err != Error::Ok) {
+		::log.error("Reading inode failed, error: {}", static_cast<uintptr_t>(err));
+		return core::Error::IOFail;
 	}
-	return vfsdir;
+
+	if(inode.is_directory()) {
+		auto vfsdir = KHeap::make<VfsDirectory>(this, ninode);
+		if(!vfsdir) {
+			return core::Error::NoMem;
+		}
+		return vfsdir;
+	} else if(inode.is_regular_file()) {
+		auto vfsfile = KHeap::make<VfsFile>(this, ninode);
+		if(!vfsfile) {
+			return core::Error::NoMem;
+		}
+		return vfsfile;
+	}
+	::log.error("Unsupported ext2 inode type for VFS: {}", inode.type);
+	return core::Error::InvalidArgument;
 }
 
 core::Result<KRefPtr<core::vfs::Inode>> Ext2Fs::directory_op_lookup(ninode_t ninode, gen::String name) {
@@ -49,11 +65,7 @@ core::Result<KRefPtr<core::vfs::Inode>> Ext2Fs::directory_op_lookup(ninode_t nin
 		::log.debug("Child ./{} @ inode {x}", dentry->name, dentry->inode);
 		//  We found our boy
 		if(dentry->name == name) {
-			auto result = make_vfs_directory_for_inode(dentry->inode);
-			if(!result) {
-				return result.error();
-			}
-			return result.destructively_move_data();
+			return make_vfs_inode(dentry->inode);
 		}
 		ptr += dentry->entry_size;
 	}
@@ -72,7 +84,7 @@ core::Result<KRefPtr<core::vfs::DirectoryEntry>> Ext2Fs::mount() {
 
 	dentry->name = "/";
 	dentry->type = vfs::DirectoryEntry::Type::Positive;
-	auto result = make_vfs_directory_for_inode(2);
+	auto result = make_vfs_inode(2);
 	if(!result) {
 		core::vfs::dentry_free(dentry);
 		return result.error();

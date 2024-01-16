@@ -35,7 +35,7 @@ namespace core::fs::ext2 {
 		}
 
 		core::Result<KRefPtr<core::vfs::DirectoryEntry>> mount() override;
-		core::Result<KRefPtr<VfsDirectory>> make_vfs_directory_for_inode(ninode_t);
+		core::Result<KRefPtr<core::vfs::Inode>> make_vfs_inode(ninode_t); 
 
 		core::Result<KRefPtr<core::vfs::Inode>> directory_op_lookup(size_t inode, gen::String name);
 	private:

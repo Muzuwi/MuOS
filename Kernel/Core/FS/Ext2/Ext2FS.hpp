@@ -3,6 +3,7 @@
 #include <SystemTypes.hpp>
 #include "BlockGroupDescriptor.hpp"
 #include "Core/Error/Error.hpp"
+#include "Core/FS/Ext2/VFS.hpp"
 #include "Core/IO/BlockDevice.hpp"
 #include "Core/VFS/Inode.hpp"
 #include "Inode.hpp"
@@ -34,6 +35,9 @@ namespace core::fs::ext2 {
 		}
 
 		core::Result<KRefPtr<core::vfs::DirectoryEntry>> mount() override;
+		core::Result<KRefPtr<VfsDirectory>> make_vfs_directory_for_inode(ninode_t);
+
+		core::Result<KRefPtr<core::vfs::Inode>> directory_op_lookup(size_t inode, gen::String name);
 	private:
 		core::io::BlockDevice* m_bdev { nullptr };
 		Superblock* m_superblock { nullptr };

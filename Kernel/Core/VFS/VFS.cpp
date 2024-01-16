@@ -140,6 +140,13 @@ static core::Result<KRefPtr<core::vfs::DirectoryEntry>> follow(KRefPtr<core::vfs
 
 		dentry = new_dentry;
 		path = new_path;
+
+		//  This handles the case where the missing component is last in the path
+		//  So: /exist1/exist2/doesnotexist
+		if(dentry->type == core::vfs::DirectoryEntry::Type::Negative) {
+			//  FIXME: Add errors for FS
+			return core::Error::InvalidArgument;
+		}
 	} while(!path.empty());
 
 	return dentry;
@@ -168,7 +175,7 @@ core::Error core::vfs::init() {
 	auto name = s_filesystem->name();
 	::log.info("Mounted root filesystem: {}", name.data());
 
-	auto maybe_dentry = follow(s_root, gen::String { "foo/bar/baz" });
+	auto maybe_dentry = follow(s_root, gen::String { "foo/bar/xd" });
 	if(!maybe_dentry) {
 		::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
 	}

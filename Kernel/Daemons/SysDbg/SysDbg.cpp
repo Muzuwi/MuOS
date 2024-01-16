@@ -13,6 +13,7 @@
 #include "Core/IO/BlockDevice.hpp"
 #include "Core/Object/Object.hpp"
 #include "Core/Object/Tree.hpp"
+#include "Core/VFS/Inode.hpp"
 #include "Memory/KHeap.hpp"
 #include "SystemTypes.hpp"
 
@@ -139,6 +140,13 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		log.info("kdebugger({}): Block devices:", thread->tid());
 		(void)core::obj::for_each_object_of_type(core::obj::ObjectType::BlockDevice, [thread](core::obj::KObject* obj) {
 			auto* bdev = reinterpret_cast<core::io::BlockDevice*>(obj);
+			auto name = bdev->name();
+			log.info("kdebugger({}):  - {}", thread->tid(), name.data());
+		});
+	} else if(command == "dfs") {
+		log.info("kdebugger({}): Filesystems:", thread->tid());
+		(void)core::obj::for_each_object_of_type(core::obj::ObjectType::FileSystem, [thread](core::obj::KObject* obj) {
+			auto* bdev = static_cast<core::vfs::FileSystem*>(obj);
 			auto name = bdev->name();
 			log.info("kdebugger({}):  - {}", thread->tid(), name.data());
 		});

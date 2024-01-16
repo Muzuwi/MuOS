@@ -75,7 +75,6 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 [[noreturn, maybe_unused]] void core::start::late_init() {
 	//  Initialize drivers
 	(void)driver::ide::init();
-	(void)vfs::init();
 
 	//  Initialize FS
 	gen::List<core::io::BlockDevice*> blks {};
@@ -90,6 +89,9 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 			::log.error("Probing failed: error {}", static_cast<uintptr_t>(err));
 		}
 	}
+
+	//  Mount root filesystem
+	(void)vfs::init();
 
 	//  Spawn the kernel serial debugger
 	auto serial_dbg =

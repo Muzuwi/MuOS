@@ -3,6 +3,7 @@
 #include <Debug/kassert.hpp>
 #include "Core/Error/Error.hpp"
 #include "Core/Log/Logger.hpp"
+#include "Core/Object/Tree.hpp"
 #include "Core/VFS/Ramfs.hpp"
 #include "Debug/kpanic.hpp"
 #include "LibGeneric/Algorithm.hpp"
@@ -145,15 +146,25 @@ static core::Result<KRefPtr<core::vfs::DirectoryEntry>> follow(KRefPtr<core::vfs
 }
 
 core::Error core::vfs::init() {
-	s_filesystem = KHeap::make<Ramfs>();
+	core::vfs::FileSystem* rootfs = nullptr;
+	(void)core::obj::for_each_object_of_type(core::obj::ObjectType::FileSystem, [&rootfs](core::obj::KObject* obj) {
+		if(!rootfs) {
+			rootfs = static_cast<core::vfs::FileSystem*>(obj);
+		}
+	});
 
+	if(!rootfs) {
+		::log.fatal("No root filesystem available - panic!");
+		kpanic();
+	}
+
+	s_filesystem = rootfs;
 	auto result = s_filesystem->mount();
 	if(!result) {
 		::log.fatal("Mounting root filesystem failed: {}", static_cast<size_t>(result.error()));
 		kpanic();
 	}
 	s_root = result.destructively_move_data();
-
 	auto name = s_filesystem->name();
 	::log.info("Mounted root filesystem: {}", name.data());
 
@@ -162,10 +173,27 @@ core::Error core::vfs::init() {
 		::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
 	}
 
-	auto maybe_dentry2 = follow(s_root, gen::String { "foo/bar/baz" });
-	if(!maybe_dentry2) {
-		::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
-	}
+	//  s_filesystem = KHeap::make<Ramfs>();
+
+	//  auto result = s_filesystem->mount();
+	//  if(!result) {
+	//  	::log.fatal("Mounting root filesystem failed: {}", static_cast<size_t>(result.error()));
+	//  	kpanic();
+	//  }
+	//  s_root = result.destructively_move_data();
+
+	//  auto name = s_filesystem->name();
+	//  ::log.info("Mounted root filesystem: {}", name.data());
+
+	//  auto maybe_dentry = follow(s_root, gen::String { "foo/bar/baz" });
+	//  if(!maybe_dentry) {
+	//  	::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
+	//  }
+
+	//  auto maybe_dentry2 = follow(s_root, gen::String { "foo/bar/baz" });
+	//  if(!maybe_dentry2) {
+	//  	::log.error("Follow inode failed: {}", static_cast<size_t>(maybe_dentry.error()));
+	//  }
 
 	return core::Error::Ok;
 }

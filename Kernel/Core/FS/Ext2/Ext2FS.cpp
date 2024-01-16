@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <Structs/KOptional.hpp>
 #include <SystemTypes.hpp>
+#include "Core/Object/Tree.hpp"
 #include "LibGeneric/ScopeGuard.hpp"
 
 using namespace core::fs::ext2;
@@ -88,7 +89,8 @@ core::Error core::fs::ext2::Ext2Fs::probe(core::io::BlockDevice* bdev) {
 		::log.debug("/{} @ inode {x}", dentry->name, dentry->inode);
 		ptr += dentry->entry_size;
 	}
-	return core::Error::Ok;
+
+	return core::obj::attach(fs);
 }
 
 core::Error Ext2Fs::read_superblock() {

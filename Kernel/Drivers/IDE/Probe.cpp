@@ -79,8 +79,7 @@ static void ide_probe(uint16 disk_control, uint16 device_control, driver::ide::D
 		log.error("probe: BlockDevice object attach failed, core::Error: {x}", static_cast<size_t>(err));
 		return;
 	}
-	auto name = blk->name();
-	log.info("probe: Successfully attached block device '{}'", name.data());
+	log.info("probe: Successfully attached block device '{}'", blk->name());
 }
 
 /**

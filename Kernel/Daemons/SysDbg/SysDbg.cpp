@@ -139,8 +139,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		log.info("kdebugger({}): Block devices:", thread->tid());
 		(void)core::obj::for_each_object_of_type(core::obj::ObjectType::BlockDevice, [thread](core::obj::KObject* obj) {
 			auto* bdev = reinterpret_cast<core::io::BlockDevice*>(obj);
-			auto name = bdev->name();
-			log.info("kdebugger({}):  - {}", thread->tid(), name.data());
+			log.info("kdebugger({}):  - {}", thread->tid(), bdev->name());
 		});
 	} else if(command == "readblock") {
 		//  No parameters passed
@@ -184,7 +183,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 			                                         }
 		                                         });
 		if(!context.blk) {
-			log.error("kdebugger({}): could not find blk with name: {}", thread->tid(), name.data());
+			log.error("kdebugger({}): could not find blk with name: {}", thread->tid(), name);
 			return;
 		}
 
@@ -215,7 +214,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 			return;
 		}
 
-		log.info("{} {} {}", context.blk_name.data(), blk_start, blk_count);
+		log.info("{} {} {}", context.blk_name, blk_start, blk_count);
 
 		const size_t bytes_per_row = 16;
 
@@ -224,7 +223,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 			for(auto j = i; (j < (i + bytes_per_row)) && (j < buf_size); j++) {
 				str::append_hex(current_line, buffer[j]);
 			}
-			log.info("[kdebugger({})]: #{x} | {}", thread->tid(), (blk_start * sector_size + i), current_line.data());
+			log.info("[kdebugger({})]: #{x} | {}", thread->tid(), (blk_start * sector_size + i), current_line);
 		}
 
 		KHeap::instance().chunk_free(buffer);
@@ -269,7 +268,7 @@ void SysDbg::sysdbg_thread() {
 					if(!parameters.empty()) {
 						int i = 0;
 						for(auto& param : parameters) {
-							log.info("arg[{}] = '{}'", i++, param.data());
+							log.info("arg[{}] = '{}'", i++, param);
 						}
 
 						const auto start = PIT::milliseconds();
@@ -299,9 +298,9 @@ void SysDbg::sysdbg_thread() {
 
 			log.info("kdebugger({}) #: ", Thread::current()->tid());
 			for(auto& param : parameters) {
-				log.info("{} ", param.data());
+				log.info("{} ", param);
 			}
-			log.info("{}", current.data());
+			log.info("{}", current);
 		}
 	}
 }
@@ -320,7 +319,7 @@ void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth) {
 	};
 
 	print_header();
-	log.info("Name {{'{}'}}", process->m_simple_name.data());
+	log.info("Name {{'{}'}}", process->m_simple_name);
 	print_header();
 	log.info("PML4 {{{}}}", Format::ptr(process->vmm().pml4().get()));
 	print_header();

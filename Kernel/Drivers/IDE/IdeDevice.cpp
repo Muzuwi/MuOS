@@ -31,7 +31,7 @@ bool IdeDevice::initialize() {
 		for(auto j = 0; j < 16; j++) {
 			str::append_hex(current_line, m_identity[i * 16 + j]);
 		}
-		log.debug("{}", current_line.data());
+		log.debug("{}", current_line);
 	}
 
 	auto supported_addressing = detect_addressing();

@@ -1,5 +1,6 @@
 #pragma once
 #include <Core/Error/Error.hpp>
+#include <Core/Log/Formatters.hpp>
 #include <LibFormat/Format.hpp>
 #include <LibGeneric/Algorithm.hpp>
 #include <LibGeneric/LockGuard.hpp>

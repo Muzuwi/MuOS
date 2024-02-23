@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'MuOS'
-copyright = '2023, Muzuwi'
+copyright = '2024, Muzuwi'
 author = 'Muzuwi'
 
 # -- General configuration ---------------------------------------------------

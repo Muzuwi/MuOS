@@ -189,12 +189,12 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 
 		size_t sector_size = 0;
 		if(const auto err = context.blk->blksize(sector_size); err != core::Error::Ok) {
-			log.error("kdebugger({}): could not read sector size, error={}", thread->tid(), static_cast<size_t>(err));
+			log.error("kdebugger({}): could not read sector size, error={}", thread->tid(), err);
 			return;
 		}
 		size_t sector_count = 0;
 		if(const auto err = context.blk->blkcount(sector_count); err != core::Error::Ok) {
-			log.error("kdebugger({}): could not read sector count, error={}", thread->tid(), static_cast<size_t>(err));
+			log.error("kdebugger({}): could not read sector count, error={}", thread->tid(), err);
 			return;
 		}
 
@@ -210,7 +210,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		if(const auto err = context.blk->read(gen::move(buffer), gen::move(buf_size), gen::move(blk_start),
 		                                      gen::move(blk_count));
 		   err != core::Error::Ok) {
-			log.error("kdebugger({}): could not read sectors, error={}", thread->tid(), static_cast<size_t>(err));
+			log.error("kdebugger({}): could not read sectors, error={}", thread->tid(), err);
 			return;
 		}
 

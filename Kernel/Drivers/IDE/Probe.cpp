@@ -76,7 +76,7 @@ static void ide_probe(uint16 disk_control, uint16 device_control, driver::ide::D
 	});
 
 	if(const auto err = core::obj::attach(blk); err != core::Error::Ok) {
-		log.error("probe: BlockDevice object attach failed, core::Error: {x}", static_cast<size_t>(err));
+		log.error("probe: BlockDevice object attach failed, core::Error: {}", err);
 		return;
 	}
 	log.info("probe: Successfully attached block device '{}'", blk->name());

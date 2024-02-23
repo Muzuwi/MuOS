@@ -30,7 +30,7 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 	//  init'd as soon as possible
 	if(const auto err = arch::platform_early_init(); err != core::Error::Ok) {
 		//  FIXME: Better error handling, break into debugger?
-		::log.fatal("Platform early init failed with error code: {}", static_cast<size_t>(err));
+		::log.fatal("Platform early init failed with error code: {}", err);
 		kpanic();
 	}
 	::log.info("Platform early init done");
@@ -47,7 +47,7 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 	//  Handles further platform initialization tasks
 	if(const auto err = arch::platform_init(); err != core::Error::Ok) {
 		//  FIXME: Better error handling, break into debugger?
-		::log.fatal("Platform init failed with error code: {}", static_cast<size_t>(err));
+		::log.fatal("Platform init failed with error code: {}", err);
 		kpanic();
 	}
 	::log.info("Platform init done");

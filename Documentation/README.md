@@ -6,6 +6,7 @@ Latest build of the documentation is automatically deployed [here](https://muos.
 ## Requirements
 
 - Sphinx
+- python-myst-parser
 
 ## Building the docs
 

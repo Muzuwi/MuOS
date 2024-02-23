@@ -5,7 +5,10 @@ MuOS Documentation
    :maxdepth: 2
    :caption: Contents:
 
-
+   dev_setup
+   kernel_build
+   qemu_run
+   baremetal_run
 
 Indices and tables
 ==================

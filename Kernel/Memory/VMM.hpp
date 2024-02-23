@@ -22,7 +22,7 @@ class VMM {
 	PhysPtr<PML4> m_pml4;
 	List<SharedPtr<VMapping>> m_mappings;
 	List<PAllocation> m_kernel_pages;
-	void* m_next_kernel_stack_at;//  FIXME/SMP: Lock this
+	void* m_next_kernel_stack_at;
 	void* m_next_anon_vm_at;
 	gen::Spinlock m_vm_lock;
 

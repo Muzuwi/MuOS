@@ -28,6 +28,9 @@ jobs:
         id: pages
         uses: actions/configure-pages@v3
 
+      - name: Install documentation dependencies
+        run: pip3 install -r Documentation/requirements.txt
+
       - uses: ammaraskar/sphinx-action@master
         with:
           docs-folder: "Documentation/"

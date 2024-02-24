@@ -33,7 +33,7 @@ jobs:
 
       - uses: ammaraskar/sphinx-action@master
         with:
-          pre-build-command: pip3 install -r Documentation/requirements.txt
+          pre-build-command: "pip3 install -r Documentation/requirements.txt"
           docs-folder: "Documentation/"
 
       - name: Upload pages artifact

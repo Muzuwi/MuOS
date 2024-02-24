@@ -31,10 +31,8 @@ jobs:
       - name: Install documentation dependencies
         run: pip3 install -r Documentation/requirements.txt
 
-      - uses: ammaraskar/sphinx-action@master
-        with:
-          pre-build-command: "pip3 install -r Documentation/requirements.txt"
-          docs-folder: "Documentation/"
+      - name: Build documentation pges
+        run: make -C Documentation/ html
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v1

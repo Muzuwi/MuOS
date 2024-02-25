@@ -6,14 +6,9 @@
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
+#include "Arch/Interface.hpp"
 #include "LibGeneric/SharedPtr.hpp"
 #include "LibGeneric/String.hpp"
-
-[[noreturn]] static void _idle_thread() {
-	while(true) {
-		asm volatile("hlt");
-	}
-}
 
 void Scheduler::tick() {
 	auto* thread = this_cpu()->current_thread();
@@ -70,7 +65,7 @@ void Scheduler::interrupt_return_common() {
 Thread* Scheduler::create_idle_task(size_t identifier) {
 	char s_buffer[64] {};
 	Format::format("idle[{}]", s_buffer, sizeof(s_buffer), identifier);
-	auto thread = Process::create_with_main_thread(gen::String { s_buffer }, Process::kerneld(), _idle_thread);
+	auto thread = Process::create_with_main_thread(gen::String { s_buffer }, Process::kerneld(), platform_idle);
 	return thread.get();
 }
 

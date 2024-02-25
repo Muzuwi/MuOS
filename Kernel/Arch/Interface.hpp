@@ -12,6 +12,12 @@ extern "C" {
 	 *  jumping to core::start::start() to progress the kernel boot.
 	 */
 	[[maybe_unused]] [[noreturn]] void platform_boot_entry(void*);
+
+	/**	Platform-specific idle function.
+	 *
+	 * 	This is the function that runs in all idle tasks (on each CPU).
+	 */
+	[[maybe_unused]] [[noreturn]] void platform_idle();
 }
 
 namespace arch {

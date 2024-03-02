@@ -1,8 +1,10 @@
+#include <Arch/x86_64/MP/ExecutionEnvironment.hpp>
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/Serial.hpp>
 #include <Arch/x86_64/SerialConsole.hpp>
 #include <Core/Error/Error.hpp>
 #include <Core/Log/Logger.hpp>
+#include <Core/MP/MP.hpp>
 #include <LibFormat/Format.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
@@ -36,17 +38,21 @@ static void write_message(core::log::LogLevel level, char const* message) {
 	Serial::write_debugger_str("\x1b[0m\n");
 }
 
-static void write_timestamp() {
-	char buf[16];
-	Format::format("+{}ms", buf, sizeof(buf), PIT::milliseconds());
-	Serial::write_debugger_str("\x1b[32m[");
+static void write_extras() {
+	char buf[24];
+	Format::format("\x1b[32m[+{}ms]", buf, sizeof(buf), PIT::milliseconds());
 	Serial::write_debugger_str(buf);
-	Serial::write_debugger_str("]\x1b[0m");
+	//  During early boot, we might not have GS base configured yet, and this_execution_environment
+	//  would deref a nullptr.
+	if(CPU::get_gs_base()) {
+		Format::format("[~{}]\x1b[0m", buf, sizeof(buf), this_execution_environment()->apic_id);
+		Serial::write_debugger_str(buf);
+	}
 }
 
 void serialcon::SerialConsole::push(core::log::LogLevel level, const char* tag, const char* message) {
 	gen::LockGuard lg { m_lock };
-	write_timestamp();
+	write_extras();
 	write_tag(tag);
 	write_message(level, message);
 }

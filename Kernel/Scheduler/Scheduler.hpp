@@ -10,7 +10,6 @@ class Scheduler {
 
 	gen::Spinlock m_scheduler_lock;
 	RunQueue m_rq;
-	Thread* m_ap_idle;
 
 	static unsigned pri_to_quants(uint8_t priority);
 	void add_thread_to_rq(Thread*);

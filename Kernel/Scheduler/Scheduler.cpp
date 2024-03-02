@@ -7,6 +7,8 @@
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include "Arch/Interface.hpp"
+#include "Core/Log/Logger.hpp"
+#include "Debug/kpanic.hpp"
 #include "LibGeneric/SharedPtr.hpp"
 #include "LibGeneric/String.hpp"
 
@@ -16,28 +18,13 @@ void Scheduler::tick() {
 		return;
 	}
 
-	if(thread == m_ap_idle) {
-		m_scheduler_lock.lock();
-
-		//  Force reschedule when at least one thread becomes runnable
-		if(m_rq.find_runnable() != nullptr) {
-			thread->reschedule();
-		} else {
-			m_rq.swap();
-			thread->clear_reschedule();
-		}
-
-		m_scheduler_lock.unlock();
-		return;
-	}
-
 	//  Cannot preempt, process is holding locks
 	if(thread->preempt_count() > 0) {
 		return;
 	}
 
-	//  Spend one thread quantum
 	if(thread->sched_ctx().quants_left > 0) {
+		//  Spend one thread quantum
 		thread->sched_ctx().quants_left--;
 	} else {
 		//  Reschedule currently running thread - ran out of quants
@@ -66,6 +53,7 @@ Thread* Scheduler::create_idle_task(size_t identifier) {
 	char s_buffer[64] {};
 	Format::format("idle[{}]", s_buffer, sizeof(s_buffer), identifier);
 	auto thread = Process::create_with_main_thread(gen::String { s_buffer }, Process::kerneld(), platform_idle);
+	thread->m_sched.priority = 19;
 	return thread.get();
 }
 
@@ -79,12 +67,9 @@ void Scheduler::bootstrap(Thread* ap_idle) {
 		const auto node_id = this_cpu()->node_id;
 		ap_idle = create_idle_task(node_id);
 	}
-	m_ap_idle = ap_idle;
 
-	//  Huge hack - use dummy buffer on the stack when switching for the first time,
-	//  as we don't care about saving garbage data
-	uint8 _dummy_val[sizeof(Thread)] = {};
-	CPU::switch_to(reinterpret_cast<Thread*>(&_dummy_val), m_ap_idle);
+	run_here(ap_idle);
+	schedule_new();
 }
 
 unsigned Scheduler::pri_to_quants(uint8_t priority) {
@@ -169,12 +154,36 @@ void Scheduler::schedule_new() {
 	m_scheduler_lock.lock();
 	auto* next_thread = m_rq.find_runnable();
 	if(!next_thread) {
+		//  No active tasks are left; swap to the inactive queue
 		m_rq.swap();
-		next_thread = m_ap_idle;
+		next_thread = m_rq.find_runnable();
+		//  There will ALWAYS be a runnable task in the queue (idle task is ALWAYS ready)
+		//  If this isn't the case, something went terribly wrong
+		if(!next_thread) {
+			core::log::_push(core::log::LogLevel::Fatal, "scheduler", "BUG: Scheduler task queue empty!");
+			kpanic();
+		}
 	}
 	m_scheduler_lock.unlock();
 
-	CPU::switch_to(thread, next_thread);
+	//  Detect the scenario when we're just bootstrapping a node
+	//  In this case, the current thread will be nullptr
+	//  Huge hack - use dummy buffer on the stack when switching for the first time,
+	//  as we don't care about saving garbage data
+	if(!thread) {
+		uint8 _dummy_val[sizeof(Thread)] = {};
+		CPU::switch_to(reinterpret_cast<Thread*>(&_dummy_val), next_thread);
+
+		core::log::_push(core::log::LogLevel::Fatal, "scheduler",
+		                 "BUG: Bootstrapping returned execution to the scheduler!");
+		kpanic();
+	}
+
+	//  Only switch_to if an actual new thread needs to run
+	//  If there is nothing else to run, we can potentially be resumed once again
+	if(thread != next_thread) {
+		CPU::switch_to(thread, next_thread);
+	}
 }
 
 /*

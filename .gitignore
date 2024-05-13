@@ -8,6 +8,7 @@
 **/.idea/*
 **/cmake-build-**/**
 .cache/
+compile_commands.json
 
 # Local dev environment
 doxy/*

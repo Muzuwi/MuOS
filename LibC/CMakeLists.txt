@@ -17,13 +17,18 @@ add_library(LibC STATIC
     string/strlen.c
     stdio/perror.c
     )
-
+set(LIBC_CXX_FLAGS
+    ${MUOS_CXX_FLAGS}
+    )
+set(LIBC_ASM_FLAGS
+    ${MUOS_ASM_FLAGS}
+    )
+target_compile_options(KernelELF
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${LIBC_CXX_FLAGS}>
+    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${LIBC_ASM_FLAGS}>
+    )
 set_target_properties(LibC PROPERTIES PREFIX "")
 set_target_properties(LibC PROPERTIES OUTPUT_NAME "libC")
-
-target_compile_options(LibC
-    PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:-ffreestanding -mcmodel=large -mno-red-zone>
-    )
 
 # Install the headers and the library to the prefix
 install(TARGETS LibC

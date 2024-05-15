@@ -23,3 +23,8 @@ else ()
         "does not exist! Check if the specified machine type is correct, otherwise this "
         "machine might not be compatible yet.")
 endif ()
+
+# Add common directories to the include search path
+include_directories(${CMAKE_SOURCE_DIR}/Kernel/)
+include_directories(${CMAKE_SOURCE_DIR}/Library/)
+include_directories(${CMAKE_SOURCE_DIR}/LibC/include/)

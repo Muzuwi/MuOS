@@ -11,10 +11,6 @@ find_package(MuToolchain REQUIRED)
 # This MUST be done after toolchain configuration above
 project(uKernel LANGUAGES CXX ASM_NASM)
 
-# Add common directories to the include search path
-include_directories(${CMAKE_SOURCE_DIR}/Kernel/)
-include_directories(${CMAKE_SOURCE_DIR}/Library/)
-include_directories(${CMAKE_SOURCE_DIR}/LibC/include/)
 # Common build flags, this must be included before adding
 # the architecture-specific CMakeLists
 include(BuildFlags.cmake)

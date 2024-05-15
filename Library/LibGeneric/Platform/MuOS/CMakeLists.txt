@@ -13,11 +13,6 @@ add_library(LibGeneric STATIC
     )
 set_target_properties(LibGeneric PROPERTIES PREFIX "")
 set_target_properties(LibGeneric PROPERTIES OUTPUT_NAME "libGeneric")
-# We need to access the kernel-specific and LibGeneric headers
-target_include_directories(LibGeneric
-    PRIVATE ${CMAKE_SOURCE_DIR}/Kernel/
-    PRIVATE ${CMAKE_SOURCE_DIR}/Library/
-    )
 # Use common system build flags
 target_compile_options(LibGeneric
     PRIVATE ${MUOS_CXX_FLAGS}

@@ -49,6 +49,7 @@ target_compile_options(KernelELF
     PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${KERNEL_ASM_FLAGS}>
     )
 target_compile_definitions(KernelELF
+    PRIVATE MACHINE=${MU_MACHINE}
     PRIVATE __is_kernel_build__
     )
 target_link_libraries(KernelELF PRIVATE

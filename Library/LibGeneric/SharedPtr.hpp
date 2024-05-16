@@ -98,7 +98,7 @@ namespace gen {
 		    : m_ptr(nullptr)
 		    , m_ref_count(nullptr) {}
 
-		explicit constexpr SharedPtr(nullptr_t)
+		explicit constexpr SharedPtr(decltype(nullptr))
 		    : SharedPtr() {}
 
 		explicit SharedPtr(T* ptr) noexcept

@@ -9,7 +9,7 @@ message(STATUS "Compiling for machine type ${MU_MACHINE}")
 find_package(MuToolchain REQUIRED)
 # Enable C++/NASM support
 # This MUST be done after toolchain configuration above
-project(uKernel LANGUAGES CXX ASM_NASM)
+project(uKernel LANGUAGES CXX ASM ASM_NASM)
 
 # Common build flags, this must be included before adding
 # the architecture-specific CMakeLists

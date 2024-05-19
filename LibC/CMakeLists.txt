@@ -25,6 +25,7 @@ set(LIBC_ASM_FLAGS
     )
 target_compile_options(KernelELF
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${LIBC_CXX_FLAGS}>
+    PRIVATE $<$<COMPILE_LANGUAGE:ASM>:${LIBC_ASM_FLAGS}>
     PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${LIBC_ASM_FLAGS}>
     )
 set_target_properties(LibC PROPERTIES PREFIX "")

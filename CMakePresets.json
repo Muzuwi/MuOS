@@ -1,0 +1,74 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "default",
+            "displayName": "Default configuration",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/cmake-build-${presetName}",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_INSTALL_PREFIX": "/usr/local/muOS",
+                "CMAKE_MODULE_PATH": "${workspaceFolder}/Toolchain/Modules"
+            }
+        },
+
+
+        {
+            "name": "arch_x86_64",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/cmake-build-x86_64-${presetName}",
+            "cacheVariables": {
+                "MU_MACHINE": "x86_64"
+            }
+        },
+        {
+            "name": "arch_riscv64",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/cmake-build-riscv64-${presetName}",
+            "cacheVariables": {
+                "MU_MACHINE": "riscv64"
+            }
+        },
+
+
+        {
+            "name": "debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "relwithdebinfo",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+
+
+        {
+            "name": "x86_64-Debug",
+            "displayName": "x86_64 (Debug)",
+            "inherits": ["default", "arch_x86_64", "debug"]
+        },
+        {
+            "name": "x86_64-RelWithDebInfo",
+            "displayName": "x86_64 (Release + Debug Info)",
+            "inherits": ["default", "arch_x86_64", "relwithdebinfo"]
+        },
+        {
+            "name": "riscv64-Debug",
+            "displayName": "RV64 (Debug)",
+            "inherits": ["default", "arch_riscv64", "debug"]
+        },
+        {
+            "name": "riscv64-RelWithDebInfo",
+            "displayName": "RV64 (Release + Debug Info)",
+            "inherits": ["default", "arch_riscv64", "relwithdebinfo"]
+        }
+
+    ]
+}

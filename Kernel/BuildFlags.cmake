@@ -19,5 +19,5 @@ set(MUOS_CXX_FLAGS
 # to a machine-specific directory.
 # This should only be ever needed from within arch-specific CMakeLists.
 set(MUOS_ASM_FLAGS
-    -f elf64
+    $<$<STREQUAL:${MU_MACHINE},x86_64>:-f elf64>
     )

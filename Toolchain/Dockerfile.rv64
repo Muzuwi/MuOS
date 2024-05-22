@@ -1,0 +1,19 @@
+FROM gcc:12.2.0
+COPY ./src/ /workdir/
+COPY ./include/* /usr/local/muOS/include/
+COPY ./include/* /usr/local/muOS/usr/include/
+RUN apt update && apt install --yes \
+	cmake \
+	nasm \
+	texinfo \
+	libmpfr-dev \
+	libmpfr6 \
+	libmpc-dev \
+	libmpc3	\
+	&& rm -rf /var/lib/apt/lists/* 
+RUN cd /workdir/ && \
+	bash -c ./download-archives.sh && \
+	bash -c ./make-binutils-rv64.sh && \
+	bash -c ./make-gcc-rv64.sh && \
+	rm -rf /workdir/
+LABEL org.opencontainers.image.source="https://github.com/Muzuwi/MuOS"

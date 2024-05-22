@@ -33,6 +33,13 @@ endif ()
 # separately from the rest of the kernel.
 file(GLOB_RECURSE KERNEL_SOURCES *.cpp *.hpp *.asm *.c *.h)
 list(FILTER KERNEL_SOURCES EXCLUDE REGEX "Kernel/Arch/*")
+# RV64 is currently a heavy WIP, and most of the core is still tied to x86.
+# For now, restrict what we're building to a very small subset of the
+# full kernel.
+if (MU_MACHINE STREQUAL "riscv64")
+    # ..currently, that subset is an empty set
+    set(KERNEL_SOURCES "")
+endif()
 
 # Target for the kernel executable
 add_executable(KernelELF ${KERNEL_SOURCES})

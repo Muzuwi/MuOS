@@ -23,19 +23,19 @@ endif ()
 
 # Resolve paths to the crtbegin/crtend objects
 # This is necessary as we're using a cross-compilation toolchain
-execute_process(COMMAND "${MUOS_CC}" -print-file-name=crtbegin.o
+execute_process(COMMAND "${MUOS_CC}" -march=rv64imac -mabi=lp64 -print-file-name=crtbegin.o
     OUTPUT_VARIABLE _MU_CRTBEGIN_PATH
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${MUOS_CC}" -print-file-name=crtend.o
+execute_process(COMMAND "${MUOS_CC}" -march=rv64imac -mabi=lp64 -print-file-name=crtend.o
     OUTPUT_VARIABLE _MU_CRTEND_PATH
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${MUOS_CC}" -print-file-name=crti.o
+execute_process(COMMAND "${MUOS_CC}" -march=rv64imac -mabi=lp64 -print-file-name=crti.o
     OUTPUT_VARIABLE _MU_KERNEL_CRTI_OBJ
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${MUOS_CC}" -print-file-name=crtn.o
+execute_process(COMMAND "${MUOS_CC}" -march=rv64imac -mabi=lp64 -print-file-name=crtn.o
     OUTPUT_VARIABLE _MU_KERNEL_CRTN_OBJ
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -56,7 +56,7 @@ set(CMAKE_ASM_COMPILER ${MUOS_AS})
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 # Default C/C++ flags
-set(_MU_RISCV_ABI_FLAGS "-march=rv64imadzicsr -mabi=lp64d")
+set(_MU_RISCV_ABI_FLAGS "-march=rv64imaczicsr -mabi=lp64")
 set(_MU_CFLAGS_DEFAULT "${_MU_RISCV_ABI_FLAGS} -fstack-protector-all -ffreestanding -mcmodel=medany")
 set(_MU_CXXFLAGS_DEFAULT "${_MU_CFLAGS_DEFAULT} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
 set(_MU_ASMFLAGS_DEFAULT "${_MU_RISCV_ABI_FLAGS}")

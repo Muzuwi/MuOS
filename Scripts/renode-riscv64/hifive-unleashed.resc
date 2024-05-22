@@ -1,0 +1,19 @@
+$name?="hifive-unleashed"
+
+using sysbus
+mach create $name
+machine LoadPlatformDescription @platforms/cpus/sifive-fu540.repl
+
+showAnalyzer uart0
+
+$mu?=@./uKernel.bin
+
+macro reset
+"""
+	sysbus LoadELF $mu
+"""
+runMacro $reset
+
+sysbus LogAllPeripheralsAccess true
+
+machine StartGdbServer 1234

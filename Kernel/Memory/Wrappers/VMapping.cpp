@@ -16,7 +16,7 @@ SharedPtr<VMapping> VMapping::create(void* address, size_t size, uint32 flags, u
 	auto page_count = size / 0x1000;
 	for(unsigned i = 0; i < page_count; ++i) {
 		auto alloc = PMM::instance().allocate(0);
-		assert(alloc.has_value());
+		ENSURE(alloc.has_value());
 		vmapping->m_pages.push_back(alloc.unwrap());
 	}
 

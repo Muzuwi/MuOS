@@ -1,5 +1,5 @@
+#include <Core/Assert/Assert.hpp>
 #include <Core/Log/Logger.hpp>
-#include <Debug/kpanic.hpp>
 #include <LibGeneric/Allocator.hpp>
 #include <Memory/Allocators/ChunkAllocator.hpp>
 #include <string.h>
@@ -34,14 +34,14 @@ void ChunkAllocator::free(void* ptr) {
 	if(ptr != chunk->alloc_ptr()) {
 		log.fatal("Partial free of pointer {} detected!", ptr);
 		dump_allocator();
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 
 	//  Tried double-freeing
 	if(chunk->m_state == ChunkState::Free) {
 		log.fatal("Double free of pointer {} detected!", ptr);
 		dump_allocator();
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 
 	chunk->m_state = ChunkState::Free;

@@ -1,4 +1,4 @@
-#include <Debug/kassert.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <LibGeneric/StaticVector.hpp>
 #include <stddef.h>
 #include "ExecutionEnvironment.hpp"
@@ -19,6 +19,6 @@ arch::mp::ExecutionEnvironment* arch::mp::create_environment() {
 	auto* env = &s_environments[s_next_env];
 	s_next_env += 1;
 
-	kassert(env == env->self_reference);
+	ENSURE(env == env->self_reference);
 	return env;
 }

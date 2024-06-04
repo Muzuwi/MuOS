@@ -1,4 +1,4 @@
-#include <Debug/kpanic.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <Memory/Allocators/VBitmap.hpp>
 #include <string.h>
 
@@ -21,9 +21,7 @@ void VBitmap::mark_bits(size_t idx, size_t count, bool value) {
 	for(size_t i = idx; i < idx + count; ++i) {
 		auto old = bit_get(i);
 
-		if(old == value) {
-			kpanic();
-		}
+		ENSURE(old != value);
 
 		bit_set(i, value);
 		if(value) {
@@ -51,14 +49,14 @@ KOptional<size_t> VBitmap::find_one() {
 			auto idx = (ptr - base) * 8 + i;
 			return KOptional<size_t> { static_cast<size_t>(idx) };
 		}
-		ASSERT_NOT_REACHED();
+		DEBUG_ASSERT_NOT_REACHED();
 	}
 
 	return KOptional<size_t> {};
 }
 
 KOptional<size_t> VBitmap::find_many(size_t) {
-	ASSERT_NOT_REACHED();
+	ENSURE_NOT_REACHED();
 }
 
 void VBitmap::initialize() {

@@ -1,8 +1,8 @@
 #include "Start.hpp"
 #include <Arch/Interface.hpp>
 #include <Arch/x86_64/PIT.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <Core/MP/MP.hpp>
-#include <Debug/kpanic.hpp>
 #include <Drivers/IDE/IDE.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
@@ -13,7 +13,6 @@
 #include "Daemons/Kbd/Kbd.hpp"
 #include "Daemons/SysDbg/SysDbg.hpp"
 #include "Daemons/Testd/Testd.hpp"
-#include "Debug/kassert.hpp"
 #include "LibFormat/Formatters/Pointer.hpp"
 #include "LibGeneric/String.hpp"
 #include "Memory/KHeap.hpp"
@@ -31,7 +30,7 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 	if(const auto err = arch::platform_early_init(); err != core::Error::Ok) {
 		//  FIXME: Better error handling, break into debugger?
 		::log.fatal("Platform early init failed with error code: {}", err);
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 	::log.info("Platform early init done");
 
@@ -48,7 +47,7 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 	if(const auto err = arch::platform_init(); err != core::Error::Ok) {
 		//  FIXME: Better error handling, break into debugger?
 		::log.fatal("Platform init failed with error code: {}", err);
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 	::log.info("Platform init done");
 	::log.info("Kernel init done, time passed: {}ms", PIT::milliseconds());
@@ -87,7 +86,7 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 	//  This is just a quick test to see if jumping to ring 3
 	//  works properly, doesn't actually do any meaningful work.
 	auto userland_init = Process::init();
-	kassert(userland_init->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4()));
+	ENSURE(userland_init->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4()));
 	auto init_thread = Thread::create_in_process(userland_init, Testd::userland_test_thread);
 	init_thread->sched_ctx().priority = 10;
 	this_cpu()->scheduler->run_here(init_thread.get());

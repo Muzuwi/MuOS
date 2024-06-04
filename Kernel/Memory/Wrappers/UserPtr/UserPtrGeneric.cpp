@@ -28,10 +28,10 @@ gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {
 	//  FIXME: Slowpath, most of the time the buffer will be within a single vmregion
 	for(unsigned i = 0; i < size; ++i) {
 		auto region = vmm.find_vmapping(user_ptr + i);
-		assert(region.has_value());
+		ENSURE(region.has_value());
 
 		auto page = region.unwrap()->page_for(user_ptr + i);
-		assert(page.has_value());
+		ENSURE(page.has_value());
 
 		auto phys_ptr = page.unwrap();
 		buf[i] = *phys_ptr;

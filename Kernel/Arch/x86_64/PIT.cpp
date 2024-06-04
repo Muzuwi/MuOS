@@ -2,6 +2,7 @@
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <Core/MP/MP.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
@@ -37,7 +38,7 @@ void _pit_irq0_handler(PtraceRegs*) {
 		if(alarm.m_start + alarm.m_len > PIT::milliseconds())
 			continue;
 
-		assert(alarm.m_thread->state() == TaskState::Sleeping);
+		ENSURE(alarm.m_thread->state() == TaskState::Sleeping);
 		if(alarm.m_thread->state() == TaskState::Sleeping) {
 			//  Wake up
 			this_cpu()->scheduler->wake_up(alarm.m_thread);

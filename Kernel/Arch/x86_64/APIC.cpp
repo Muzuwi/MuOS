@@ -65,7 +65,7 @@ void APIC::find_local_base() {
 	auto maybe_madt = ACPI::find_table(ACPI::table_apic_sig);
 	if(!maybe_madt.has_value()) {
 		log.error("MADT/APIC table not present!");
-		ASSERT_NOT_REACHED();
+		ENSURE_NOT_REACHED();
 	}
 	PhysAddr madt = PhysAddr { (maybe_madt.unwrap()).get() };
 

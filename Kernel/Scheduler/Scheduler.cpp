@@ -1,14 +1,13 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/IRQDisabler.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <Core/MP/MP.hpp>
-#include <Debug/kassert.hpp>
 #include <LibFormat/Format.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include "Arch/Interface.hpp"
 #include "Core/Log/Logger.hpp"
-#include "Debug/kpanic.hpp"
 #include "LibGeneric/SharedPtr.hpp"
 #include "LibGeneric/String.hpp"
 
@@ -73,7 +72,7 @@ void Scheduler::bootstrap(Thread* ap_idle) {
 }
 
 unsigned Scheduler::pri_to_quants(uint8_t priority) {
-	kassert(priority <= 140);
+	ENSURE(priority <= 140);
 
 	if(priority < 120) {
 		return (140 - priority) * 20;
@@ -161,7 +160,7 @@ void Scheduler::schedule_new() {
 		//  If this isn't the case, something went terribly wrong
 		if(!next_thread) {
 			core::log::_push(core::log::LogLevel::Fatal, "scheduler", "BUG: Scheduler task queue empty!");
-			kpanic();
+			ENSURE_NOT_REACHED();
 		}
 	}
 	m_scheduler_lock.unlock();
@@ -176,7 +175,7 @@ void Scheduler::schedule_new() {
 
 		core::log::_push(core::log::LogLevel::Fatal, "scheduler",
 		                 "BUG: Bootstrapping returned execution to the scheduler!");
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 
 	//  Only switch_to if an actual new thread needs to run
@@ -196,7 +195,7 @@ void Scheduler::wake_up(Thread* thread) {
 
 	IRQDisabler irq_disabler {};
 
-	kassert(thread->state() != TaskState::Running);
+	ENSURE(thread->state() != TaskState::Running);
 	thread->set_state(TaskState::Ready);
 
 	m_scheduler_lock.lock();

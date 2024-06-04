@@ -1,4 +1,5 @@
 #pragma once
+#include <Core/Assert/Assert.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/StaticVector.hpp>
 #include <Memory/Allocators/ChunkAllocator.hpp>
@@ -45,7 +46,7 @@ class KHeap {
 		} else if(n <= 512) {
 			return 6;
 		}
-		ASSERT_NOT_REACHED();
+		ENSURE_NOT_REACHED();
 	}
 
 	gen::Spinlock m_heap_lock {};

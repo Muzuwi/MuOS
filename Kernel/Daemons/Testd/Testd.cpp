@@ -35,7 +35,7 @@ void Testd::userland_test_thread() {
 
 	log.debug("Thread({}): mapping shellcode", current->tid());
 	auto mapping = VMapping::create((void*)shellcode_location, 0x1000, VM_READ | VM_WRITE | VM_EXEC, MAP_SHARED);
-	kassert(current->parent()->vmm().insert_vmapping(gen::move(mapping)));
+	ENSURE(current->parent()->vmm().insert_vmapping(gen::move(mapping)));
 
 	log.debug("Thread({}): copying shellcode", current->tid());
 	for(auto& b : bytes) {

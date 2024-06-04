@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #ifdef __is_kernel_build__
-#	include <Debug/kassert.hpp>
+#	include <Core/Assert/Assert.hpp>
 #endif
 
 namespace gen {
@@ -102,32 +102,32 @@ namespace gen {
 		 *  Array-index operator
 		 */
 		constexpr T& operator[](size_t n) {
-			assert(n < m_pointer);
+			ENSURE(n < m_pointer);
 			return m_data[n];
 		}
 
 		constexpr T const& operator[](size_t n) const {
-			assert(n < m_pointer);
+			ENSURE(n < m_pointer);
 			return m_data[n];
 		}
 
 		constexpr T& front() {
-			assert(m_pointer);
+			ENSURE(m_pointer);
 			return m_data[0];
 		}
 
 		constexpr T const& front() const {
-			assert(m_pointer);
+			ENSURE(m_pointer);
 			return m_data[0];
 		}
 
 		constexpr T& back() {
-			assert(m_pointer);
+			ENSURE(m_pointer);
 			return m_data[m_pointer - 1];
 		}
 
 		constexpr T const& back() const {
-			assert(m_pointer);
+			ENSURE(m_pointer);
 			return m_data[m_pointer - 1];
 		}
 	};

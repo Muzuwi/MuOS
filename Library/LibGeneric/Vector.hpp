@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #ifdef __is_kernel_build__
-#	include <Debug/kassert.hpp>
+#	include <Core/Assert/Assert.hpp>
 #endif
 
 namespace gen {
@@ -113,7 +113,7 @@ namespace gen {
 		}
 
 		T pop_back() {
-			assert(m_item_count > 0);
+			ENSURE(m_item_count > 0);
 
 			auto v = m_data[--m_item_count];
 			_object_destroy(m_data + m_item_count, 1);
@@ -148,12 +148,12 @@ namespace gen {
 		constexpr T const& operator[](size_t n) const { return m_data[n]; }
 
 		T& at(size_t n) {
-			assert(n < m_item_count);
+			ENSURE(n < m_item_count);
 			return operator[](n);
 		}
 
 		T const& at(size_t n) const {
-			assert(n < m_item_count);
+			ENSURE(n < m_item_count);
 			return operator[](n);
 		}
 

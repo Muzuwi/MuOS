@@ -76,8 +76,8 @@ void PMM::init_regions(PhysPtr<MultibootInfo> multiboot_info) {
 				auto kernel_phys_start = (uint64_t)&_ukernel_preloader_physical;
 				auto kernel_phys_end = (uint64_t)&_ukernel_elf_end - (uint64_t)&_ukernel_virtual_offset;
 
-				assert((kernel_phys_start & 0xFFF) == 0);
-				assert((kernel_phys_end & 0xFFF) == 0);
+				ENSURE((kernel_phys_start & 0xFFF) == 0);
+				ENSURE((kernel_phys_end & 0xFFF) == 0);
 
 				//  Split regions overlapping with the kernel executable
 				if(start < kernel_phys_end) {

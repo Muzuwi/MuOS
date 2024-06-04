@@ -1,4 +1,4 @@
-#include <Debug/kpanic.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <Memory/Allocators/PageBitmapAllocator.hpp>
 #include <Memory/Units.hpp>
 
@@ -28,7 +28,7 @@ void PageBitmapAllocator::initialize() {
 
 	m_alloc_pool_base = pool_aligned;
 
-	assert(m_bitmap_size < m_region_size);
+	ENSURE(m_bitmap_size < m_region_size);
 	memset(m_base.get_mapped(), 0x0, m_bitmap_size);
 	m_deferred_initialization = false;
 }
@@ -70,11 +70,7 @@ KOptional<PhysAddr> PageBitmapAllocator::alloc_one() {
 void PageBitmapAllocator::mark_bits(size_t idx, size_t count, bool value) {
 	for(size_t i = idx; i < idx + count; ++i) {
 		auto old = bit_get(i);
-
-		if(old == value) {
-			kpanic();
-			continue;
-		}
+		DEBUG_ASSERT(old != value);
 
 		bit_set(i, value);
 	}
@@ -98,7 +94,7 @@ KOptional<size_t> PageBitmapAllocator::find_one() {
 			return KOptional<size_t> { idx };
 		}
 
-		ASSERT_NOT_REACHED();
+		DEBUG_ASSERT_NOT_REACHED();
 	}
 
 	return KOptional<size_t> {};
@@ -106,5 +102,5 @@ KOptional<size_t> PageBitmapAllocator::find_one() {
 
 KOptional<size_t> PageBitmapAllocator::find_many(size_t) {
 	//  FIXME: Implement
-	ASSERT_NOT_REACHED();
+	ENSURE_NOT_REACHED();
 }

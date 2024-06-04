@@ -28,7 +28,7 @@ void ACPI::parse_tables() {
 	auto maybe_rsdp = find_rsdp();
 	if(!maybe_rsdp.has_value()) {
 		log.error("No RSDP pointer found!");
-		ASSERT_NOT_REACHED();
+		ENSURE_NOT_REACHED();
 	}
 
 	auto const& rsdp = *maybe_rsdp.unwrap();

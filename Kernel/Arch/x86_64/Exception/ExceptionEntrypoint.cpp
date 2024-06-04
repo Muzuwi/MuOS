@@ -1,5 +1,5 @@
+#include <Core/Assert/Assert.hpp>
 #include <Core/MP/MP.hpp>
-#include <Debug/kpanic.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include "Exception.hpp"
@@ -22,7 +22,7 @@ extern "C" void _kernel_exception_entrypoint(size_t vector, PtraceRegs* interrup
 
 	auto response = handler(interrupt_stack_frame, vector);
 	if(response == Exception::Response::KernelPanic) {
-		kpanic();
+		ENSURE_NOT_REACHED();
 	} else if(response == Exception::Response::TerminateThread) {
 		const auto thread = this_cpu()->current_thread();
 		thread->set_state(TaskState::Leaving);

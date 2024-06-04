@@ -1,5 +1,5 @@
 #pragma once
-#include <Debug/kpanic.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <LibGeneric/Memory.hpp>
 #include <LibGeneric/Optional.hpp>
 
@@ -37,9 +37,7 @@ public:
 	 * 	the KResult after the move results in undefined behavior.
 	 */
 	constexpr T destructively_move_data() {
-		if(m_result != Result::Value) {
-			kpanic();
-		}
+		ENSURE(m_result == Result::Value);
 		//  TODO: This could store the moved state to verify the object is not
 		//		  moved from at runtime.
 		return gen::move(m_data._data);
@@ -50,9 +48,7 @@ public:
 	 * 	a value, a kernel panic is triggered.
 	 */
 	constexpr T data() const {
-		if(m_result != Result::Value) {
-			kpanic();
-		}
+		ENSURE(m_result == Result::Value);
 		return m_data._data;
 	}
 
@@ -61,9 +57,7 @@ public:
 	 * 	an error, a kernel panic is triggered.
 	 */
 	constexpr ErrType error() const {
-		if(m_result != Result::Error) {
-			kpanic();
-		}
+		ENSURE(m_result == Result::Error);
 		return m_data._error;
 	}
 

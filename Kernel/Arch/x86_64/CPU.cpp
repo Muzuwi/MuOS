@@ -3,7 +3,6 @@
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Core/Log/Logger.hpp>
-#include <Debug/kpanic.hpp>
 #include <Process/Process.hpp>
 #include <Syscalls/Syscall.hpp>
 #include <SystemTypes.hpp>

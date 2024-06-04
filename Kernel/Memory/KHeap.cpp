@@ -14,7 +14,7 @@ void KHeap::init() {
 
 	const auto size = 1 * Units::MiB;
 	auto chunk_space = VMM::allocate_kernel_heap(size);
-	kassert(chunk_space != nullptr);
+	ENSURE(chunk_space != nullptr);
 	log.debug("ChunkAllocator({}), size {}", chunk_space, size);
 	m_chunk_allocator = ChunkAllocator { chunk_space, size };
 

@@ -14,8 +14,8 @@ void V86::run_irq(uint8 irq, V86Regs& regs) {
 
 	auto maybe_code_page = PMM::instance().allocate_lowmem();
 	auto maybe_stack_page = PMM::instance().allocate_lowmem();
-	kassert(maybe_code_page.has_value());
-	kassert(maybe_stack_page.has_value());
+	ENSURE(maybe_code_page.has_value());
+	ENSURE(maybe_stack_page.has_value());
 
 	auto code_page = maybe_code_page.unwrap();
 	auto stack_page = maybe_stack_page.unwrap();

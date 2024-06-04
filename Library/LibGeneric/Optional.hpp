@@ -4,7 +4,7 @@
 #ifndef __is_kernel_build__
 #	include <cassert>
 #else
-#	include <Debug/kassert.hpp>
+#	include <Core/Assert/Assert.hpp>
 #endif
 
 namespace gen {
@@ -145,7 +145,7 @@ namespace gen {
 		 *  If no data is currently stored, triggers a panic.
 		 */
 		constexpr T& unwrap() {
-			assert(has_value());
+			ENSURE(has_value());
 			return m_data;
 		}
 
@@ -154,7 +154,7 @@ namespace gen {
 		 *  If no data is currently stored, triggers a panic.
 		 */
 		constexpr T const& unwrap() const {
-			assert(has_value());
+			ENSURE(has_value());
 			return m_data;
 		}
 

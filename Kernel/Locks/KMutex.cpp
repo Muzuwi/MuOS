@@ -1,5 +1,5 @@
+#include <Core/Assert/Assert.hpp>
 #include <Core/MP/MP.hpp>
-#include <Debug/kassert.hpp>
 #include <Locks/KMutex.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
@@ -57,7 +57,7 @@ void KMutex::waiter_try_wake_up() {
 		m_waiters.pop_front();
 
 		auto* thread = mutex_waiter.m_waiter;
-		kassert(thread->state() == TaskState::Blocking);
+		ENSURE(thread->state() == TaskState::Blocking);
 		this_cpu()->scheduler->wake_up(thread);
 	}
 	m_waiters_lock.unlock();

@@ -3,7 +3,6 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/MP/CpuBootstrapPage.hpp>
 #include <Core/Log/Logger.hpp>
-#include <Debug/kassert.hpp>
 #include <Kernel/ksleep.hpp>
 #include <Memory/PMM.hpp>
 #include <Process/Process.hpp>

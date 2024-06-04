@@ -1,8 +1,8 @@
 #include <Arch/x86_64/CPUID.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
+#include <Core/Assert/Assert.hpp>
 #include <Core/Log/Logger.hpp>
-#include <Debug/kpanic.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
@@ -23,7 +23,7 @@ void VMM::initialize_kernel_vm() {
 	auto res = PMM::instance().allocate();
 	if(!res.has_value()) {
 		log.fatal("Failed allocating page for kerneld PML4! Out of memory?");
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 
 	auto pml4 = res.unwrap().base();
@@ -61,7 +61,7 @@ void VMM::_map_pallocation(PAllocation allocation, void* vaddr) {
 		if(!pdpte || !pde || !pte) {
 			log.fatal("Failed mapping PAllocation for address {}! Page structure allocation failed.",
 			          Format::ptr(vaddr));
-			kpanic();
+			ENSURE_NOT_REACHED();
 		}
 
 		pml4e.set(FlagPML4E::Present, true);
@@ -94,7 +94,7 @@ void VMM::_map_kernel_executable() {
 		auto* pte = ensure_pt(addr, LeakAllocatedPage::Yes);
 		if(!pdpte || !pde || !pte) {
 			log.fatal("PDPTE/PDE/PTE allocation failure during ELF mapping. Out of memory?");
-			kpanic();
+			ENSURE_NOT_REACHED();
 		}
 
 		pml4e.set(FlagPML4E::Present, true);
@@ -135,7 +135,7 @@ void VMM::_map_physical_identity() {
 			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
 			if(!pdpte) {
 				log.fatal("PDPTE allocation for physical identity map failed! Out of memory?");
-				kpanic();
+				ENSURE_NOT_REACHED();
 			}
 
 			pml4e.set(FlagPML4E::Present, true);
@@ -154,7 +154,7 @@ void VMM::_map_physical_identity() {
 			auto* pde = ensure_pd(addr, LeakAllocatedPage::Yes);
 			if(!pdpte || !pde) {
 				log.fatal("PDPTE/PDE allocation for physical identity map failed! Out of memory?");
-				kpanic();
+				ENSURE_NOT_REACHED();
 			}
 
 			pml4e.set(FlagPML4E::Present, true);
@@ -460,17 +460,17 @@ bool VMM::addrunmap(void* vaddr) {
 	auto& pml4e = (*pml4)[vaddr];
 	if(!pml4e.get(FlagPML4E::Present)) {
 		log.fatal("VMapping corruption or double free detected");
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 	auto& pdpte = (*pml4e.directory())[vaddr];
 	if(!pdpte.get(FlagPDPTE::Present)) {
 		log.fatal("VMapping corruption or double free detected");
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 	auto& pde = (*pdpte.directory())[vaddr];
 	if(!pde.get(FlagPDE::Present)) {
 		log.fatal("VMapping corruption or double free detected");
-		kpanic();
+		ENSURE_NOT_REACHED();
 	}
 	auto& pte = (*pde.table())[vaddr];
 	pte.set(FlagPTE::Present, false);
@@ -557,7 +557,7 @@ void* VMM::allocate_user_stack(uint64 stack_size) {
 	}
 
 	auto stack_mapping = VMapping::create((void*)stack_top, stack_size, VM_READ | VM_WRITE, MAP_PRIVATE);
-	kassert(insert_vmapping(gen::move(stack_mapping)));
+	ENSURE(insert_vmapping(gen::move(stack_mapping)));
 
 	return (void*)(stack_top + stack_size);
 }
@@ -578,7 +578,7 @@ VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
 
 	auto mapping = VMapping::create((void*)kstack_top, stack_size, VM_READ | VM_WRITE | VM_KERNEL, MAP_PRIVATE);
 	auto mapping_ptr = mapping.get();
-	kassert(insert_vmapping(gen::move(mapping)));
+	ENSURE(insert_vmapping(gen::move(mapping)));
 
 	return mapping_ptr;
 }
@@ -622,7 +622,7 @@ BumpAllocator VMM::s_heap_break { &_ukernel_heap_start,
  *  This should only be used by low-level kernel allocators!
  */
 void* VMM::allocate_kernel_heap(size_t size) {
-	kassert(size > 0);
+	ENSURE(size > 0);
 	auto size_rounded_to_page_size = ((size + 0x1000 - 1) & ~(0x1000 - 1));
 
 	auto* ptr = s_heap_break.allocate(size_rounded_to_page_size);

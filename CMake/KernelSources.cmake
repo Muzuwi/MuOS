@@ -1,0 +1,20 @@
+function(add_kernel_sources)
+    set(KERNEL_SOURCES ${KERNEL_SOURCES} PARENT_SCOPE)
+
+    foreach(arg IN LISTS ARGN)
+        if(IS_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/${arg}")
+            if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${arg}/Build.cmake")
+                include("${CMAKE_CURRENT_LIST_DIR}/${arg}/Build.cmake")
+            else()
+                message(FATAL_ERROR "Could not find Build.cmake in requested source subdirectory: ${CMAKE_CURRENT_LIST_DIR}/${arg}")
+            endif()
+        elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/${arg}")
+            list(APPEND KERNEL_SOURCES "${CMAKE_CURRENT_LIST_DIR}/${arg}")
+        else()
+            message(FATAL_ERROR "Invalid argument ${arg} given to add_kernel_sources")
+        endif()
+    endforeach()
+
+    # Set the KERNEL_SOURCES variable to be available in the parent scope
+    set(KERNEL_SOURCES ${KERNEL_SOURCES} PARENT_SCOPE)
+endfunction()

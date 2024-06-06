@@ -1,0 +1,1 @@
+add_kernel_sources(IDE/)

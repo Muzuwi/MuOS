@@ -28,21 +28,8 @@ else ()
         "currently supported. Tried looking in: ${_ARCH_LISTS_FILE}")
 endif ()
 
-# Gather kernel source files
-# We also exclude the architecture folder, as that is built
-# separately from the rest of the kernel.
-file(GLOB_RECURSE KERNEL_SOURCES *.cpp *.hpp *.asm *.c *.h)
-list(FILTER KERNEL_SOURCES EXCLUDE REGEX "Kernel/Arch/*")
-# RV64 is currently a heavy WIP, and most of the core is still tied to x86.
-# For now, restrict what we're building to a very small subset of the
-# full kernel.
-if (MU_MACHINE STREQUAL "riscv64")
-    # ..currently, that subset is an empty set
-    set(KERNEL_SOURCES "")
-endif()
-
 # Target for the kernel executable
-add_executable(KernelELF ${KERNEL_SOURCES})
+add_executable(KernelELF)
 
 # Kernel build flags
 set(KERNEL_CXX_FLAGS
@@ -64,6 +51,12 @@ target_link_libraries(KernelELF PRIVATE
     LibGeneric
     LibC
     )
+
+# Include the top-level Build.cmake, which will descend down
+# into the different subdirectories to collect all kernel sources.
+include(Build.cmake)
+target_sources(KernelELF PRIVATE ${KERNEL_SOURCES})
+message(STATUS "Kernel sources: ${KERNEL_SOURCES}")
 
 add_custom_command(TARGET KernelELF
     POST_BUILD

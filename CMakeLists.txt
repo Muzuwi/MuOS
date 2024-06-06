@@ -5,6 +5,9 @@ project(MuOS LANGUAGES NONE)
 #  Signal that this is the main kernel build
 set(MU_BUILD_TYPE cross)
 
+# Include common modules
+include(CMake/KernelSources.cmake)
+
 #  Compile modules
 add_subdirectory(Kernel/)
 add_subdirectory(LibC/)

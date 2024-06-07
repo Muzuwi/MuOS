@@ -3,9 +3,7 @@
 #include <LibGeneric/Move.hpp>
 #include <stddef.h>
 #include <stdint.h>
-#ifdef __is_kernel_build__
-#	include <Core/Assert/Assert.hpp>
-#endif
+#include "Platform/Assert.hpp"
 
 namespace gen {
 	/*
@@ -102,32 +100,32 @@ namespace gen {
 		 *  Array-index operator
 		 */
 		constexpr T& operator[](size_t n) {
-			ENSURE(n < m_pointer);
+			LIBGEN_ASSERT(n < m_pointer);
 			return m_data[n];
 		}
 
 		constexpr T const& operator[](size_t n) const {
-			ENSURE(n < m_pointer);
+			LIBGEN_ASSERT(n < m_pointer);
 			return m_data[n];
 		}
 
 		constexpr T& front() {
-			ENSURE(m_pointer);
+			LIBGEN_ASSERT(m_pointer);
 			return m_data[0];
 		}
 
 		constexpr T const& front() const {
-			ENSURE(m_pointer);
+			LIBGEN_ASSERT(m_pointer);
 			return m_data[0];
 		}
 
 		constexpr T& back() {
-			ENSURE(m_pointer);
+			LIBGEN_ASSERT(m_pointer);
 			return m_data[m_pointer - 1];
 		}
 
 		constexpr T const& back() const {
-			ENSURE(m_pointer);
+			LIBGEN_ASSERT(m_pointer);
 			return m_data[m_pointer - 1];
 		}
 	};

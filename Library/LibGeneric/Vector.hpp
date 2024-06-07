@@ -2,10 +2,7 @@
 #include <LibGeneric/Allocator.hpp>
 #include <LibGeneric/InitializerList.hpp>
 #include <stddef.h>
-
-#ifdef __is_kernel_build__
-#	include <Core/Assert/Assert.hpp>
-#endif
+#include "Platform/Assert.hpp"
 
 namespace gen {
 	template<class T, template<typename> class Alloc = gen::Allocator>
@@ -113,7 +110,7 @@ namespace gen {
 		}
 
 		T pop_back() {
-			ENSURE(m_item_count > 0);
+			LIBGEN_ASSERT(m_item_count > 0);
 
 			auto v = m_data[--m_item_count];
 			_object_destroy(m_data + m_item_count, 1);
@@ -148,12 +145,12 @@ namespace gen {
 		constexpr T const& operator[](size_t n) const { return m_data[n]; }
 
 		T& at(size_t n) {
-			ENSURE(n < m_item_count);
+			LIBGEN_ASSERT(n < m_item_count);
 			return operator[](n);
 		}
 
 		T const& at(size_t n) const {
-			ENSURE(n < m_item_count);
+			LIBGEN_ASSERT(n < m_item_count);
 			return operator[](n);
 		}
 

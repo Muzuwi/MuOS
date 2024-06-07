@@ -1,11 +1,8 @@
 #pragma once
 
-#ifdef __is_kernel_build__
-#	include <Core/Assert/Assert.hpp>
-#endif
-
 #include <stddef.h>
 #include <stdint.h>
+#include "Platform/Assert.hpp"
 
 #define bits(a)    (sizeof(a) * 8)
 #define bitmask(a) (size_t(1) << (a))
@@ -26,7 +23,7 @@ namespace gen {
 		 *  Constructs a bitmap with space for the specified amount of entries
 		 */
 		BitMap(size_t entries) {
-			ENSURE(entries != 0);
+			LIBGEN_ASSERT(entries != 0);
 
 			//  Align to size of a uint32
 			m_count = (entries & 31u) ? (entries & ~31u) + bits_per_entry : (entries);
@@ -75,7 +72,7 @@ namespace gen {
 		 *  Returns the value of the bit at index 'n'
 		 */
 		bool at(size_t n) const {
-			ENSURE(n < m_count);
+			LIBGEN_ASSERT(n < m_count);
 
 			size_t index = n / bits_per_entry;
 			size_t bit = n % bits_per_entry;
@@ -91,7 +88,7 @@ namespace gen {
 		 *  Sets a bit at index 'n' to the specified value, 1 by default
 		 */
 		void set(size_t n, bool v = true) {
-			ENSURE(n < m_count);
+			LIBGEN_ASSERT(n < m_count);
 
 			size_t index = n / bits_per_entry;
 			size_t bit = n % bits_per_entry;

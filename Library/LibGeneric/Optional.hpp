@@ -1,11 +1,7 @@
 #pragma once
 #include <LibGeneric/Memory.hpp>
 #include <LibGeneric/Move.hpp>
-#ifndef __is_kernel_build__
-#	include <cassert>
-#else
-#	include <Core/Assert/Assert.hpp>
-#endif
+#include "Platform/Assert.hpp"
 
 namespace gen {
 	struct __NullOpt {
@@ -145,7 +141,7 @@ namespace gen {
 		 *  If no data is currently stored, triggers a panic.
 		 */
 		constexpr T& unwrap() {
-			ENSURE(has_value());
+			LIBGEN_ASSERT(has_value());
 			return m_data;
 		}
 
@@ -154,7 +150,7 @@ namespace gen {
 		 *  If no data is currently stored, triggers a panic.
 		 */
 		constexpr T const& unwrap() const {
-			ENSURE(has_value());
+			LIBGEN_ASSERT(has_value());
 			return m_data;
 		}
 

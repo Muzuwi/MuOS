@@ -1,3 +1,1 @@
-add_kernel_sources(
-    KAtomic.cpp
-)
+# Left empty for future use

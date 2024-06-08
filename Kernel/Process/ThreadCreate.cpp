@@ -57,11 +57,6 @@ SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*ke
 	//  Restore saved kernel gs base of next process
 	CPU::set_kernel_gs_base((void*)next->m_kernel_gs_base);
 
-	//  Set the GS base to point to the current AP's CTB
-	//  FIXME: Realistically only need to do this once, at AP boot
-	//  arch::mp::environment_set(void*);
-	//  CPU::set_gs_base((void*)(&SMP::ctb()));
-
 	next->set_state(TaskState::Running);
 }
 

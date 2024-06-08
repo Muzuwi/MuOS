@@ -20,9 +20,6 @@ public:
 	explicit PhysPtr(T* ptr) noexcept
 	    : m_ptr(ptr) {}
 
-	//	PhysPtr(const PageToken& token) noexcept
-	//	: m_ptr(reinterpret_cast<T*>(token.address())) {}   //  FIXME: I don't like this cast
-
 	T* get() { return m_ptr; }
 
 	const T* get() const { return m_ptr; }

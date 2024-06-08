@@ -3,7 +3,6 @@
 #include <Process/Thread.hpp>
 
 KBox<const char> UserString::copy_to_kernel() {
-	//  FIXME: Make sure a different thread cannot modify the address space while we're in here
 	auto* user_ptr = (uint8*)m_ptr;
 	auto& vmm = Thread::current()->parent()->vmm();
 	auto lock = vmm.acquire_vm_lock();

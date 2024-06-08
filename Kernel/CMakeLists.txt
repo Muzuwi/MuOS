@@ -45,6 +45,7 @@ target_compile_options(KernelELF
 target_compile_definitions(KernelELF
     PRIVATE MACHINE=${MU_MACHINE}
     PRIVATE __is_kernel_build__
+    PRIVATE ARCH_IS_${MU_MACHINE}=1
     )
 target_link_libraries(KernelELF PRIVATE
     ${MU_MACHINE}::LibArch

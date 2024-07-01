@@ -7,7 +7,6 @@
 #include <LibGeneric/Move.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/String.hpp>
-#include <Locks/KMutex.hpp>
 #include <SystemTypes.hpp>
 
 namespace core::log {

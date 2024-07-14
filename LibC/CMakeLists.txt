@@ -23,7 +23,7 @@ set(LIBC_CXX_FLAGS
 set(LIBC_ASM_FLAGS
     ${MUOS_ASM_FLAGS}
     )
-target_compile_options(KernelELF
+target_compile_options(LibC
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${LIBC_CXX_FLAGS}>
     PRIVATE $<$<COMPILE_LANGUAGE:ASM>:${LIBC_ASM_FLAGS}>
     PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${LIBC_ASM_FLAGS}>

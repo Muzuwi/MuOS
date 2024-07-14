@@ -1,5 +1,5 @@
 TOOLCHAIN_VER = v2
-LIBC_PATH = ../LibC/
+LIBC_PATH = ../Library/LibC/
 
 .PHONY: default
 default: x86_64

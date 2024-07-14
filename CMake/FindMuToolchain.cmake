@@ -27,4 +27,4 @@ endif ()
 # Add common directories to the include search path
 include_directories(${CMAKE_SOURCE_DIR}/Kernel/)
 include_directories(${CMAKE_SOURCE_DIR}/Library/)
-include_directories(${CMAKE_SOURCE_DIR}/LibC/include/)
+include_directories(${CMAKE_SOURCE_DIR}/Library/LibC/include/)

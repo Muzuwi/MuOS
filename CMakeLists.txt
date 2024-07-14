@@ -5,5 +5,5 @@ project(MuOS LANGUAGES NONE)
 include(CMake/ConfigureCMake.cmake)
 
 add_subdirectory(Kernel/)
-add_subdirectory(LibC/)
+add_subdirectory(Library/LibC/)
 add_subdirectory(Library/LibGeneric/)

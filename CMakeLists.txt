@@ -5,8 +5,8 @@ project(MuOS LANGUAGES NONE)
 #  Signal that this is the main kernel build
 set(MU_BUILD_TYPE cross)
 
-# Include common modules
-include(CMake/KernelSources.cmake)
+# Add the project CMake modules to the search path
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
 #  Compile modules
 add_subdirectory(Kernel/)

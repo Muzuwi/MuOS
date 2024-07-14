@@ -5,6 +5,7 @@ if (NOT MU_MACHINE)
 endif ()
 message(STATUS "Compiling for machine type ${MU_MACHINE}")
 
+include(KernelSources)
 # Configure the architecture-specific toolchain
 find_package(MuToolchain REQUIRED)
 # Enable C++/NASM support

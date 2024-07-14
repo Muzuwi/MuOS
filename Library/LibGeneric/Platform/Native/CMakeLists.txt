@@ -1,10 +1,4 @@
-include(FetchContent)
-FetchContent_Declare(
-    ExternCatch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG 62fd660583d3ae7a7886930b413c3c570e89786c
-)
-FetchContent_MakeAvailable(ExternCatch2)
+include(ConfigureNativeTests)
 
 add_library(LibGeneric
     Platform/Native/Allocator-Native.cpp

@@ -38,3 +38,5 @@ target_compile_options(TestLibGeneric
     PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:${TESTLIBGEN_CXX_FLAGS}>)
 target_link_options(TestLibGeneric
     PRIVATE $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:C>>:${TESTLIBGEN_LINKER_FLAGS}>)
+
+catch_discover_tests(TestLibGeneric)

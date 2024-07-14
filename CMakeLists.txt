@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.17)
 project(MuOS LANGUAGES NONE)
 
+enable_testing()
+
 #  Signal that this is the main kernel build
 set(MU_BUILD_TYPE cross)
 

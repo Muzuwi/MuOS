@@ -2,13 +2,7 @@
 cmake_minimum_required(VERSION 3.17)
 project(MuOS LANGUAGES NONE)
 
-enable_testing()
-
-#  Signal that this is the main kernel build
-set(MU_BUILD_TYPE cross)
-
-# Add the project CMake modules to the search path
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+include(CMake/ConfigureCMake.cmake)
 
 #  Compile modules
 add_subdirectory(Kernel/)

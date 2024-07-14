@@ -13,4 +13,7 @@ if(NOT DEFINED MU_BUILD_TYPE)
 endif()
 
 # Add custom CMake modules to the search path
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/)
+list(APPEND CMAKE_MODULE_PATH
+        ${CMAKE_CURRENT_LIST_DIR}/
+        ${CMAKE_CURRENT_LIST_DIR}/Toolchain/
+        )

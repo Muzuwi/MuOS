@@ -22,7 +22,7 @@ For example, to build the kernel for `x86_64`, run the following:
 
 ```bash
 mkdir -p build/ && cd build/
-cmake ../ -DCMAKE_MODULE_PATH=$(pwd)/../Toolchain/Modules -DMU_MACHINE=x86_64 -DCMAKE_INSTALL_PREFIX=/usr/local/muOS/
+cmake ../ -DCMAKE_MODULE_PATH=$(pwd)/../CMake -DMU_MACHINE=x86_64 -DCMAKE_INSTALL_PREFIX=/usr/local/muOS/
 make -j$(nproc)
 ```
 
@@ -32,7 +32,7 @@ Please note that this assumes the current directory is the MuOS repository (`${M
 
 The kernel utilizes CMake as the build system, but additional configuration options are **required** to be passed for a successful build.
 These options are:
-- `-DCMAKE_MODULE_PATH` - for now, this **must** be set to the absolute path to the  `Toolchain/Modules/` folder of the cloned MuOS repository
+- `-DCMAKE_MODULE_PATH` - for now, this **must** be set to the absolute path to the  `CMake/` folder of the cloned MuOS repository
 - `-DCMAKE_INSTALL_PREFIX` - for now, this **must** be set to `/usr/local/muOS`
 - `-DMU_MACHINE` - this defines the architecture to build for. Currently, only `x86_64` is supported.
 

@@ -3,6 +3,7 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/IDT.hpp>
+#include <Arch/x86_64/Interrupt.hpp>
 #include <Arch/x86_64/MP/Boot.hpp>
 #include <Arch/x86_64/MP/ExecutionEnvironment.hpp>
 #include <Arch/x86_64/PCI/PCI.hpp>
@@ -53,7 +54,7 @@ core::Error arch::platform_early_init() {
 }
 
 core::Error arch::platform_init() {
-	CPU::irq_enable();
+	irq_local_enable();
 
 	PCI::discover();
 	Syscall::init();

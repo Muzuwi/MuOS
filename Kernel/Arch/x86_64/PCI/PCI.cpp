@@ -1,6 +1,6 @@
-#include <Arch/x86_64/IRQDisabler.hpp>
 #include <Arch/x86_64/PCI/PCI.hpp>
 #include <Arch/x86_64/PCI/PciDevice.hpp>
+#include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/Log/Logger.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <SystemTypes.hpp>
@@ -79,7 +79,7 @@ void PCI::add_device(PciDevice device) {
  *  The callback should return true if a specific device is wanted.
  */
 KOptional<PciDevice> PCI::acquire_device(gen::Function<bool(PciDevice const&)> callback) {
-	IRQDisabler disabler {};
+	core::irq::InterruptDisabler disabler {};
 	gen::LockGuard guard { s_devices_lock };
 
 	for(auto& lock : s_devices) {

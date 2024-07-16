@@ -1,4 +1,4 @@
-#include <Arch/x86_64/IRQDisabler.hpp>
+#include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
@@ -26,7 +26,7 @@ void KHeap::init() {
 }
 
 void KHeap::dump_stats() {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 	m_heap_lock.lock();
 
 	m_chunk_allocator.dump_allocator();

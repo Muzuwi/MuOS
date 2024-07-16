@@ -1,4 +1,4 @@
-#include <Arch/x86_64/IRQDisabler.hpp>
+#include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/MP/MP.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <Locks/KSemaphore.hpp>
@@ -14,7 +14,7 @@ KSemaphore::~KSemaphore() {}
 
 void KSemaphore::wait() {
 	{
-		IRQDisabler irq_disabler {};
+		core::irq::InterruptDisabler irq_disabler {};
 		gen::LockGuard<gen::Spinlock> guard { m_lock };
 
 		//  Try acquiring, if non-zero consume one and return immediately
@@ -32,7 +32,7 @@ void KSemaphore::wait() {
 }
 
 void KSemaphore::signal() {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 	gen::LockGuard<gen::Spinlock> guard { m_lock };
 
 	if(!m_queue.empty()) {

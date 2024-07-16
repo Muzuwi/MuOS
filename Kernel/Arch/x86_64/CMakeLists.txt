@@ -22,6 +22,7 @@ target_compile_options(Architecture
     )
 target_compile_definitions(Architecture
     PRIVATE __is_kernel_build__
+    PRIVATE ARCH_IS_x86_64=1
     )
 # The link script flag is public, this way the kernel executable is also
 # built with the proper linking layout.

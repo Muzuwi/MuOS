@@ -1,8 +1,8 @@
+#include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/Log/Logger.hpp>
 #include <LibGeneric/Algorithm.hpp>
 #include <Process/Process.hpp>
 #include <Scheduler/RunQueue.hpp>
-#include "Arch/x86_64/IRQDisabler.hpp"
 
 CREATE_LOGGER("scheduler", core::log::LogLevel::Debug);
 
@@ -36,7 +36,7 @@ void RunQueue::swap() {
 }
 
 void RunQueue::dump_statistics() {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 	log.debug("Active queue:");
 	for(auto const& thread : *m_active) {
 		log.debug("Thread{{{}}}, TID{{{}}}, Priority{{{}}}, Quant{{{}}}", Format::ptr(&thread), thread->tid(),

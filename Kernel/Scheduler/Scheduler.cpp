@@ -1,12 +1,11 @@
 #include <Arch/x86_64/CPU.hpp>
-#include <Arch/x86_64/IRQDisabler.hpp>
 #include <Core/Assert/Assert.hpp>
+#include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/MP/MP.hpp>
 #include <LibFormat/Format.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
-#include "Arch/Interface.hpp"
 #include "Core/Log/Logger.hpp"
 #include "LibGeneric/SharedPtr.hpp"
 #include "LibGeneric/String.hpp"
@@ -87,7 +86,7 @@ unsigned Scheduler::pri_to_quants(uint8_t priority) {
  *  preempted/block/sleep.
  */
 void Scheduler::add_thread_to_rq(Thread* thread) {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 
 	m_scheduler_lock.lock();
 	m_rq.add_inactive(thread);
@@ -100,7 +99,7 @@ void Scheduler::add_thread_to_rq(Thread* thread) {
  *  Called when a task voluntarily relinquishes its' CPU time
  */
 void Scheduler::schedule() {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 	auto* thread = this_cpu()->current_thread();
 
 	m_scheduler_lock.lock();
@@ -116,7 +115,7 @@ void Scheduler::schedule() {
  *  The thread is not re-added to the inactive queue.
  */
 void Scheduler::sleep() {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 	auto* thread = this_cpu()->current_thread();
 	thread->set_state(TaskState::Sleeping);
 
@@ -132,7 +131,7 @@ void Scheduler::sleep() {
  *  The thread is not re-added to the inactive queue.
  */
 void Scheduler::block() {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 	auto* thread = this_cpu()->current_thread();
 	thread->set_state(TaskState::Blocking);
 
@@ -193,7 +192,7 @@ void Scheduler::wake_up(Thread* thread) {
 		return;
 	}
 
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 
 	ENSURE(thread->state() != TaskState::Running);
 	thread->set_state(TaskState::Ready);
@@ -221,7 +220,7 @@ void Scheduler::run_here(Thread* thread) {
 }
 
 void Scheduler::dump_statistics() {
-	IRQDisabler irq_disabler {};
+	core::irq::InterruptDisabler irq_disabler {};
 
 	m_scheduler_lock.lock();
 	m_rq.dump_statistics();

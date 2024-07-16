@@ -1,8 +1,8 @@
 #include "IRQDispatcher.hpp"
 #include <Arch/x86_64/CPU.hpp>
-#include <Arch/x86_64/IRQDisabler.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
+#include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/MP/MP.hpp>
 #include <LibGeneric/Algorithm.hpp>
 #include <LibGeneric/LockGuard.hpp>
@@ -49,7 +49,7 @@ void IRQDispatcher::dispatch_microtask(uint8_t irq, PtraceRegs* interrupt_trap_f
  *  be registered for a single IRQ.
  */
 bool IRQDispatcher::register_microtask(uint8_t irq_num, IRQDispatcher::HandlerFunc handler) {
-	IRQDisabler disabler {};
+	core::irq::InterruptDisabler disabler {};
 	s_microtask_lock.lock();
 
 	bool retval = false;
@@ -66,7 +66,7 @@ bool IRQDispatcher::register_microtask(uint8_t irq_num, IRQDispatcher::HandlerFu
  *  Removes a microtask from the specified IRQ.
  */
 void IRQDispatcher::remove_microtask(uint8_t irq_num, IRQDispatcher::HandlerFunc handler) {
-	IRQDisabler disabler {};
+	core::irq::InterruptDisabler disabler {};
 	s_microtask_lock.lock();
 
 	if(s_microtasks[irq_num] == handler) {

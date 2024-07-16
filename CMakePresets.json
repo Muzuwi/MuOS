@@ -10,7 +10,7 @@
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_INSTALL_PREFIX": "/usr/local/muOS",
-                "CMAKE_MODULE_PATH": "${sourceDir}/Toolchain/Modules"
+                "CMAKE_MODULE_PATH": "${sourceDir}/CMake"
             }
         },
 

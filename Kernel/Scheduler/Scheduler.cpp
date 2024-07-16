@@ -59,7 +59,7 @@ Thread* Scheduler::create_idle_task(size_t identifier) {
  *  Creates the idle task for the current AP and enters it, kickstarting the scheduler on the current AP
  */
 void Scheduler::bootstrap(Thread* ap_idle) {
-	CPU::irq_disable();
+	irq_local_disable();
 
 	if(!ap_idle) {
 		const auto node_id = this_cpu()->node_id;

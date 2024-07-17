@@ -9,6 +9,7 @@ set(MUOS_CXX_FLAGS
     -Wextra
     -Werror=unused-result
     -Werror=return-type
+    -Werror=uninitialized
     --std=c++2a
     $<$<CONFIG:Debug>:-ggdb -g>
     $<$<CONFIG:Release>:-O2>

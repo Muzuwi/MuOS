@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Memory/Allocators/BumpAllocator.hpp>
 #include <SystemTypes.hpp>
 
 enum class ChunkState {

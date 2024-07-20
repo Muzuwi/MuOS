@@ -55,6 +55,7 @@ target_compile_definitions(KernelELF
     )
 target_link_libraries(KernelELF PRIVATE
     ${MU_MACHINE}::LibArch
+    LibAllocator
     LibGeneric
     LibC
     )

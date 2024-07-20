@@ -3,6 +3,7 @@
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
 #include <Core/Assert/Assert.hpp>
 #include <Core/Log/Logger.hpp>
+#include <LibAllocator/BumpAllocator.hpp>
 #include <Memory/PMM.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
@@ -613,8 +614,8 @@ bool VMM::clone_address_space_from(PhysPtr<PML4> pml4) {
 	return true;
 }
 
-BumpAllocator VMM::s_heap_break { &_ukernel_heap_start,
-	                              (size_t)((uint8*)&_ukernel_heap_end - (uint8*)&_ukernel_heap_start) };
+static liballoc::BumpAllocator s_heap_break { liballoc::Arena(
+	    &_ukernel_heap_start, (size_t)((uint8*)&_ukernel_heap_end - (uint8*)&_ukernel_heap_start)) };
 
 /*
  *  Allocates a region of the specified size (rounded to integer amount of pages) in the kernel heap address space.

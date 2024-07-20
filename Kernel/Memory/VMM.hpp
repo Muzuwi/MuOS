@@ -3,7 +3,6 @@
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Spinlock.hpp>
-#include <Memory/Allocators/BumpAllocator.hpp>
 #include <Memory/Wrappers/VMapping.hpp>
 #include <Process/Thread.hpp>
 #include <Structs/KOptional.hpp>
@@ -31,7 +30,6 @@ class VMM {
 		Yes
 	};
 
-	static BumpAllocator s_heap_break;
 	[[nodiscard]] static void* allocate_kernel_heap(size_t size);
 
 	void _map_pallocation(PAllocation, void*);

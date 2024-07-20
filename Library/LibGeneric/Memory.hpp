@@ -17,4 +17,16 @@ namespace gen {
 
 		ptr->~T();
 	}
+
+	/*	Align a given pointer `ptr` at the boundary specified by `alignment`.
+	 * 	The pointer is modified to be aligned, and the number of padding bytes
+	 * 	that were added is returned.
+	 * 	If `alignment` is not a power-of-two, the behavior is undefined.
+	 */
+	inline size_t align(size_t alignment, void*& ptr) {
+		const auto intptr = reinterpret_cast<uintptr_t>(ptr);
+		const auto aligned = (intptr - 1u + alignment) & -alignment;
+		ptr = reinterpret_cast<void*>(aligned);
+		return aligned - intptr;
+	}
 }

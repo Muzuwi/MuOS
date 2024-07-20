@@ -13,6 +13,7 @@ set(TESTLIBALLOCATOR_LINKER_FLAGS
     )
 
 add_executable(TestLibAllocator
+    BumpAllocator.cpp
     Main.cpp
     )
 

@@ -1,8 +1,8 @@
 #pragma once
 #include <Core/Assert/Assert.hpp>
+#include <LibAllocator/ChunkAllocator.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/StaticVector.hpp>
-#include <Memory/Allocators/ChunkAllocator.hpp>
 #include <Memory/Allocators/SlabAllocator.hpp>
 #include "LibGeneric/Memory.hpp"
 
@@ -50,7 +50,7 @@ class KHeap {
 	}
 
 	gen::Spinlock m_heap_lock {};
-	ChunkAllocator m_chunk_allocator {};
+	liballoc::ChunkAllocator m_chunk_allocator {};
 	gen::StaticVector<SlabAllocator, 256> m_slab_allocators[7] {};
 
 	SlabAllocator* slab_grow(size_t requested_size);

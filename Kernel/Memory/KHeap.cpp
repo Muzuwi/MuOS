@@ -16,7 +16,9 @@ void KHeap::init() {
 	auto chunk_space = VMM::allocate_kernel_heap(size);
 	ENSURE(chunk_space != nullptr);
 	log.debug("ChunkAllocator({}), size {}", chunk_space, size);
-	m_chunk_allocator = ChunkAllocator { chunk_space, size };
+	m_chunk_allocator = liballoc::ChunkAllocator {
+		liballoc::Arena {chunk_space, size}
+	};
 
 	for(unsigned i = 0; i < 2; ++i) {
 		for(unsigned object_size = 8; object_size <= 256; object_size <<= 1) {
@@ -29,7 +31,6 @@ void KHeap::dump_stats() {
 	core::irq::InterruptDisabler irq_disabler {};
 	m_heap_lock.lock();
 
-	m_chunk_allocator.dump_allocator();
 	for(auto& size_slabs : m_slab_allocators) {
 		for(auto& v : size_slabs) {
 			log.debug("Slab({}): size={}, free={}, used={}", v.pool_base(), v.object_size(), v.objects_free(),

@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.17)
+
+if(NOT MU_BUILD_TYPE STREQUAL "cross")
+    message(STATUS "Native tests requested - LibC build skipped")
+    return()
+endif()
+
 find_package(MuToolchain REQUIRED)
 project(LibC LANGUAGES C)
 

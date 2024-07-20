@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.17)
 
+if(NOT MU_BUILD_TYPE STREQUAL "cross")
+    message(STATUS "Native tests requested - kernel build skipped")
+    return()
+endif()
+
 if (NOT MU_MACHINE)
     message(FATAL_ERROR "No target architecture was specified! Please provide via MU_MACHINE")
 endif ()

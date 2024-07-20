@@ -1,7 +1,20 @@
 #pragma once
 
 namespace gen {
-	template<typename LockType>
+	template<typename T>
+	concept Lockable = requires(T lock) {
+		{ lock.lock() };
+	};
+
+	template<typename T>
+	concept Unlockable = requires(T lock) {
+		{ lock.unlock() };
+	};
+
+	template<typename T>
+	concept Lock = Lockable<T> && Unlockable<T>;
+
+	template<Lock LockType>
 	class LockGuard {
 		LockType& m_lock;
 	public:

@@ -18,7 +18,6 @@ target_compile_options(Architecture
     )
 target_compile_definitions(Architecture
     PUBLIC ARCH_IS_RISCV64=1
-    PRIVATE __is_kernel_build__=1
     )
 
 # The link script flag is public, this way the kernel executable is also

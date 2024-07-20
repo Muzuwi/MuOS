@@ -17,9 +17,6 @@ set_target_properties(LibGeneric PROPERTIES OUTPUT_NAME "libGeneric")
 target_compile_options(LibGeneric
     PRIVATE ${MUOS_CXX_FLAGS}
     )
-target_compile_definitions(LibGeneric
-    PRIVATE __is_kernel_build__
-    )
 
 # Install the shim to the prefix
 install(TARGETS LibGeneric

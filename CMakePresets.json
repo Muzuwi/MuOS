@@ -21,7 +21,8 @@
             "binaryDir": "${sourceDir}/cmake-build-native_tests-${presetName}",
             "cacheVariables": {
                 "MU_MACHINE": "x86_64",
-                "MU_BUILD_TYPE": "native"
+                "MU_BUILD_TYPE": "native",
+                "LIBALLOCATOR_BUILD_TESTS": "true"
             }
         },
 

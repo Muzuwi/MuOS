@@ -1,4 +1,4 @@
-#include <Memory/PMM.hpp>
+#include <Core/Mem/GFP.hpp>
 #include <Memory/VMM.hpp>
 #include <Memory/Wrappers/VMapping.hpp>
 
@@ -15,9 +15,9 @@ SharedPtr<VMapping> VMapping::create(void* address, size_t size, uint32 flags, u
 	//  FIXME:  Fix unaligned sizes
 	auto page_count = size / 0x1000;
 	for(unsigned i = 0; i < page_count; ++i) {
-		auto alloc = PMM::instance().allocate(0);
+		auto alloc = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
 		ENSURE(alloc.has_value());
-		vmapping->m_pages.push_back(alloc.unwrap());
+		vmapping->m_pages.push_back(alloc.data());
 	}
 
 	return SharedPtr<VMapping> { vmapping };
@@ -25,7 +25,7 @@ SharedPtr<VMapping> VMapping::create(void* address, size_t size, uint32 flags, u
 
 VMapping::~VMapping() {
 	for(auto& alloc : m_pages) {
-		PMM::instance().free(alloc);
+		core::mem::free_pages(alloc);
 	}
 }
 
@@ -39,7 +39,7 @@ KOptional<PhysPtr<uint8>> VMapping::page_for(void* vaddr) const {
 		auto* region_end = region_start + alloc.size();
 		if(vaddr >= region_start && vaddr < region_end) {
 			auto offset = (uint8*)vaddr - (uint8*)region_start;
-			auto addr = alloc.base().as<uint8>() + offset;
+			auto addr = PhysAddr { alloc.base }.as<uint8>() + offset;
 			return addr;
 		}
 

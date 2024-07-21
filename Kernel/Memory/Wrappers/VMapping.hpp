@@ -1,10 +1,11 @@
 #pragma once
 
 #include <LibGeneric/List.hpp>
-#include <Memory/Allocators/PAllocation.hpp>
+#include <Memory/Ptr.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Structs/KOptional.hpp>
 #include <SystemTypes.hpp>
+#include "Core/Mem/GFP.hpp"
 
 enum VMappingFlags : uint32 {
 	VM_KERNEL = 0x00000001,
@@ -29,7 +30,7 @@ private:
 	template<class T>
 	using SharedPtr = gen::SharedPtr<T>;
 
-	List<PAllocation> m_pages;
+	List<core::mem::PageAllocation> m_pages;
 
 	void* m_addr;
 	size_t m_size;
@@ -52,9 +53,9 @@ public:
 
 	size_t size() const { return m_size; }
 
-	List<PAllocation>& pages() { return m_pages; }
+	List<core::mem::PageAllocation>& pages() { return m_pages; }
 
-	List<PAllocation> const& pages() const { return m_pages; }
+	List<core::mem::PageAllocation> const& pages() const { return m_pages; }
 
 	void* addr() const { return m_addr; }
 

@@ -4,7 +4,6 @@
 #include <Core/Assert/Assert.hpp>
 #include <Core/MP/MP.hpp>
 #include <Drivers/IDE/IDE.hpp>
-#include <Memory/PMM.hpp>
 #include <Memory/VMM.hpp>
 #include <Scheduler/Scheduler.hpp>
 #include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
@@ -40,7 +39,6 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 
 	//  Initialize required kernel subsystems
 	VMM::initialize_kernel_vm();
-	PMM::instance().init_deferred_allocators();
 	KHeap::instance().init();
 
 	//  Handles further platform initialization tasks

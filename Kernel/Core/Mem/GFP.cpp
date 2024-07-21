@@ -1,3 +1,4 @@
+#include <Arch/VM.hpp>
 #include <Core/Error/Error.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/Mem/GFP.hpp>
@@ -31,16 +32,23 @@ struct AllocatorBase {
 
 struct SlabBasedPageAllocator : public AllocatorBase {
 	SlabBasedPageAllocator(liballoc::Arena arena)
-	    : slab(arena, 0x1000) {}
+	    : slab(liballoc::Arena { idmap(arena.base), arena.length }, 0x1000) {
+		AllocatorBase::start = arena.base;
+		AllocatorBase::size = arena.length;
+	}
 
 	void* allocate(size_t order, core::mem::PageAllocFlags) override {
 		ENSURE(order == 0);
-		return slab.allocate();
+		auto* ptr = slab.allocate();
+		if(!ptr) {
+			return nullptr;
+		}
+		return idunmap(ptr);
 	}
 
 	core::Error free(core::mem::PageAllocation alloc) override {
 		ENSURE(alloc.order == 0);
-		slab.free(alloc.base);
+		slab.free(idmap(alloc.base));
 		return core::Error::Ok;
 	}
 
@@ -109,11 +117,8 @@ static T* allocalloc(Args... args) {
 		if(maybe_handle.has_error()) {
 			return nullptr;
 		}
-
-		//  FIXME: Map pstart to virtual memory
-		void* vstartfixme = pstart;
-
 		//  LEAK: Leaking the region handle, as we probably won't ever need to free this
+		void* vstart = idmap(pstart);
 		s_allocalloc = liballoc::ChunkAllocator {
 			liballoc::Arena {vstart, CONFIG_CORE_MEM_GFP_DEFAULT_ALLOCALLOC_SIZE},
 		};
@@ -138,16 +143,12 @@ static AllocatorBase* create_allocator_for_request(size_t order, core::mem::Page
 	if(maybe_handle.has_error()) {
 		return nullptr;
 	}
-	//  FIXME: Map pstart to virtual memory
-	void* vstartfixme = pstart;
 
-	auto* allocator = allocalloc<SlabBasedPageAllocator>(liballoc::Arena { vstart, default_request_size });
+	auto* allocator = allocalloc<SlabBasedPageAllocator>(liballoc::Arena { pstart, default_request_size });
 	if(!allocator) {
 		(void)core::mem::free(maybe_handle.data());
 		return nullptr;
 	}
-	allocator->start = pstart;
-	allocator->size = default_request_size;
 	//  Link the allocator
 	//  For simplicity, put the new allocator as root.
 	allocator->next = s_root;

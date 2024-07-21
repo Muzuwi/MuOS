@@ -3,12 +3,14 @@
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
 #include <Core/Assert/Assert.hpp>
 #include <Core/Log/Logger.hpp>
+#include <Core/Mem/GFP.hpp>
 #include <LibAllocator/BumpAllocator.hpp>
-#include <Memory/PMM.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
 #include <Process/Process.hpp>
 #include <string.h>
+#include "Core/Mem/Layout.hpp"
+#include "Memory/Ptr.hpp"
 
 using namespace Units;
 CREATE_LOGGER("vmm", core::log::LogLevel::Debug);
@@ -21,15 +23,15 @@ void VMM::initialize_kernel_vm() {
 
 	log.info("Initializing kerneld address space");
 
-	auto res = PMM::instance().allocate();
+	auto res = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
 	if(!res.has_value()) {
 		log.fatal("Failed allocating page for kerneld PML4! Out of memory?");
 		ENSURE_NOT_REACHED();
 	}
 
-	auto pml4 = res.unwrap().base();
+	auto pml4 = PhysPtr<PML4> { (PML4*)res.data().base };
 	memset(pml4.get_mapped(), 0, 0x1000);
-	kerneld.vmm().m_pml4 = res.unwrap().base().as<PML4>();
+	kerneld.vmm().m_pml4 = PhysPtr<PML4> { (PML4*)res.data().base };
 
 	log.debug("Mapping kernel executable");
 	kerneld.vmm()._map_kernel_executable();
@@ -51,9 +53,9 @@ void VMM::initialize_kernel_vm() {
  *  Maps the given PAllocation starting at virtual address vaddr
  *  Should only be used by lower level kernel allocators, userland should use VMappings
  */
-void VMM::_map_pallocation(PAllocation allocation, void* vaddr) {
-	auto physical = allocation.base();
-	while(physical < allocation.end()) {
+void VMM::_map_pallocation(core::mem::PageAllocation allocation, void* vaddr) {
+	auto physical = PhysAddr { allocation.base };
+	while(physical.get() < allocation.end()) {
 		PML4E& pml4e = (*m_pml4)[vaddr];
 		auto* pdpte = ensure_pdpt(vaddr, LeakAllocatedPage::Yes);
 		auto* pde = ensure_pd(vaddr, LeakAllocatedPage::Yes);
@@ -119,6 +121,16 @@ void VMM::_map_kernel_executable() {
 	}
 }
 
+static void* get_physical_end() {
+	void* max = nullptr;
+	core::mem::for_each_region([&max](core::mem::Region region) {
+		if(region.start > max) {
+			max = region.start;
+		}
+	});
+	return max;
+}
+
 /*
  *  Creates the identity map in the current address space. Only called on kernel
  *  initialization
@@ -128,7 +140,7 @@ void VMM::_map_physical_identity() {
 	auto physical = PhysAddr { nullptr };
 	PhysPtr<PML4> pml4 = m_pml4;
 
-	const auto physical_end = PMM::instance().physical_end_addr().get();
+	const auto physical_end = get_physical_end();
 
 	if(CPUID::has_huge_pages()) {
 		for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 1 * GiB) {
@@ -193,12 +205,12 @@ PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
 	if(!pml4e.directory()) {
 		PhysAddr phys;
 		if(leak == LeakAllocatedPage::Yes) {
-			KOptional<PAllocation> alloc = PMM::instance().allocate(0);
+			auto alloc = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
 			if(!alloc.has_value()) {
 				log.error("Failed to allocate page for PT!");
 				return nullptr;
 			}
-			phys = alloc.unwrap().base();
+			phys = PhysAddr { alloc.data().base };
 		} else {
 			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
 			if(!alloc.has_value()) {
@@ -224,12 +236,12 @@ PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
 	if(!pdpte->directory()) {
 		PhysAddr phys;
 		if(leak == LeakAllocatedPage::Yes) {
-			KOptional<PAllocation> alloc = PMM::instance().allocate(0);
+			auto alloc = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
 			if(!alloc.has_value()) {
 				log.error("Failed to allocate page for PD!");
 				return nullptr;
 			}
-			phys = alloc.unwrap().base();
+			phys = PhysAddr { alloc.data().base };
 		} else {
 			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
 			if(!alloc.has_value()) {
@@ -255,12 +267,12 @@ PTE* VMM::ensure_pt(void* addr, LeakAllocatedPage leak) {
 	if(!pde->table()) {
 		PhysAddr phys;
 		if(leak == LeakAllocatedPage::Yes) {
-			KOptional<PAllocation> alloc = PMM::instance().allocate(0);
+			auto alloc = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
 			if(!alloc.has_value()) {
 				log.error("Failed to allocate page for PT!");
 				return nullptr;
 			}
-			phys = alloc.unwrap().base();
+			phys = PhysAddr { alloc.data().base };
 		} else {
 			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
 			if(!alloc.has_value()) {
@@ -387,8 +399,8 @@ KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
 bool VMM::map(VMapping const& mapping) {
 	auto virtual_addr = (uint8_t*)mapping.addr();
 	for(auto& page : mapping.pages()) {
-		auto phys = page.base();
-		for(unsigned i = 0; i < (1u << page.order()); ++i) {
+		auto phys = PhysAddr { page.base };
+		for(unsigned i = 0; i < (1u << page.order); ++i) {
 			addrmap(virtual_addr, phys, static_cast<VMappingFlags>(mapping.flags()));
 			virtual_addr += 0x1000;
 			phys += 0x1000;
@@ -403,8 +415,8 @@ bool VMM::map(VMapping const& mapping) {
 bool VMM::unmap(VMapping const& mapping) {
 	auto virtual_addr = (uint8_t*)mapping.addr();
 	for(auto& page : mapping.pages()) {
-		auto phys = page.base();
-		for(unsigned i = 0; i < (1u << page.order()); ++i) {
+		auto phys = PhysAddr { page.base };
+		for(unsigned i = 0; i < (1u << page.order); ++i) {
 			addrunmap(virtual_addr);
 			virtual_addr += 0x1000;
 			phys += 0x1000;
@@ -485,13 +497,13 @@ bool VMM::addrunmap(void* vaddr) {
  *  Can't use VMappings for these, as most often they won't have an underlying VM mapping
  */
 KOptional<PhysAddr> VMM::_allocate_kernel_page(size_t order) {
-	auto alloc = PMM::instance().allocate(order);
+	auto alloc = core::mem::allocate_pages(order, core::mem::PageAllocFlags {});
 	if(!alloc.has_value()) {
 		return {};
 	}
 
-	m_kernel_pages.push_back(alloc.unwrap());
-	return { alloc.unwrap().base() };
+	m_kernel_pages.push_back(alloc.data());
+	return { alloc.data().base };
 }
 
 /*
@@ -634,12 +646,12 @@ void* VMM::allocate_kernel_heap(size_t size) {
 
 	//  Map new pages for the allocated heap region
 	for(auto* current = (uint8*)ptr; current < (uint8*)ptr + size_rounded_to_page_size; current += 0x1000) {
-		auto page = PMM::instance().allocate();
+		auto page = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
 		if(!page.has_value()) {
 			return nullptr;
 		}
 
-		Process::_kerneld_ref().vmm()._map_pallocation(page.unwrap(), current);
+		Process::_kerneld_ref().vmm()._map_pallocation(page.data(), current);
 	}
 
 	return ptr;

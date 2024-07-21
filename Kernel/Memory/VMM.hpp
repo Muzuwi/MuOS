@@ -1,4 +1,5 @@
 #pragma once
+#include <Core/Mem/GFP.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
@@ -19,7 +20,7 @@ class VMM {
 	Process& m_process;
 	PhysPtr<PML4> m_pml4;
 	List<SharedPtr<VMapping>> m_mappings;
-	List<PAllocation> m_kernel_pages;
+	List<core::mem::PageAllocation> m_kernel_pages;
 	void* m_next_kernel_stack_at;
 	void* m_next_anon_vm_at;
 	gen::Spinlock m_vm_lock;
@@ -31,7 +32,7 @@ class VMM {
 
 	[[nodiscard]] static void* allocate_kernel_heap(size_t size);
 
-	void _map_pallocation(PAllocation, void*);
+	void _map_pallocation(core::mem::PageAllocation, void*);
 	void _map_kernel_executable();
 	void _map_physical_identity();
 	void _map_kernel_prealloc_pml4();

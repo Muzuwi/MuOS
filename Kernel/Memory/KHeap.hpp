@@ -1,9 +1,9 @@
 #pragma once
 #include <Core/Assert/Assert.hpp>
 #include <LibAllocator/ChunkAllocator.hpp>
+#include <LibAllocator/SlabAllocator.hpp>
 #include <LibGeneric/Spinlock.hpp>
 #include <LibGeneric/StaticVector.hpp>
-#include <Memory/Allocators/SlabAllocator.hpp>
 #include "LibGeneric/Memory.hpp"
 
 class KHeap {
@@ -51,9 +51,9 @@ class KHeap {
 
 	gen::Spinlock m_heap_lock {};
 	liballoc::ChunkAllocator m_chunk_allocator {};
-	gen::StaticVector<SlabAllocator, 256> m_slab_allocators[7] {};
+	gen::StaticVector<liballoc::SlabAllocator, 256> m_slab_allocators[7] {};
 
-	SlabAllocator* slab_grow(size_t requested_size);
+	liballoc::SlabAllocator* slab_grow(size_t requested_size);
 public:
 	static KHeap& instance() { return s_instance; }
 

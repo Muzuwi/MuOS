@@ -12,7 +12,6 @@ using gen::List;
 class VMM {
 	friend void SysDbg::handle_command(gen::List<gen::String> const& args);
 	friend class V86;
-	friend class SlabAllocator;
 	friend class KHeap;
 	friend class SMP;
 	friend void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth);

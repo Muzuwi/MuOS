@@ -1,7 +1,8 @@
 #include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
-#include <Memory/Allocators/SlabAllocator.hpp>
+#include <LibAllocator/Arena.hpp>
+#include <LibAllocator/SlabAllocator.hpp>
 #include <Memory/KHeap.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
@@ -33,8 +34,8 @@ void KHeap::dump_stats() {
 
 	for(auto& size_slabs : m_slab_allocators) {
 		for(auto& v : size_slabs) {
-			log.debug("Slab({}): size={}, free={}, used={}", v.pool_base(), v.object_size(), v.objects_free(),
-			          v.objects_used());
+			log.debug("Slab({}): pool_capacity={} object_size={} overhead={}", v.pool_start(), v.pool_capacity(),
+			          v.object_size(), v.overhead());
 		}
 	}
 	m_heap_lock.unlock();
@@ -91,8 +92,10 @@ void* KHeap::slab_alloc(size_t size) {
 	auto* ptr = [size, this]() -> void* {
 		auto& slabs = m_slab_allocators[index_for_size(size)];
 		for(auto& allocator : slabs) {
-			if(allocator.objects_free() > 0) {
-				return allocator.allocate();
+			const auto ptr = allocator.allocate();
+			if(ptr) {
+				// log.debug("alloc slab={x} ptr={x}", allocator.pool_start(), ptr);
+				return ptr;
 			}
 		}
 
@@ -124,7 +127,9 @@ void KHeap::slab_free(void* ptr, size_t size) {
 	[size, ptr, this]() {
 		auto& slabs = m_slab_allocators[index_for_size(size)];
 		for(auto& allocator : slabs) {
-			if(allocator.contains_address(ptr)) {
+			if(ptr >= allocator.pool_start() &&
+			   ptr < (reinterpret_cast<uint8_t*>(allocator.pool_start()) + allocator.pool_size())) {
+				// log.debug("free slab={x} ptr={x}", allocator.pool_start(), ptr);
 				allocator.free(ptr);
 				return;
 			}
@@ -140,15 +145,18 @@ void KHeap::slab_free(void* ptr, size_t size) {
  *  Create a new slab for the specified allocation request
  *  This function assumes a heap lock was already taken
  */
-SlabAllocator* KHeap::slab_grow(size_t requested_size) {
+liballoc::SlabAllocator* KHeap::slab_grow(size_t requested_size) {
+	const size_t default_arena_size = 32768;
 	const unsigned actual_object_size = 8 << index_for_size(requested_size);
 
-	auto maybe_slab = SlabAllocator::make(32768, actual_object_size);
-	if(!maybe_slab.has_value()) {
+	auto* allocator_arena = VMM::allocate_kernel_heap(default_arena_size);
+	if(!allocator_arena) {
 		return nullptr;
 	}
-	auto slab = maybe_slab.unwrap();
-	log.debug("SlabAllocator({}), size {}, objects {}", slab.pool_base(), slab.object_size(), slab.objects_free());
+	auto slab = liballoc::SlabAllocator(liballoc::Arena { allocator_arena, default_arena_size }, actual_object_size);
+
+	log.debug("Created slab: ptr={} object_size={} overhead={}", slab.pool_start(), slab.object_size(),
+	          slab.overhead());
 
 	auto& list = m_slab_allocators[index_for_size(requested_size)];
 	list.push_back(gen::move(slab));

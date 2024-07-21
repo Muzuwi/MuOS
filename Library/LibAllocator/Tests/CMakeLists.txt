@@ -13,6 +13,7 @@ set(TESTLIBALLOCATOR_LINKER_FLAGS
     )
 
 add_executable(TestLibAllocator
+    SlabAllocator.cpp
     Bitmap.cpp
     BumpAllocator.cpp
     ChunkAllocator.cpp

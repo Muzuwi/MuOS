@@ -6,6 +6,7 @@ set(LIBALLOCATOR_CXX_FLAGS
     )
 
 add_library(LibAllocator STATIC
+    Src/SlabAllocator.cpp
     Src/ChunkAllocator.cpp
     )
 

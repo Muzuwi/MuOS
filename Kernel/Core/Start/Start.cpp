@@ -2,6 +2,7 @@
 #include <Arch/Interface.hpp>
 #include <Arch/x86_64/PIT.hpp>
 #include <Core/Assert/Assert.hpp>
+#include <Core/Mem/Layout.hpp>
 #include <Core/MP/MP.hpp>
 #include <Drivers/IDE/IDE.hpp>
 #include <Memory/VMM.hpp>
@@ -18,6 +19,16 @@
 #include "Process/Process.hpp"
 
 CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
+
+/*	Dumps the physical memory layout and it's current kernel reservations.
+ */
+static void dump_core_mem_layout() {
+	::log.info("Physical memory layout:");
+	core::mem::for_each_region([](core::mem::Region region) {
+		::log.info("|- {x} - {x} ({})", Format::ptr(region.start), Format::ptr((uint8*)region.start + region.len),
+		           core::mem::type_to_str(region.type));
+	});
+}
 
 /** Start the kernel and boot into userland
  *
@@ -37,6 +48,7 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
 	arch::mp::environment_set(env);
 	::log.info("Kernel starting on node={} with environment={x}", env->node_id, Format::ptr(env));
 
+	dump_core_mem_layout();
 	//  Initialize required kernel subsystems
 	VMM::initialize_kernel_vm();
 	KHeap::instance().init();

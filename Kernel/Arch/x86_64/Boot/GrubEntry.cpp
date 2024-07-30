@@ -11,6 +11,11 @@
 #include <Memory/Ptr.hpp>
 #include <SystemTypes.hpp>
 
+//  Low conventional memory is marked as reserved for kernel purposes
+//	This specifies the cutoff start address, where memory regions
+//  that start at base addresses less than this value will be reserved.
+#define CONFIG_ARCH_X86_64_LOWMEM_RESERVE_CUTOFF ((void*)0x10000)
+
 CREATE_LOGGER("boot::grub", core::log::LogLevel::Debug);
 
 static PhysPtr<MultibootInfo> s_multiboot_context;
@@ -69,10 +74,20 @@ static void platform_boot_grub_init_memory(MultibootInfo* bootinfo) {
 			case MultibootMMap::RegionType::USABLE: {
 				memory_amount += range;
 
-				//  Ignore everything in lowmem - we risk overwriting
-				//  paging structures created by earlier bootloaders.
-				if(end < 0x100000) {
-					(void)core::mem::create((void*)start, range, core::mem::RegionType::HardwareReservation);
+				//  Reserve the lower conventional memory, as:
+				//	1) There's usually machine-specific stuff down there that we may need
+				//     that cannot be overwritten by normal page allocations
+				//  2) We need to have some pages accessible in 16-bit reserved
+				//	   to allow for booting other APs in the system
+				//  3) The bootloader code will probably also use some conventional
+				//	   for initial paging structures, which if overwritten will crash
+				//	   the kernel catastrophically (this should realistically be fixed
+				//	   by making the bootloader pass its allocation information to the kernel)
+				//  Thus, prevent the use of these pages entirely for generic allocations
+				//  as using them gives us barely any benefit over the amount of pain they
+				//  could otherwise cause.
+				if((void*)start < CONFIG_ARCH_X86_64_LOWMEM_RESERVE_CUTOFF) {
+					(void)core::mem::create((void*)start, range, core::mem::RegionType::PlatformReservation);
 					break;
 				}
 

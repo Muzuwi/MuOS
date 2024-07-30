@@ -10,6 +10,9 @@
 #include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
 #include "Core/Error/Error.hpp"
 #include "Core/Log/Logger.hpp"
+#ifdef KERNEL_HACKS_VESADEMO
+#	include "Daemons/DemoVESA/DemoVESA.hpp"
+#endif
 #include "Daemons/Kbd/Kbd.hpp"
 #include "Daemons/SysDbg/SysDbg.hpp"
 #include "Daemons/Testd/Testd.hpp"
@@ -83,6 +86,13 @@ static void dump_core_mem_layout() {
 	auto serial_dbg =
 	        Process::create_with_main_thread(gen::String { "sys_dbg" }, Process::kerneld(), SysDbg::sysdbg_thread);
 	this_cpu()->scheduler->run_here(serial_dbg.get());
+
+#ifdef KERNEL_HACKS_VESADEMO
+	//  Spawn the VESA demo thread
+	auto vesa_demo =
+	        Process::create_with_main_thread(gen::String { "vesademo" }, Process::kerneld(), vesademo::demo_thread);
+	this_cpu()->scheduler->run_here(vesa_demo.get());
+#endif
 
 	//  Spawn a demo thread that reads from the keyboard
 	//  FIXME: Remove this, especially that we have to register the IRQ

@@ -21,6 +21,8 @@ namespace core::mem {
 		Allocator = 2,
 		/* the platform reports that this range is defectve */
 		Defective = 3,
+		/* reserved by the platform-specific kernel code */
+		PlatformReservation = 4,
 	};
 
 	inline char const* type_to_str(RegionType type) {
@@ -28,6 +30,7 @@ namespace core::mem {
 			case RegionType::Usable: return "Usable";
 			case RegionType::HardwareReservation: return "HardwareReservation";
 			case RegionType::Allocator: return "Allocator";
+			case RegionType::PlatformReservation: return "PlatformReservation";
 			default: return "INVALID";
 		}
 	}

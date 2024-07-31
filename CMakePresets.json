@@ -59,6 +59,13 @@
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
+        {
+            "name": "experimentalhacks",
+            "hidden": true,
+            "cacheVariables": {
+                "KERNEL_HACKS_VESADEMO": "1"
+            }
+        },
 
 
         {
@@ -70,6 +77,11 @@
             "name": "x86_64-RelWithDebInfo",
             "displayName": "x86_64 (Release + Debug Info)",
             "inherits": ["default", "arch_x86_64", "relwithdebinfo"]
+        },
+        {
+            "name": "x86_64-ExperimentalHacks",
+            "displayName": "x86_64 (Hacky experiments build)",
+            "inherits": ["default", "arch_x86_64", "relwithdebinfo", "experimentalhacks"]
         },
         {
             "name": "riscv64-Debug",

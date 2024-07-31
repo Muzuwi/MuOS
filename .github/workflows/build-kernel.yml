@@ -17,7 +17,7 @@ jobs:
     continue-on-error: ${{ startsWith(matrix.build_preset, 'riscv64') }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install build dependencies
       run: apt update && apt install -qq -y grub-pc xorriso ninja-build
@@ -46,7 +46,7 @@ jobs:
         echo "gitrev=$(git describe --always --dirty)" >> $GITHUB_OUTPUT
 
     - name: Upload system image and kernel artifacts
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v4
       with:
         name: MuOS.${{ matrix.build_preset }}.${{ github.ref_name }}.${{ steps.buildmeta.outputs.gitrev }}
         path: ${{github.workspace}}/Root/*

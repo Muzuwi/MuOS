@@ -1,4 +1,4 @@
-TOOLCHAIN_VER = v2
+TOOLCHAIN_VER = v3
 LIBC_PATH = ../Library/LibC/
 
 .PHONY: default

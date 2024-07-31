@@ -1,4 +1,4 @@
-FROM gcc:12.2.0
+FROM gcc:12-bookworm
 COPY ./src/ /workdir/
 COPY ./include/* /usr/local/muOS/include/
 COPY ./include/* /usr/local/muOS/usr/include/

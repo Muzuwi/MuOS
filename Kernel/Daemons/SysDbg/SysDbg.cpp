@@ -233,7 +233,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		//  readblock ide@01f0:03f6 7ffff 2
 	} else if(command == "df") {
 		log.fatal("Crashing..");
-		int v = *(int*)(1 - 1);
+		int v = *(int volatile*)(1 - 1);
 		(void)v;
 	}
 }

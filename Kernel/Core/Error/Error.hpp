@@ -9,6 +9,8 @@ namespace core {
 		NoMem,
 		IOFail,
 		InvalidArgument,
+		EntityAlreadyExists,
+		EntityMissing,
 	};
 
 	template<typename T>

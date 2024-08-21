@@ -1,1 +1,3 @@
-# Left empty for future purposes
+add_kernel_sources(
+    IRQ.cpp
+)

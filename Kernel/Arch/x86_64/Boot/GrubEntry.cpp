@@ -1,8 +1,10 @@
 #include <Arch/Interface.hpp>
 #include <Arch/x86_64/Boot/MultibootInfo.hpp>
 #include <Arch/x86_64/CPU.hpp>
-#include <Arch/x86_64/IDT.hpp>
+#include <Arch/x86_64/Interrupt/IDT.hpp>
+#include <Arch/x86_64/Interrupt/PIC8259.hpp>
 #include <Arch/x86_64/MP/ExecutionEnvironment.hpp>
+#include <Arch/x86_64/PIT.hpp>
 #include <Core/Assert/Assert.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/Mem/Layout.hpp>
@@ -30,7 +32,9 @@ extern "C" [[noreturn, maybe_unused]] void platform_boot_entry(void* context) {
 	CPU::set_gs_base(env);
 	CPU::set_kernel_gs_base(env);
 	this_execution_environment()->gdt.load();
+	x86_64::pic8259_init();
 	IDT::init();
+	x86_64::pit_init();
 	//  Force reload GSBASE after changing GDT
 	CPU::set_gs_base(env);
 	CPU::set_kernel_gs_base(env);

@@ -1,6 +1,7 @@
 #include "Boot.hpp"
 #include <Arch/x86_64/APIC.hpp>
 #include <Arch/x86_64/CPU.hpp>
+#include <Arch/x86_64/Interrupt/IDT.hpp>
 #include <Arch/x86_64/MP/CpuBootstrapPage.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Kernel/ksleep.hpp>
@@ -9,7 +10,6 @@
 #include <Scheduler/Scheduler.hpp>
 #include <string.h>
 #include <SystemTypes.hpp>
-#include "Arch/x86_64/IDT.hpp"
 #include "Core/MP/MP.hpp"
 #include "ExecutionEnvironment.hpp"
 #include "Memory/Ptr.hpp"

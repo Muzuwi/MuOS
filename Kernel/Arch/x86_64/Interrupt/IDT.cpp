@@ -1,5 +1,5 @@
 #include <Arch/x86_64/GDT.hpp>
-#include <Arch/x86_64/IDT.hpp>
+#include <Arch/x86_64/Interrupt/IDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 
 static IDT_Entry interrupt_descr_table[IDT_INTS_COUNT] = {};
@@ -24,27 +24,6 @@ inline void lidt(void* idtr) {
 	             : "rax");
 }
 
-/*
-    Remaps the PIC to offset interrupts
-    by 0x20 to avoid overlapping standard arch interrupts
-*/
-static void remap_pic() {
-	Ports::out(PIC_MASTER_CMD, 0x11);
-	Ports::out(PIC_SLAVE_CMD, 0x11);
-
-	Ports::out(PIC_MASTER_DATA, 0x20);
-	Ports::out(PIC_SLAVE_DATA, 40);
-
-	Ports::out(PIC_MASTER_DATA, 4);
-	Ports::out(PIC_SLAVE_DATA, 2);
-
-	Ports::out(PIC_MASTER_DATA, ICW4_8086);
-	Ports::out(PIC_SLAVE_DATA, ICW4_8086);
-
-	Ports::out(PIC_MASTER_DATA, 0);
-	Ports::out(PIC_SLAVE_DATA, 0);
-}
-
 template<typename T>
 static void register_interrupt_gate(uint8_t irq_num, T gate, uint8_t type, uint16_t selector) {
 	auto& entry = interrupt_descr_table[irq_num];
@@ -65,8 +44,6 @@ static void register_interrupt_gate(uint8_t irq_num, T gate, uint8_t type, uint1
     into IDTR
 */
 void IDT::init() {
-	remap_pic();
-
 	const uint8_t type_irq { 0x8e };
 	const uint8_t type_trap { 0x8f };
 	const auto cs = GDT::get_kernel_CS();

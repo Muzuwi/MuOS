@@ -7,7 +7,6 @@
 #include <Drivers/IDE/IDE.hpp>
 #include <Memory/VMM.hpp>
 #include <Scheduler/Scheduler.hpp>
-#include "Arch/x86_64/Interrupt/IRQDispatcher.hpp"
 #include "Core/Error/Error.hpp"
 #include "Core/Log/Logger.hpp"
 #ifdef KERNEL_HACKS_VESADEMO
@@ -95,12 +94,9 @@ static void dump_core_mem_layout() {
 #endif
 
 	//  Spawn a demo thread that reads from the keyboard
-	//  FIXME: Remove this, especially that we have to register the IRQ
-	//  handler on our own instead of the thread doing it's own work.
 	auto kbd = Process::create_with_main_thread(gen::String { "debug_keyboard" }, Process::kerneld(), Kbd::kbd_thread);
 	kbd->sched_ctx().priority = 0;
 	this_cpu()->scheduler->run_here(kbd.get());
-	IRQDispatcher::register_microtask(1, Kbd::kbd_microtask);
 
 	//  Spawn a demo userland "init" thread
 	//  This is just a quick test to see if jumping to ring 3

@@ -1,5 +1,6 @@
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/Serial.hpp>
+#include <Core/IRQ/IRQ.hpp>
 #include <Core/Log/Logger.hpp>
 #include <string.h>
 #include <Structs/KOptional.hpp>
@@ -21,10 +22,18 @@ void Serial::set_debugger_port(Serial::Port port) {
 	//  Enable IRQs for the kernel debugger - data inbound
 	register_write(port, Register::IrqEn, 0x1);
 	//  Register microtask
-	IRQDispatcher::register_microtask(irq(port), _serial_irq_handler);
+	const auto maybe_handle = core::irq::request_irq(32 + irq(port),
+	                                                 [](void*) -> core::irq::HandlingState {
+		                                                 _serial_irq_handler();
+		                                                 return core::irq::HandlingState::Handled;
+	                                                 },
+	                                                 {});
+	if(maybe_handle.has_error()) {
+		log.error("Failed to request IRQ ({})", maybe_handle.error());
+	}
 }
 
-void Serial::_serial_irq_handler(PtraceRegs*) {
+core::irq::HandlingState Serial::_serial_irq_handler() {
 	const auto port = s_kernel_debugger_port.unwrap();
 	bool data_received = false;
 	while(data_pending(port)) {
@@ -35,6 +44,7 @@ void Serial::_serial_irq_handler(PtraceRegs*) {
 	if(data_received) {
 		s_debugger_semaphore.signal();
 	}
+	return core::irq::HandlingState::Handled;
 }
 
 bool Serial::try_initialize(Serial::Port port) {

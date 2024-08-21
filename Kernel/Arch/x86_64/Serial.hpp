@@ -1,5 +1,5 @@
 #pragma once
-#include <Arch/x86_64/Interrupt/IRQDispatcher.hpp>
+#include <Core/IRQ/IRQ.hpp>
 #include <Locks/KSemaphore.hpp>
 #include <Structs/StaticRing.hpp>
 #include <SystemTypes.hpp>
@@ -31,7 +31,7 @@ public:
 	static KSemaphore& debugger_semaphore();
 	static StaticRing<uint8, 4096>& buffer();
 private:
-	static void _serial_irq_handler(PtraceRegs*);
+	static core::irq::HandlingState _serial_irq_handler();
 	static bool try_initialize(Port port);
 	static uint16 io_port(Port port);
 	static uint8 irq(Port port);

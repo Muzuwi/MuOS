@@ -4,6 +4,7 @@
 class PtraceRegs;
 
 class PIT final {
+public:
 	uint16_t m_divider;
 	uint64_t m_ticks;
 
@@ -11,7 +12,7 @@ class PIT final {
 	friend void _pit_irq0_handler(PtraceRegs*);
 	unsigned frequency() const;
 	uint64_t millis() const;
-public:
+
 	PIT() noexcept;
 	static uint64_t ticks();
 	static uint64_t milliseconds();
@@ -24,3 +25,7 @@ public:
 
 	static void sleep(uint64_t);
 };
+
+namespace x86_64 {
+	void pit_init();
+}

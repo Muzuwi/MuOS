@@ -1,8 +1,9 @@
-#include <Arch/x86_64/Interrupt/IRQDispatcher.hpp>
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
 #include <Core/Assert/Assert.hpp>
+#include <Core/IRQ/IRQ.hpp>
+#include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
@@ -10,6 +11,8 @@
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
+
+CREATE_LOGGER("x86_64::pit", core::log::LogLevel::Debug);
 
 struct Alarm {
 	Thread* m_thread;
@@ -49,12 +52,7 @@ void _pit_irq0_handler(PtraceRegs*) {
 
 PIT::PIT() noexcept
     : m_divider(1193)
-    , m_ticks(0) {//  ~1000.15 Hz
-	IRQDispatcher::register_microtask(0, _pit_irq0_handler);
-	Ports::out(PIT::port_command(), 0b00110100);
-	update_timer_reload(m_divider);
-	//	kdebugf("[PIT] Timer at %i Hz\n", PIT::base_frequency() / m_divider);
-}
+    , m_ticks(0) {}
 
 void PIT::tick() {
 	m_ticks++;
@@ -83,4 +81,20 @@ void PIT::sleep(uint64_t len) {
 	//	kdebugf("set sleep for pid=%i\n", proc->pid());
 
 	s_alarms.push_back({ .m_thread = thread, .m_start = time, .m_len = len });
+}
+
+void x86_64::pit_init() {
+	//  ~1000.15 Hz
+	const auto maybe_handle = core::irq::request_irq(32 + 0,
+	                                                 [](void*) -> core::irq::HandlingState {
+		                                                 _pit_irq0_handler(nullptr);
+		                                                 return core::irq::HandlingState::Handled;
+	                                                 },
+	                                                 {});
+	if(maybe_handle.has_error()) {
+		::log.error("Failed to request IRQ for PIT ({})", maybe_handle.error());
+		return;
+	}
+	Ports::out(PIT::port_command(), 0b00110100);
+	update_timer_reload(pit.m_divider);
 }

@@ -55,8 +55,10 @@
 	} while(false)
 
 //  Hang the current CPU in an infinite loop
-#define HANG() \
-	do {       \
+#define HANG()              \
+	do {                    \
+		volatile int _ = 0; \
+		(void)_;            \
 	} while(true)
 
 #ifdef NDEBUG

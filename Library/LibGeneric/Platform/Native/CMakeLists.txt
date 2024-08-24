@@ -20,6 +20,7 @@ set(TESTLIBGEN_LINKER_FLAGS
     -fsanitize=address -fsanitize=undefined -fsanitize=leak)
 
 add_executable(TestLibGeneric
+    Platform/Native/Tests/AVL.cpp
     Platform/Native/Tests/Utility.cpp
     Platform/Native/Tests/Main.cpp
     Platform/Native/Tests/BitMap.cpp

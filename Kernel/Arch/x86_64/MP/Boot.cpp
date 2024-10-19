@@ -59,7 +59,7 @@ void arch::mp::boot_aps() {
 		bootstrap_struct.real_gdtr_offset = (uintptr_t)data_page.get() + offsetof(CpuBootstrapPage, real_mode_gdt);
 		bootstrap_struct.compat_gdtr_offset = (uintptr_t)data_page.get() + offsetof(CpuBootstrapPage, compat_mode_gdt);
 		bootstrap_struct.long_gdtr_offset = (uintptr_t)data_page.get() + offsetof(CpuBootstrapPage, long_mode_gdt);
-		bootstrap_struct.cr3 = (uintptr_t)idle_task->parent()->vmm().pml4().get();
+		bootstrap_struct.cr3 = (uintptr_t)idle_task->parent()->vmm().paging_handle();
 		bootstrap_struct.ap_environment = arch::mp::create_environment();
 		bootstrap_struct.ap_environment->apic_id = ap_id;
 		bootstrap_struct.idle_task = idle_task;

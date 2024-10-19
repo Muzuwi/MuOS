@@ -1,8 +1,9 @@
 #pragma once
-#include <Arch/x86_64/Paging.hpp>
+#include <Arch/VM.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/SharedPtr.hpp>
+#include <Memory/Ptr.hpp>
 #include <SystemTypes.hpp>
 
 enum class TaskState {
@@ -42,7 +43,7 @@ class Thread {
 	InactiveTaskFrame* m_interrupted_task_frame {};//  Offset 0x0
 	void* m_kernel_stack_bottom {};                //  Offset 0x8
 	uint64 m_kernel_gs_base {};                    //  Offset 0x10
-	PhysPtr<PML4> m_pml4 {};                       //  Offset 0x18
+	arch::PagingHandle m_paging_handle {};         //  Offset 0x18
 	//  ==================
 
 	SharedPtr<Process> m_parent {};
@@ -67,7 +68,7 @@ public:
 	TaskSchedCtx& sched_ctx() { return m_sched; }
 	uint8 priority() const { return m_sched.priority; }
 	InactiveTaskFrame* irq_task_frame() const { return m_interrupted_task_frame; }
-	PhysPtr<PML4> pml4() const { return m_pml4; }
+	arch::PagingHandle paging_handle() const { return m_paging_handle; }
 
 	void set_state(TaskState state) { m_state = state; }
 

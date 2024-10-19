@@ -321,7 +321,7 @@ void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth) {
 	print_header();
 	log.info("Name {{'{}'}}", process->m_simple_name);
 	print_header();
-	log.info("PML4 {{{}}}", Format::ptr(process->vmm().pml4().get()));
+	log.info("PML4 {{{}}}", Format::ptr(process->vmm().paging_handle()));
 	print_header();
 	log.info("Flags {{privilege({}), randomize_vm({})}}", process->flags().privilege == User ? "User" : "Kernel",
 	         process->flags().randomize_vm);
@@ -353,7 +353,7 @@ void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth) {
 	for(auto& thread : process->m_threads) {
 		print_header();
 		log.info("... Thread({}), SP{{{}}}, PML4{{{}}}, State{{{}}}, PreemptCount{{{}}}, Pri{{{}}}", thread->tid(),
-		         Format::ptr(thread->m_kernel_stack_bottom), Format::ptr(thread->m_pml4.get()),
+		         Format::ptr(thread->m_kernel_stack_bottom), Format::ptr(thread->m_paging_handle),
 		         state_str(thread->state()), thread->preempt_count(), thread->priority());
 	}
 	print_header();

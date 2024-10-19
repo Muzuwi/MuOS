@@ -11,7 +11,7 @@
 
 SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*kernel_exec)()) {
 	auto thread = SharedPtr {
-		new(KHeap::instance().slab_alloc(sizeof(Thread))) Thread {parent, PidAllocator::next()}
+		new(KHeap::instance().slab_alloc(sizeof(Thread))) Thread { parent, PidAllocator::next() }
 	};
 
 	if(!thread) {
@@ -32,7 +32,7 @@ SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*ke
 	        (InactiveTaskFrame*)thread->_bootstrap_task_stack(PhysAddr { (stack_last_page + 1).get() }, state);
 	thread->sched_ctx().priority = 1;
 	thread->set_state(TaskState::Ready);
-	thread->m_pml4 = parent->vmm().pml4();
+	thread->m_paging_handle = parent->vmm().paging_handle();
 
 	return thread;
 }

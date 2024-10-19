@@ -102,7 +102,7 @@ static void dump_core_mem_layout() {
 	//  This is just a quick test to see if jumping to ring 3
 	//  works properly, doesn't actually do any meaningful work.
 	auto userland_init = Process::init();
-	ENSURE(userland_init->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4()));
+	ENSURE(userland_init->vmm().clone_address_space_from(Process::kerneld()->vmm().paging_handle()));
 	auto init_thread = Thread::create_in_process(userland_init, Testd::userland_test_thread);
 	init_thread->sched_ctx().priority = 10;
 	this_cpu()->scheduler->run_here(init_thread.get());

@@ -17,7 +17,7 @@ SharedPtr<Thread> Process::create_with_main_thread(gen::String name, SharedPtr<P
 		return SharedPtr<Thread> { nullptr };
 	}
 	//  Clone base kernel mappings
-	if(!process->vmm().clone_address_space_from(Process::kerneld()->vmm().pml4())) {
+	if(!process->vmm().clone_address_space_from(Process::kerneld()->vmm().paging_handle())) {
 		return SharedPtr<Thread> { nullptr };
 	}
 

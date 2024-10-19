@@ -1,16 +1,17 @@
-#include <Arch/x86_64/CPUID.hpp>
-#include <Arch/x86_64/GDT.hpp>
-#include <Arch/x86_64/InactiveTaskFrame.hpp>
+#include <Arch/VM.hpp>
 #include <Core/Assert/Assert.hpp>
+#include <Core/Assert/Panic.hpp>
+#include <Core/Error/Error.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/Mem/GFP.hpp>
+#include <Core/Mem/Layout.hpp>
 #include <LibAllocator/BumpAllocator.hpp>
+#include <Memory/Ptr.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
 #include <Process/Process.hpp>
 #include <string.h>
-#include "Core/Mem/Layout.hpp"
-#include "Memory/Ptr.hpp"
+#include <SystemTypes.hpp>
 
 using namespace Units;
 CREATE_LOGGER("vmm", core::log::LogLevel::Debug);
@@ -22,16 +23,11 @@ void VMM::initialize_kernel_vm() {
 	Process& kerneld = Process::_kerneld_ref();
 
 	log.info("Initializing kerneld address space");
-
-	auto res = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
-	if(!res.has_value()) {
-		log.fatal("Failed allocating page for kerneld PML4! Out of memory?");
-		ENSURE_NOT_REACHED();
+	auto maybe_handle = arch::addralloc();
+	if(maybe_handle.has_error()) {
+		core::panic("Failed allocating paging handle for kerneld process! Out of memory?");
 	}
-
-	auto pml4 = PhysPtr<PML4> { (PML4*)res.data().base };
-	memset(pml4.get_mapped(), 0, 0x1000);
-	kerneld.vmm().m_pml4 = PhysPtr<PML4> { (PML4*)res.data().base };
+	kerneld.vmm().m_paging_handle = maybe_handle.data();
 
 	log.debug("Mapping kernel executable");
 	kerneld.vmm()._map_kernel_executable();
@@ -39,13 +35,10 @@ void VMM::initialize_kernel_vm() {
 	log.debug("Creating physical identity map");
 	kerneld.vmm()._map_physical_identity();
 
-	log.debug("Preallocating kernel PML4E");
-	kerneld.vmm()._map_kernel_prealloc_pml4();
-
 	asm volatile("mov %%rax, %0\n"
 	             "mov cr3, %%rax\n"
 	             :
-	             : "r"(pml4.get())
+	             : "r"(kerneld.vmm().m_paging_handle)
 	             : "rax");
 }
 
@@ -56,25 +49,13 @@ void VMM::initialize_kernel_vm() {
 void VMM::_map_pallocation(core::mem::PageAllocation allocation, void* vaddr) {
 	auto physical = PhysAddr { allocation.base };
 	while(physical.get() < allocation.end()) {
-		PML4E& pml4e = (*m_pml4)[vaddr];
-		auto* pdpte = ensure_pdpt(vaddr, LeakAllocatedPage::Yes);
-		auto* pde = ensure_pd(vaddr, LeakAllocatedPage::Yes);
-		auto* pte = ensure_pt(vaddr, LeakAllocatedPage::Yes);
-
-		if(!pdpte || !pde || !pte) {
-			log.fatal("Failed mapping PAllocation for address {}! Page structure allocation failed.",
-			          Format::ptr(vaddr));
-			ENSURE_NOT_REACHED();
+		auto err =
+		        arch::addrmap(m_paging_handle, physical.get(), vaddr, arch::PageFlags::Read | arch::PageFlags::Write);
+		if(err != core::Error::Ok) {
+			core::panic("Failed to map PageAllocation for kernel allocator!");
 		}
-
-		pml4e.set(FlagPML4E::Present, true);
-		pdpte->set(FlagPDPTE::Present, true);
-		pde->set(FlagPDE::Present, true);
-		pte->set(FlagPTE::Present, true);
-		pte->set(FlagPTE::Global, true);
-		pte->set_page(physical);
-
 		physical += 0x1000;
+		vaddr = reinterpret_cast<uint8*>(vaddr) + 0x1000;
 	}
 }
 
@@ -87,36 +68,18 @@ void VMM::_map_kernel_executable() {
 	auto* const kernel_elf_end = reinterpret_cast<uint8_t*>(&_ukernel_elf_end);
 	auto* const kernel_text_start = reinterpret_cast<uint8_t*>(&_ukernel_text_start);
 	auto* const kernel_text_end = reinterpret_cast<uint8_t*>(&_ukernel_text_end);
-	PhysPtr<PML4> pml4 = m_pml4;
 
 	auto kernel_physical = PhysAddr { &_ukernel_physical_start };
 	for(auto addr = kernel_elf_start; addr < kernel_elf_end; addr += 0x1000) {
-		auto& pml4e = (*pml4)[addr];
-		auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
-		auto* pde = ensure_pd(addr, LeakAllocatedPage::Yes);
-		auto* pte = ensure_pt(addr, LeakAllocatedPage::Yes);
-		if(!pdpte || !pde || !pte) {
-			log.fatal("PDPTE/PDE/PTE allocation failure during ELF mapping. Out of memory?");
-			ENSURE_NOT_REACHED();
+		auto flags = arch::PageFlags::Read | arch::PageFlags::Write;
+		bool in_text_section = (addr >= kernel_text_start && addr < kernel_text_end);
+		if(in_text_section) {
+			flags = flags | arch::PageFlags::Execute;
 		}
-
-		pml4e.set(FlagPML4E::Present, true);
-		pml4e.set(FlagPML4E::User, false);
-		pdpte->set(FlagPDPTE::Present, true);
-		pdpte->set(FlagPDPTE::User, false);
-		pde->set(FlagPDE::Present, true);
-		pde->set(FlagPDE::User, false);
-		pte->set(FlagPTE::Present, true);
-		pte->set(FlagPTE::Global, true);
-		pte->set(FlagPTE::User, false);
-		pte->set_page(kernel_physical);
-
-		if(CPUID::has_NXE()) {
-			//  Execute only in text sections
-			bool xd = !(addr >= kernel_text_start && addr < kernel_text_end);
-			pte->set(FlagPTE::ExecuteDisable, xd);
+		auto err = arch::addrmap(m_paging_handle, kernel_physical.get(), addr, flags);
+		if(err != core::Error::Ok) {
+			core::panic("Failed to addrmap kernel executable!");
 		}
-
 		kernel_physical += 0x1000;
 	}
 }
@@ -138,259 +101,17 @@ static void* get_physical_end() {
 void VMM::_map_physical_identity() {
 	auto identity_start = reinterpret_cast<uint8_t*>(&_ukernel_identity_start);
 	auto physical = PhysAddr { nullptr };
-	PhysPtr<PML4> pml4 = m_pml4;
 
 	const auto physical_end = get_physical_end();
 
-	if(CPUID::has_huge_pages()) {
-		for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 1 * GiB) {
-			auto& pml4e = (*pml4)[addr];
-			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
-			if(!pdpte) {
-				log.fatal("PDPTE allocation for physical identity map failed! Out of memory?");
-				ENSURE_NOT_REACHED();
-			}
-
-			pml4e.set(FlagPML4E::Present, true);
-			pml4e.set(FlagPML4E::User, false);
-			pdpte->set(FlagPDPTE::Present, true);
-			pdpte->set(FlagPDPTE::User, false);
-			pdpte->set(FlagPDPTE::HugePage, true);
-			pdpte->set_directory(physical.as<PD>());
-
-			physical += 1 * Units::GiB;
+	for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 2 * MiB) {
+		const auto err = arch::addrmap(m_paging_handle, physical.get(), addr,
+		                               arch::PageFlags::Read | arch::PageFlags::Write | arch::PageFlags::Large);
+		if(err != core::Error::Ok) {
+			core::panic("Failed to create physical identity map!");
 		}
-	} else {
-		for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 2 * MiB) {
-			auto& pml4e = (*pml4)[addr];
-			auto* pdpte = ensure_pdpt(addr, LeakAllocatedPage::Yes);
-			auto* pde = ensure_pd(addr, LeakAllocatedPage::Yes);
-			if(!pdpte || !pde) {
-				log.fatal("PDPTE/PDE allocation for physical identity map failed! Out of memory?");
-				ENSURE_NOT_REACHED();
-			}
-
-			pml4e.set(FlagPML4E::Present, true);
-			pml4e.set(FlagPML4E::User, false);
-			pdpte->set(FlagPDPTE::Present, true);
-			pdpte->set(FlagPDPTE::User, false);
-			pde->set(FlagPDE::Present, true);
-			pde->set(FlagPDE::User, false);
-			pde->set(FlagPDE::LargePage, true);
-			pde->set_table(physical.as<PT>());
-
-			physical += 2 * MiB;
-		}
+		physical += 2 * MiB;
 	}
-}
-
-/*
- *  Preallocate all PML4 PDPT nodes for the kernel shared address space
- *  That way, any changes to the shared kernel address space will persist throughout all processes,
- *  as all process PML4's are clones of the root PML4
- */
-void VMM::_map_kernel_prealloc_pml4() {
-	PhysPtr<PML4> pml4 = m_pml4;
-	for(unsigned i = index_pml4e(&_ukernel_shared_start); i <= index_pml4e(&_ukernel_shared_end); ++i) {
-		auto addr = (void*)((uint64_t)i << 39ul);
-		(*pml4)[addr].set(FlagPML4E::Present, true);
-
-		ensure_pdpt(addr, LeakAllocatedPage::Yes);
-	}
-}
-
-PDPTE* VMM::ensure_pdpt(void* addr, LeakAllocatedPage leak) {
-	PML4E& pml4e = (*m_pml4)[addr];
-
-	if(!pml4e.directory()) {
-		PhysAddr phys;
-		if(leak == LeakAllocatedPage::Yes) {
-			auto alloc = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
-			if(!alloc.has_value()) {
-				log.error("Failed to allocate page for PT!");
-				return nullptr;
-			}
-			phys = PhysAddr { alloc.data().base };
-		} else {
-			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
-			if(!alloc.has_value()) {
-				log.error("Failed to allocate page for PT!");
-				return nullptr;
-			}
-			phys = alloc.unwrap();
-		}
-
-		memset(phys.get_mapped(), 0x0, 0x1000);
-		pml4e.set_directory(phys.as<PDPT>());
-	}
-
-	return &(*pml4e.directory())[addr];
-}
-
-PDE* VMM::ensure_pd(void* addr, LeakAllocatedPage leak) {
-	auto* pdpte = ensure_pdpt(addr, leak);
-	if(!pdpte) {
-		return nullptr;
-	}
-
-	if(!pdpte->directory()) {
-		PhysAddr phys;
-		if(leak == LeakAllocatedPage::Yes) {
-			auto alloc = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
-			if(!alloc.has_value()) {
-				log.error("Failed to allocate page for PD!");
-				return nullptr;
-			}
-			phys = PhysAddr { alloc.data().base };
-		} else {
-			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
-			if(!alloc.has_value()) {
-				log.error("Failed to allocate page for PD!");
-				return nullptr;
-			}
-			phys = alloc.unwrap();
-		}
-
-		memset(phys.get_mapped(), 0x0, 0x1000);
-		pdpte->set_directory(phys.as<PD>());
-	}
-
-	return &(*pdpte->directory())[addr];
-}
-
-PTE* VMM::ensure_pt(void* addr, LeakAllocatedPage leak) {
-	auto* pde = ensure_pd(addr, leak);
-	if(!pde) {
-		return nullptr;
-	}
-
-	if(!pde->table()) {
-		PhysAddr phys;
-		if(leak == LeakAllocatedPage::Yes) {
-			auto alloc = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
-			if(!alloc.has_value()) {
-				log.error("Failed to allocate page for PT!");
-				return nullptr;
-			}
-			phys = PhysAddr { alloc.data().base };
-		} else {
-			KOptional<PhysAddr> alloc = _allocate_kernel_page(0);
-			if(!alloc.has_value()) {
-				log.error("Failed to allocate page for PT!");
-				return nullptr;
-			}
-			phys = alloc.unwrap();
-		}
-
-		memset(phys.get_mapped(), 0x0, 0x1000);
-		pde->set_table(phys.as<PT>());
-	}
-
-	return &(*pde->table())[addr];
-}
-
-KOptional<PhysPtr<PML4>> VMM::clone_pml4(PhysPtr<PML4> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value()) {
-		return {};
-	}
-
-	auto pml4 = page.unwrap().as<PML4>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pml4.get_mapped(), source.get_mapped(), 0x1000);
-
-	for(unsigned i = 0; i < 512; ++i) {
-		//  Kernel shared memory should be copied as-is
-		if(i >= index_pml4e(&_ukernel_shared_start) && i <= index_pml4e(&_ukernel_shared_end)) {
-			pml4->m_entries[i] = source->m_entries[i];
-			continue;
-		}
-
-		//  Clone only present entries
-		if(pml4->m_entries[i].get(FlagPML4E::Present)) {
-			auto pdpt = clone_pdpt(pml4->m_entries[i].directory());
-			if(!pdpt.has_value()) {
-				return {};
-			}
-
-			pml4->m_entries[i].set_directory(pdpt.unwrap());
-		}
-	}
-
-	return pml4;
-}
-
-KOptional<PhysPtr<PDPT>> VMM::clone_pdpt(PhysPtr<PDPT> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value()) {
-		return {};
-	}
-
-	auto pdpt = page.unwrap().as<PDPT>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pdpt.get_mapped(), source.get_mapped(), 0x1000);
-
-	for(unsigned i = 0; i < 512; ++i) {
-		//  Skip entries marked as huge page - these do not contain any paging structures but physical addresses
-		if(pdpt->m_entries[i].get(FlagPDPTE::HugePage)) {
-			continue;
-		}
-
-		//  Clone only present entries
-		if(pdpt->m_entries[i].get(FlagPDPTE::Present)) {
-			auto pd = clone_pd(pdpt->m_entries[i].directory());
-			if(!pd.has_value()) {
-				return {};
-			}
-
-			pdpt->m_entries[i].set_directory(pd.unwrap());
-		}
-	}
-
-	return pdpt;
-}
-
-KOptional<PhysPtr<PD>> VMM::clone_pd(PhysPtr<PD> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value()) {
-		return {};
-	}
-
-	auto pd = page.unwrap().as<PD>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pd.get_mapped(), source.get_mapped(), 0x1000);
-
-	for(unsigned i = 0; i < 512; ++i) {
-		//  Skip entries marked as large page - these do not contain any paging structures but physical addresses
-		if(pd->m_entries[i].get(FlagPDE::LargePage)) {
-			continue;
-		}
-
-		//  Clone only present entries
-		if(pd->m_entries[i].get(FlagPDE::Present)) {
-			auto pt = clone_pt(pd->m_entries[i].table());
-			if(!pt.has_value()) {
-				return {};
-			}
-
-			pd->m_entries[i].set_table(pt.unwrap());
-		}
-	}
-
-	return pd;
-}
-
-KOptional<PhysPtr<PT>> VMM::clone_pt(PhysPtr<PT> source) {
-	auto page = _allocate_kernel_page(0);
-	if(!page.has_value()) {
-		return {};
-	}
-
-	auto pt = page.unwrap().as<PT>();
-	//  Clone flags, dirs should be overwritten
-	memcpy(pt.get_mapped(), source.get_mapped(), 0x1000);
-
-	return { pt };
 }
 
 /*
@@ -422,72 +143,6 @@ bool VMM::unmap(VMapping const& mapping) {
 			phys += 0x1000;
 		}
 	}
-	return true;
-}
-
-/*
- *  Map a virtual address to a physical address
- */
-bool VMM::addrmap(void* vaddr, PhysAddr paddr, VMappingFlags flags) {
-	PhysPtr<PML4> pml4 = m_pml4;
-
-	auto& pml4e = (*pml4)[vaddr];
-	auto* pdpte = ensure_pdpt(vaddr, LeakAllocatedPage::No);
-	auto* pde = ensure_pd(vaddr, LeakAllocatedPage::No);
-	auto* pte = ensure_pt(vaddr, LeakAllocatedPage::No);
-	if(!pdpte || !pde || !pte) {
-		log.error("VMapping map failed - PDPTE/PDE/PTE allocation failed.");
-		return false;
-	}
-
-	//  For top-level structures (above PTEs), set the most permissive flags
-	//  (also set proper user/supervisor flags based on virtual address, not the mapping flags)
-	const bool is_user_mem = index_pml4e(vaddr) < index_pml4e(&_ukernel_virtual_start);
-
-	pml4e.set(FlagPML4E::Present, true);
-	pml4e.set(FlagPML4E::User, is_user_mem);
-	pml4e.set(FlagPML4E::RW, true);
-
-	pdpte->set(FlagPDPTE::Present, true);
-	pdpte->set(FlagPDPTE::User, is_user_mem);
-	pdpte->set(FlagPDPTE::RW, true);
-
-	pde->set(FlagPDE::Present, true);
-	pde->set(FlagPDE::User, is_user_mem);
-	pde->set(FlagPDE::RW, true);
-
-	pte->set(FlagPTE::Present, flags & VM_READ);
-	pte->set(FlagPTE::User, !(flags & VM_KERNEL));
-	pte->set(FlagPTE::RW, flags & VM_WRITE);
-	pte->set(FlagPTE::ExecuteDisable, !(flags & VM_EXEC));
-	pte->set_page(paddr);
-
-	return false;
-}
-
-/*
- *  Unmap the page with the specified virtual address
- */
-bool VMM::addrunmap(void* vaddr) {
-	PhysPtr<PML4> pml4 = m_pml4;
-	auto& pml4e = (*pml4)[vaddr];
-	if(!pml4e.get(FlagPML4E::Present)) {
-		log.fatal("VMapping corruption or double free detected");
-		ENSURE_NOT_REACHED();
-	}
-	auto& pdpte = (*pml4e.directory())[vaddr];
-	if(!pdpte.get(FlagPDPTE::Present)) {
-		log.fatal("VMapping corruption or double free detected");
-		ENSURE_NOT_REACHED();
-	}
-	auto& pde = (*pdpte.directory())[vaddr];
-	if(!pde.get(FlagPDE::Present)) {
-		log.fatal("VMapping corruption or double free detected");
-		ENSURE_NOT_REACHED();
-	}
-	auto& pte = (*pde.table())[vaddr];
-	pte.set(FlagPTE::Present, false);
-
 	return true;
 }
 
@@ -616,13 +271,13 @@ void* VMM::allocate_user_heap(size_t region_size) {
 	return addr;
 }
 
-bool VMM::clone_address_space_from(PhysPtr<PML4> pml4) {
-	auto clone_or_error = clone_pml4(pml4);
-	if(!clone_or_error.has_value()) {
+bool VMM::clone_address_space_from(arch::PagingHandle handle) {
+	auto maybe_handle = arch::addrclone(handle);
+	if(maybe_handle.has_error()) {
 		return false;
 	}
 
-	m_pml4 = clone_or_error.unwrap();
+	m_paging_handle = maybe_handle.destructively_move_data();
 	return true;
 }
 
@@ -659,4 +314,28 @@ void* VMM::allocate_kernel_heap(size_t size) {
 
 gen::LockGuard<gen::Spinlock> VMM::acquire_vm_lock() {
 	return gen::LockGuard { m_vm_lock };
+}
+
+bool VMM::addrmap(void* vaddr, PhysAddr paddr, VMappingFlags flags) {
+	arch::PageFlags arch_flags {};
+	if(flags & VM_READ) {
+		arch_flags = arch_flags | arch::PageFlags::Read;
+	}
+	if(flags & VM_WRITE) {
+		arch_flags = arch_flags | arch::PageFlags::Write;
+	}
+	if(flags & VM_EXEC) {
+		arch_flags = arch_flags | arch::PageFlags::Execute;
+	}
+	if(!(flags & VM_KERNEL)) {
+		arch_flags = arch_flags | arch::PageFlags::User;
+	}
+
+	const auto err = arch::addrmap(m_paging_handle, paddr.get(), vaddr, arch_flags);
+	return err == core::Error::Ok;
+}
+
+bool VMM::addrunmap(void* vaddr) {
+	const auto err = arch::addrunmap(m_paging_handle, vaddr);
+	return err == core::Error::Ok;
 }

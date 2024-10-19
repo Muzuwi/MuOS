@@ -120,7 +120,7 @@ static T* allocalloc(Args... args) {
 		//  LEAK: Leaking the region handle, as we probably won't ever need to free this
 		void* vstart = idmap(pstart);
 		s_allocalloc = liballoc::ChunkAllocator {
-			liballoc::Arena {vstart, CONFIG_CORE_MEM_GFP_DEFAULT_ALLOCALLOC_SIZE},
+			liballoc::Arena { vstart, CONFIG_CORE_MEM_GFP_DEFAULT_ALLOCALLOC_SIZE },
 		};
 	}
 	return gen::construct_at<T>((T*)s_allocalloc.unwrap().allocate(sizeof(T)), gen::forward<Args>(args)...);
@@ -171,6 +171,7 @@ static AllocatorBase* create_allocator_for_request(size_t order, core::mem::Page
 		auto* ptr = alloc->allocate(order, flags);
 		if(!ptr) {
 			//  This allocator couldn't allocate our request, try a different one
+			alloc = alloc->next;
 			continue;
 		}
 		return core::Result<core::mem::PageAllocation> {

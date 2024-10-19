@@ -11,6 +11,7 @@ namespace core {
 		InvalidArgument,
 		EntityAlreadyExists,
 		EntityMissing,
+		Unsupported,
 	};
 
 	template<typename T>

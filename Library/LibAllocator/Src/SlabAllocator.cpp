@@ -39,11 +39,19 @@ void* liballoc::SlabAllocator::allocate() {
 	if(!liballoc::bitmap_find_one(m_bitmap_start, m_bitmap_size, idx)) {
 		return nullptr;
 	}
+	//  The bitmap will always be a multiple of 8, but the actual capacity of the pool may differ
+	if(idx >= m_pool_capacity) {
+		return nullptr;
+	}
 	liballoc::bitmap_set(m_bitmap_start, m_bitmap_size, idx, true);
 	return (void*)(reinterpret_cast<uintptr_t>(m_pool_start) + idx * m_object_size);
 }
 
 void liballoc::SlabAllocator::free(void* addr) {
 	auto idx = ((uintptr_t)addr - (uintptr_t)m_pool_start) / m_object_size;
+	//  The bitmap will always be a multiple of 8, but the actual capacity of the pool may differ
+	if(idx >= m_pool_capacity) {
+		return;
+	}
 	liballoc::bitmap_set(m_bitmap_start, m_bitmap_size, idx, false);
 }

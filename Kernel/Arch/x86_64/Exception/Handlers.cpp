@@ -8,6 +8,39 @@
 
 CREATE_LOGGER("x86_64::exception", core::log::LogLevel::Debug);
 
+static char const* EXCEPTION_VECTOR_TO_STRING[32] = { "Division Error",
+	                                                  "Debug",
+	                                                  "Non-maskable Interrupt",
+	                                                  "Breakpoint",
+	                                                  "Overflow",
+	                                                  "Bound Range Exceeded",
+	                                                  "Invalid Opcode",
+	                                                  "Device Not Available",
+	                                                  "Double Fault",
+	                                                  "Coprocessor Segment Overrun",
+	                                                  "Invalid TSS",
+	                                                  "Segment Not Present",
+	                                                  "Stack-Segment Fault",
+	                                                  "General Protection Fault",
+	                                                  "Page Fault",
+	                                                  "Reserved",
+	                                                  "x87 Floating-Point Exception",
+	                                                  "Alignment Check",
+	                                                  "Machine Check",
+	                                                  "SIMD Floating-Point Exception",
+	                                                  "Virtualization Exception",
+	                                                  "Control Protection Exception",
+	                                                  "Reserved",
+	                                                  "Reserved",
+	                                                  "Reserved",
+	                                                  "Reserved",
+	                                                  "Reserved",
+	                                                  "Reserved",
+	                                                  "Hypervisor Injection Exception",
+	                                                  "VMM Communication Exception",
+	                                                  "Security Exception",
+	                                                  "Reserved" };
+
 static void dump_registers(PtraceRegs* pt) {
 	log.error("rax={x} rbx={x} rcx={x} rdx={x}", pt->rax, pt->rbx, pt->rcx, pt->rdx);
 	log.error("rsi={x} rdi={x} rbp={x} rip={x}", pt->rsi, pt->rdi, pt->rbp, pt->rip);
@@ -20,7 +53,7 @@ static void dump_registers(PtraceRegs* pt) {
 Exception::Response Exception::handle_uncaught(PtraceRegs* pt, uint8 vector) {
 	const auto thread = this_cpu()->current_thread();
 
-	log.error("Unhandled exception vector={x}", vector);
+	log.error("Unhandled exception vector={x} ({})", vector, EXCEPTION_VECTOR_TO_STRING[vector & 0x1F]);
 	dump_registers(pt);
 
 	if(!thread) {

@@ -27,5 +27,5 @@
 #	define idunmap(idptr)                                                                                  \
 		((idptr >= KERNEL_VM_IDENTITY_BASE)                                                                 \
 		         ? reinterpret_cast<uint8_t*>(idptr) - reinterpret_cast<uintptr_t>(KERNEL_VM_IDENTITY_BASE) \
-		         : idptr)
+		         : reinterpret_cast<uint8_t*>(idptr))
 #endif

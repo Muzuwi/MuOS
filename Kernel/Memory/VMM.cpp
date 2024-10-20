@@ -6,13 +6,11 @@
 #include <Core/Mem/GFP.hpp>
 #include <Core/Mem/Layout.hpp>
 #include <LibAllocator/BumpAllocator.hpp>
-#include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
 #include <Process/Process.hpp>
 #include <string.h>
 #include <SystemTypes.hpp>
 
-using namespace Units;
 CREATE_LOGGER("vmm", core::log::LogLevel::Debug);
 
 /*
@@ -103,13 +101,13 @@ void VMM::_map_physical_identity() {
 
 	const auto physical_end = get_physical_end();
 
-	for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 2 * MiB) {
+	for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 2_MiB) {
 		const auto err = arch::addrmap(m_paging_handle, physical.get(), addr,
 		                               arch::PageFlags::Read | arch::PageFlags::Write | arch::PageFlags::Large);
 		if(err != core::Error::Ok) {
 			core::panic("Failed to create physical identity map!");
 		}
-		physical += 2 * MiB;
+		physical += 2_MiB;
 	}
 }
 

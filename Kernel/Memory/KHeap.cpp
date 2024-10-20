@@ -4,7 +4,6 @@
 #include <LibAllocator/Arena.hpp>
 #include <LibAllocator/SlabAllocator.hpp>
 #include <Memory/KHeap.hpp>
-#include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
 
 KHeap KHeap::s_instance {};
@@ -13,7 +12,7 @@ CREATE_LOGGER("kheap", core::log::LogLevel::Debug);
 void KHeap::init() {
 	log.info("Initializing kernel allocators..");
 
-	const auto size = 1 * Units::MiB;
+	const auto size = 1_MiB;
 	auto chunk_space = VMM::allocate_kernel_heap(size);
 	ENSURE(chunk_space != nullptr);
 	log.debug("ChunkAllocator({}), size {}", chunk_space, size);

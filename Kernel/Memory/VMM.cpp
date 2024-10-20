@@ -6,7 +6,6 @@
 #include <Core/Mem/GFP.hpp>
 #include <Core/Mem/Layout.hpp>
 #include <LibAllocator/BumpAllocator.hpp>
-#include <Memory/Ptr.hpp>
 #include <Memory/Units.hpp>
 #include <Memory/VMM.hpp>
 #include <Process/Process.hpp>

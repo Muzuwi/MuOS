@@ -1,5 +1,5 @@
+#include <Arch/VM.hpp>
 #include <Arch/x86_64/VGA.hpp>
-#include <Memory/Ptr.hpp>
 #include <stddef.h>
 #include <string.h>
 

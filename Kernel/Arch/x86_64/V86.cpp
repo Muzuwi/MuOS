@@ -1,8 +1,8 @@
+#include <Arch/VM.hpp>
 #include <Arch/x86_64/V86.hpp>
 #include <Core/MP/MP.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Spinlock.hpp>
-#include <Memory/Ptr.hpp>
 #include <Memory/VMM.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>

@@ -1,7 +1,7 @@
 #pragma once
 
+#include <Arch/VM.hpp>
 #include <LibGeneric/List.hpp>
-#include <Memory/Ptr.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Structs/KOptional.hpp>
 #include <SystemTypes.hpp>

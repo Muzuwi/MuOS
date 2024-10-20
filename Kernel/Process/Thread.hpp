@@ -3,7 +3,6 @@
 #include <Arch/x86_64/PtraceRegs.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/SharedPtr.hpp>
-#include <Memory/Ptr.hpp>
 #include <SystemTypes.hpp>
 
 enum class TaskState {

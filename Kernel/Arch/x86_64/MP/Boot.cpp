@@ -1,4 +1,5 @@
 #include "Boot.hpp"
+#include <Arch/VM.hpp>
 #include <Arch/x86_64/APIC.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Arch/x86_64/Interrupt/IDT.hpp>
@@ -12,7 +13,6 @@
 #include <SystemTypes.hpp>
 #include "Core/MP/MP.hpp"
 #include "ExecutionEnvironment.hpp"
-#include "Memory/Ptr.hpp"
 
 extern uint8 ap_bootstrap_start;
 extern uint8 ap_bootstrap_end;

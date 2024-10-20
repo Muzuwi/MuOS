@@ -1,7 +1,7 @@
+#include <Arch/VM.hpp>
 #include <Arch/x86_64/ACPI.hpp>
 #include <Core/Log/Logger.hpp>
 #include <LibGeneric/List.hpp>
-#include <Memory/Ptr.hpp>
 #include <Structs/KOptional.hpp>
 
 CREATE_LOGGER("x86_64::acpi", core::log::LogLevel::Debug);

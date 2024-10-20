@@ -1,5 +1,5 @@
 #pragma once
-#include <Memory/Ptr.hpp>
+#include <Arch/VM.hpp>
 #include <stdint.h>
 
 class MultibootMMap {

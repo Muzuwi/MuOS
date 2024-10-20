@@ -1,8 +1,8 @@
+#include <Arch/VM.hpp>
 #include <Arch/x86_64/ACPI.hpp>
 #include <Arch/x86_64/APIC.hpp>
 #include <Core/Log/Logger.hpp>
 #include <LibGeneric/StaticVector.hpp>
-#include <Memory/Ptr.hpp>
 #include <string.h>
 
 CREATE_LOGGER("x86_64::apic", core::log::LogLevel::Debug);

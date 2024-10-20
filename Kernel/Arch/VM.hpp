@@ -79,4 +79,144 @@ namespace arch {
 	core::Error addrmap(PagingHandle, void* pptr, void* vptr, PageFlags flags);
 	///  Unmap a given virtual address
 	core::Error addrunmap(PagingHandle, void* vptr);
+
+	///  Physical pointer container class
+	///  This can be used to distinguish between virtual and physical pointers
+	///  and to avoid bugs related to the confusion of the two. This also provides
+	///  utilities to easily access the pointer by internally calling `idmap` when
+	///  the pointer is dereferenced.
+	///
+	///  PhysPtr constraints the pointer to a given type.
+	template<class T>
+	class PhysPtr {
+	public:
+		PhysPtr() noexcept
+		    : m_ptr(nullptr) {}
+
+		explicit PhysPtr(T* ptr) noexcept
+		    : m_ptr(ptr) {}
+
+		[[nodiscard]] constexpr T* get() { return m_ptr; }
+
+		[[nodiscard]] constexpr T const* get() const { return m_ptr; }
+
+		T* get_mapped() { return _to_identity_space(m_ptr); }
+
+		[[nodiscard]] T const* get_mapped() const { return _to_identity_space(m_ptr); }
+
+		T& operator*() { return *_to_identity_space(m_ptr); }
+
+		T const& operator*() const { return *_to_identity_space(m_ptr); }
+
+		T& operator[](size_t index) { return *(_to_identity_space(m_ptr) + index); }
+
+		T const& operator[](size_t index) const { return *(_to_identity_space(m_ptr) + index); }
+
+		T* operator->() { return _to_identity_space(m_ptr); }
+
+		T const* operator->() const { return _to_identity_space(m_ptr); }
+
+		constexpr PhysPtr& operator++() {
+			m_ptr++;
+			return *this;
+		}
+
+		constexpr PhysPtr operator++(int) {
+			auto temp = *this;
+			operator++();
+			return temp;
+		}
+
+		constexpr PhysPtr operator+(size_t offset) const {
+			auto temp = *this;
+			temp.m_ptr += offset;
+			return temp;
+		}
+
+		constexpr PhysPtr operator-(size_t offset) const {
+			auto temp = *this;
+			temp.m_ptr -= offset;
+			return temp;
+		}
+
+		constexpr size_t operator-(PhysPtr other_ptr) const { return m_ptr - other_ptr.m_ptr; }
+
+		constexpr PhysPtr& operator=(T* ptr) {
+			m_ptr = ptr;
+			return *this;
+		}
+
+		//  Semantics of operator bool on a physical pointer is not well defined,
+		//  as a zero physical pointer is perfectly valid. This may be removed in
+		//  the future.
+		constexpr explicit operator bool() const { return m_ptr != nullptr; }
+	private:
+		T* m_ptr;
+
+		static inline T* _to_identity_space(T* ptr) { return reinterpret_cast<T*>(idmap(ptr)); }
+	};
+
+	///  Physical address container class
+	///  This can be used to distinguish between virtual and physical pointers
+	///  and to avoid bugs related to the confusion of the two.
+	///
+	///	 A PhysAddr contains no type information, it is a bare void* pointer.
+	class PhysAddr {
+	public:
+		PhysAddr() noexcept
+		    : m_ptr(nullptr) {}
+
+		explicit PhysAddr(void* addr) noexcept
+		    : m_ptr(addr) {}
+
+		template<class T>
+		PhysPtr<T> as() {
+			return PhysPtr<T> { reinterpret_cast<T*>(m_ptr) };
+		}
+
+		constexpr void* get() { return m_ptr; }
+
+		void* get_mapped() { return as<uint8_t>().get_mapped(); }
+
+		PhysAddr operator+(size_t offset) const {
+			auto temp = *this;
+			temp.operator+=(offset);
+			return temp;
+		}
+
+		PhysAddr operator-(size_t offset) const {
+			auto temp = *this;
+			temp.operator-=(offset);
+			return temp;
+		}
+
+		size_t operator-(PhysAddr v) const { return (uintptr_t)m_ptr - (uintptr_t)v.m_ptr; }
+
+		PhysAddr& operator+=(size_t offset) {
+			m_ptr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(m_ptr) + offset);
+			return *this;
+		}
+
+		PhysAddr& operator-=(size_t offset) {
+			m_ptr = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(m_ptr) - offset);
+			return *this;
+		}
+
+		constexpr bool operator==(PhysAddr const& addr) const { return m_ptr == addr.m_ptr; }
+
+		constexpr bool operator>(PhysAddr const& v) const { return m_ptr > v.m_ptr; }
+
+		constexpr bool operator<(PhysAddr const& v) const { return m_ptr < v.m_ptr; }
+
+		constexpr bool operator<=(PhysAddr const& v) const { return m_ptr <= v.m_ptr; }
+
+		constexpr bool operator>=(PhysAddr const& v) const { return m_ptr >= v.m_ptr; }
+	private:
+		void* m_ptr;
+	};
 }
+
+//  Evil global `using` to avoid changing all users of
+//  PhysAddr/PhysPtr for now.
+using arch::PhysAddr;
+using arch::PhysPtr;

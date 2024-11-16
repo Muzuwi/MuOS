@@ -18,9 +18,6 @@ jobs:
           - build_preset: x86_64-RelWithDebInfo
             container_image: ghcr.io/muzuwi/muos-toolchain:v3
             x86_iso: True
-          - build_preset: x86_64-ExperimentalHacks
-            container_image: ghcr.io/muzuwi/muos-toolchain:v3
-            x86_iso: True
           - build_preset: starfive-visionfive2
             container_image: ghcr.io/muzuwi/muos-toolchain:v3-rv64
             rv64_uimage: True

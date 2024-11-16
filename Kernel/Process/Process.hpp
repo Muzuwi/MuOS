@@ -1,5 +1,4 @@
 #pragma once
-#include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/SharedPtr.hpp>
@@ -31,10 +30,8 @@ using gen::List;
 using gen::SharedPtr;
 
 class Process {
-	friend void SysDbg::sysdbg_thread();
 	friend class Scheduler;
 	friend class Thread;
-	friend void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth);
 
 	pid_t m_pid;
 	ProcFlags m_flags;

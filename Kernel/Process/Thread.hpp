@@ -1,7 +1,6 @@
 #pragma once
 #include <Arch/VM.hpp>
 #include <Arch/x86_64/PtraceRegs.hpp>
-#include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/SharedPtr.hpp>
 #include <SystemTypes.hpp>
 
@@ -35,7 +34,6 @@ extern "C" void _task_enter_bootstrap();
 class Thread {
 	friend class Process;
 	friend class Scheduler;
-	friend void SysDbg::dump_process(gen::SharedPtr<Process> process, size_t depth);
 
 	//  Layout of the following fields is important, as we're directly accessing
 	//  these from asm code

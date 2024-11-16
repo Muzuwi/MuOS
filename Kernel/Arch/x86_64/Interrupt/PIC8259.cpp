@@ -37,7 +37,7 @@ static void pic8259_init() {
  *  As a result, no interrupts will be serviced by the chips.
  *  This simply masks all interrupts.
  */
-static void pic8259_shutdown() {
+__attribute__((unused)) static void pic8259_shutdown() {
 	Ports::out(PIC8259_PORT_MDATA, 0xff);
 	Ports::out(PIC8259_PORT_SDATA, 0xff);
 }
@@ -83,7 +83,7 @@ static uint16 pic8259_read_isr() {
 
 /*	Reads the IRQ request register from both PICs
  */
-static uint16 pic8259_read_irr() {
+__attribute__((unused)) static uint16 pic8259_read_irr() {
 	return pic8259_read_irq_reg(0x0A);
 }
 

@@ -7,6 +7,7 @@
 set(MUOS_CXX_FLAGS
     -Wall
     -Wextra
+    -Werror=unused
     -Werror=unused-result
     -Werror=return-type
     -Werror=uninitialized

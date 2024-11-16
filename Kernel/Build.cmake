@@ -5,7 +5,6 @@ if(${MU_MACHINE} STREQUAL "x86_64")
     add_kernel_sources(Memory/)
     add_kernel_sources(Process/)
     add_kernel_sources(Scheduler/)
-    add_kernel_sources(Syscalls/)
 endif()
 
 add_kernel_sources(Core/)

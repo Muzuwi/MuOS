@@ -13,7 +13,6 @@
 #include <Core/Error/Error.hpp>
 #include <Core/MP/MP.hpp>
 #include <Memory/VMM.hpp>
-#include <Syscalls/Syscall.hpp>
 #include <SystemTypes.hpp>
 
 CREATE_LOGGER("boot::x86_64", core::log::LogLevel::Debug);
@@ -31,7 +30,6 @@ core::Error arch::platform_init() {
 	irq_local_enable();
 
 	PCI::discover();
-	Syscall::init();
 	ACPI::parse_tables();
 	APIC::discover();
 	arch::mp::boot_aps();

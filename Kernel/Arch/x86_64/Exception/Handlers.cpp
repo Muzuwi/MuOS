@@ -1,9 +1,6 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
-#include <Process/Process.hpp>
-#include <Process/Thread.hpp>
-#include <Scheduler/Scheduler.hpp>
 #include "Exception.hpp"
 
 CREATE_LOGGER("x86_64::exception", core::log::LogLevel::Debug);
@@ -61,17 +58,17 @@ Exception::Response Exception::handle_uncaught(PtraceRegs* pt, uint8 vector) {
 		return Response::KernelPanic;
 	}
 
-	if(thread->parent()->flags().privilege == Kernel) {
-		log.fatal("Kernel Panic - unhandled exception in kernel-mode process");
-		return Response::KernelPanic;
-	}
+	//  if(thread->parent()->flags().privilege == Kernel) {
+	//  	log.fatal("Kernel Panic - unhandled exception in kernel-mode process");
+	//  	return Response::KernelPanic;
+	//  }
 
-	log.error("in thread(tid={}), process(pid={})", thread->tid(), thread->parent()->pid());
-	log.error("task_frame={x}, stack_frame={x}", Format::ptr(thread->irq_task_frame()), Format::ptr(pt));
-	log.error("Thread(tid={}): Uncaught exception - killing", thread->tid());
-	thread->set_state(TaskState::Leaving);
-	thread->reschedule();
-	this_cpu()->scheduler->schedule();
+	//  log.error("in thread(tid={}), process(pid={})", thread->tid(), thread->parent()->pid());
+	//  log.error("task_frame={x}, stack_frame={x}", Format::ptr(thread->irq_task_frame()), Format::ptr(pt));
+	//  log.error("Thread(tid={}): Uncaught exception - killing", thread->tid());
+	//  thread->set_state(TaskState::Leaving);
+	//  thread->reschedule();
+	//  this_cpu()->scheduler->schedule();
 
 	return Exception::Response::TerminateThread;
 }
@@ -86,10 +83,10 @@ Exception::Response Exception::handle_page_fault(PtraceRegs* pt, uint8) {
 		return Response::KernelPanic;
 	}
 
-	if(thread->parent()->flags().privilege == User) {
-		log.error("Thread(tid={}): Page fault - killing", thread->tid());
-		return Response::TerminateThread;
-	}
+	//  if(thread->parent()->flags().privilege == User) {
+	//  	log.error("Thread(tid={}): Page fault - killing", thread->tid());
+	//  	return Response::TerminateThread;
+	//  }
 
 	log.fatal("Kernel Panic - page fault in kernel-mode process");
 	return Exception::Response::KernelPanic;

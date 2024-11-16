@@ -10,7 +10,6 @@ CREATE_LOGGER("x86_64::i8250", core::log::LogLevel::Debug);
 //  FIXME: Only support COM0 for now
 
 static KOptional<Serial::Port> s_kernel_debugger_port {};
-static KSemaphore s_debugger_semaphore {};
 static StaticRing<uint8, 4096> s_buffer;
 
 void Serial::set_debugger_port(Serial::Port port) {
@@ -41,9 +40,7 @@ core::irq::HandlingState Serial::_serial_irq_handler() {
 		s_buffer.try_push(data);
 		data_received = true;
 	}
-	if(data_received) {
-		s_debugger_semaphore.signal();
-	}
+	(void)data_received;
 	return core::irq::HandlingState::Handled;
 }
 
@@ -142,15 +139,7 @@ void Serial::write_debugger_str(char const* str) {
 	write_str(s_kernel_debugger_port.unwrap(), str);
 }
 
-StaticRing<uint8, 4096>& Serial::buffer() {
-	return s_buffer;
-}
-
 uint8 Serial::irq(Serial::Port port) {
 	static constexpr const uint16 io_address_for_port[4] = { 4, 3, 4, 3 };
 	return io_address_for_port[static_cast<size_t>(port) % 4];
-}
-
-KSemaphore& Serial::debugger_semaphore() {
-	return s_debugger_semaphore;
 }

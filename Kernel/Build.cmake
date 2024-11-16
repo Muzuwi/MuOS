@@ -1,10 +1,2 @@
-if(${MU_MACHINE} STREQUAL "x86_64")
-    add_kernel_sources(Kernel/)
-    add_kernel_sources(Locks/)
-    add_kernel_sources(Memory/)
-    add_kernel_sources(Process/)
-    add_kernel_sources(Scheduler/)
-endif()
-
 add_kernel_sources(Core/)
 add_kernel_sources(Structs/)

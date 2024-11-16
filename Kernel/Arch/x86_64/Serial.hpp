@@ -1,6 +1,5 @@
 #pragma once
 #include <Core/IRQ/IRQ.hpp>
-#include <Locks/KSemaphore.hpp>
 #include <Structs/StaticRing.hpp>
 #include <SystemTypes.hpp>
 
@@ -28,8 +27,6 @@ public:
 	static void write_str(Port, const char*);
 	static void write_debugger_str(const char*);
 	static void set_debugger_port(Port);
-	static KSemaphore& debugger_semaphore();
-	static StaticRing<uint8, 4096>& buffer();
 private:
 	static core::irq::HandlingState _serial_irq_handler();
 	static bool try_initialize(Port port);

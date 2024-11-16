@@ -7,7 +7,6 @@ struct PtraceRegs;
 class CPU {
 public:
 	static void initialize_features();
-	static void switch_to(Thread* prev, Thread* next);
 	static void set_kernel_gs_base(void*);
 	static uint64_t get_kernel_gs_base();
 	static uint64_t get_gs_base();
@@ -16,6 +15,4 @@ public:
 	static void set_gs_base(void*);
 	static void lgdt(void*);
 	static void ltr(uint16 selector);
-
-	[[noreturn]] static void jump_to_user(PtraceRegs* regs);
 };

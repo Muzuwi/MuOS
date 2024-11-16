@@ -3,7 +3,6 @@
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/PortIO.hpp>
 #include <Core/Log/Logger.hpp>
-#include <Process/Process.hpp>
 #include <SystemTypes.hpp>
 
 CREATE_LOGGER("x86_64::cpu", core::log::LogLevel::Debug);
@@ -37,10 +36,6 @@ void CPU::initialize_features() {
 
 extern "C" void _switch_to_asm(Thread*, Thread*);
 
-void CPU::switch_to(Thread* prev, Thread* next) {
-	_switch_to_asm(prev, next);
-}
-
 void CPU::set_kernel_gs_base(void* p) {
 	wrmsr(0xC0000102, (uint64_t)p);
 }
@@ -70,10 +65,6 @@ uint64 CPU::cr3() {
 }
 
 extern "C" [[noreturn]] void _bootstrap_user(PtraceRegs* regs);
-
-[[noreturn]] void CPU::jump_to_user(PtraceRegs* regs) {
-	_bootstrap_user(regs);
-}
 
 extern "C" void loadGDT(void*);
 void CPU::lgdt(void* ptr) {

@@ -8,9 +8,6 @@
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Spinlock.hpp>
-#include <Process/Process.hpp>
-#include <Process/Thread.hpp>
-#include <Scheduler/Scheduler.hpp>
 
 CREATE_LOGGER("x86_64::pit", core::log::LogLevel::Debug);
 
@@ -34,20 +31,20 @@ void update_timer_reload(uint16_t freq) {
 
 void _pit_irq0_handler(PtraceRegs*) {
 	pit.tick();
-	this_cpu()->scheduler->tick();
+	//  this_cpu()->scheduler->tick();
 
-	for(auto it = s_alarms.begin(); it != s_alarms.end(); ++it) {
-		auto& alarm = *it;
-		if(alarm.m_start + alarm.m_len > PIT::milliseconds())
-			continue;
+	//  for(auto it = s_alarms.begin(); it != s_alarms.end(); ++it) {
+	//  	auto& alarm = *it;
+	//  	if(alarm.m_start + alarm.m_len > PIT::milliseconds())
+	//  		continue;
 
-		ENSURE(alarm.m_thread->state() == TaskState::Sleeping);
-		if(alarm.m_thread->state() == TaskState::Sleeping) {
-			//  Wake up
-			this_cpu()->scheduler->wake_up(alarm.m_thread);
-		}
-		s_alarms.erase(it);
-	}
+	//  	ENSURE(alarm.m_thread->state() == TaskState::Sleeping);
+	//  	if(alarm.m_thread->state() == TaskState::Sleeping) {
+	//  		//  Wake up
+	//  		this_cpu()->scheduler->wake_up(alarm.m_thread);
+	//  	}
+	//  	s_alarms.erase(it);
+	//  }
 }
 
 PIT::PIT() noexcept

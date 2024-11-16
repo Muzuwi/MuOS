@@ -1,5 +1,4 @@
 if(${MU_MACHINE} STREQUAL "x86_64")
-    add_kernel_sources(Drivers/)
     add_kernel_sources(Kernel/)
     add_kernel_sources(Locks/)
     add_kernel_sources(Memory/)

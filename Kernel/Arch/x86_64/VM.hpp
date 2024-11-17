@@ -3,19 +3,20 @@
 #include <LibGeneric/BitFlags.hpp>
 #include <SystemTypes.hpp>
 
-/* Base address of the identity region in virtual memory */
-#define KERNEL_VM_IDENTITY_BASE (reinterpret_cast<void*>(&_ukernel_identity_start))
-/* Length of the identity region in virtual memory */
-#define KERNEL_VM_IDENTITY_LEN \
-	(reinterpret_cast<uintptr_t>(&_ukernel_heap_start) - reinterpret_cast<void*>(&_ukernel_identity_start))
-
-/* Start address of the VM region that will be shared across ALL processes */
-#define KERNEL_VM_SHARED_START (reinterpret_cast<void*>(&_ukernel_shared_start))
-/* End address of the shared VM region */
-#define KERNEL_VM_SHARED_END (reinterpret_cast<void*>(&_ukernel_shared_end))
-
-/* Start address of the kernel VM region */
-#define KERNEL_VM_START (reinterpret_cast<void*>(&_ukernel_virtual_start))
+#define _LINKSYM(a)             (reinterpret_cast<void*>(&a))
+#define _PTRDIFF(a, b)          (static_cast<uintptr_t>((reinterpret_cast<uint8*>(a) - reinterpret_cast<uint8*>(b))))
+#define KERNEL_VM_START         _LINKSYM(_ukernel_virtual_start)
+#define KERNEL_VM_VMALLOC_BASE  _LINKSYM(_ukernel_heap_start)
+#define KERNEL_VM_VMALLOC_LEN   _PTRDIFF(_LINKSYM(_ukernel_heap_end), _LINKSYM(_ukernel_heap_start))
+#define KERNEL_VM_ELF_BASE      _LINKSYM(_ukernel_elf_start)
+#define KERNEL_VM_ELF_LEN       _PTRDIFF(_LINKSYM(_ukernel_elf_end), _LINKSYM(_ukernel_elf_start))
+#define KERNEL_VM_TEXT_BASE     _LINKSYM(_ukernel_text_start)
+#define KERNEL_VM_TEXT_LEN      _PTRDIFF(_LINKSYM(_ukernel_text_end), _LINKSYM(_ukernel_text_start))
+#define KERNEL_VM_IDENTITY_BASE _LINKSYM(_ukernel_identity_start)
+#define KERNEL_VM_IDENTITY_LEN  _PTRDIFF(_LINKSYM(_ukernel_heap_start), _LINKSYM(_ukernel_identity_start))
+#define KERNEL_VM_SHARED_START  _LINKSYM(_ukernel_shared_start)
+#define KERNEL_VM_SHARED_END    _LINKSYM(_ukernel_shared_end)
+#define KERNEL_PM_LOAD_BASE     _LINKSYM(_ukernel_physical_start)
 
 namespace arch {
 	static inline constexpr uint64 PAGING_ADDRESS_MASK = 0x000ffffffffff000u;

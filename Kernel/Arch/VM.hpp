@@ -16,6 +16,28 @@
 #ifndef KERNEL_VM_IDENTITY_LEN
 #	error "Missing architecture definition: KERNEL_VM_IDENTITY_LEN (Length of the identity region in virtual memory)"
 #endif
+#ifndef KERNEL_VM_VMALLOC_BASE
+#	error "Missing architecture definition: KERNEL_VM_VMALLOC_BASE (Base address of the vmalloc region in virtual memory)"
+#endif
+#ifndef KERNEL_VM_VMALLOC_LEN
+#	error "Missing architecture definition: KERNEL_VM_VMALLOC_LEN (Length of the vmalloc region in virtual memory)"
+#endif
+#ifndef KERNEL_VM_ELF_BASE
+#	error "Missing architecture definition: KERNEL_VM_ELF_BASE (Base address of the kernel ELF in virtual memory)"
+#endif
+#ifndef KERNEL_VM_ELF_LEN
+#	error "Missing architecture definition: KERNEL_VM_ELF_LEN (Length of the kernel ELF in virtual memory)"
+#endif
+#ifndef KERNEL_VM_TEXT_BASE
+#	error "Missing architecture definition: KERNEL_VM_TEXT_BASE (Base address of kernel executable/code sections in virtual memory)"
+#endif
+#ifndef KERNEL_VM_TEXT_LEN
+#	error "Missing architecture definition: KERNEL_VM_TEXT_LEN (Length of the kernel executable/code sections in virtual memory)"
+#endif
+
+#ifndef KERNEL_PM_LOAD_BASE
+#	error "Missing architecture definition: KERNEL_PM_LOAD_BASE (Physical address the kernel is loaded by the bootloader)"
+#endif
 
 /* Custom helpers go here */
 #ifndef idmap

@@ -22,7 +22,6 @@ class VMM {
 	arch::PagingHandle m_paging_handle;
 	List<SharedPtr<VMapping>> m_mappings;
 	List<core::mem::PageAllocation> m_kernel_pages;
-	void* m_next_kernel_stack_at;
 	void* m_next_anon_vm_at;
 	gen::Spinlock m_vm_lock;
 
@@ -31,19 +30,11 @@ class VMM {
 		Yes
 	};
 
-	[[nodiscard]] static void* allocate_kernel_heap(size_t size);
-
-	void _map_pallocation(core::mem::PageAllocation, void*);
-	void _map_kernel_executable();
-	void _map_physical_identity();
-	KOptional<PhysAddr> _allocate_kernel_page(size_t order);
-
 	bool map(VMapping const&);
 	bool unmap(VMapping const&);
 public:
 	explicit VMM(Process& proc) noexcept
 	    : m_process(proc)
-	    , m_next_kernel_stack_at(&_ukernel_virt_kstack_start)
 	    , m_next_anon_vm_at(&_userspace_heap_start) {}
 
 	arch::PagingHandle paging_handle() const { return m_paging_handle; }
@@ -54,7 +45,6 @@ public:
 	gen::LockGuard<gen::Spinlock> acquire_vm_lock();
 
 	void* allocate_user_stack(uint64 stack_size);
-	VMapping* allocate_kernel_stack(uint64 stack_size);
 	void* allocate_user_heap(size_t region_size);
 
 	bool clone_address_space_from(arch::PagingHandle);

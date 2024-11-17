@@ -54,7 +54,6 @@ class Thread {
 
 	Thread(SharedPtr<Process>, tid_t);
 
-	[[nodiscard]] void* _bootstrap_task_stack(PhysAddr kernel_stack_bottom, PtraceRegs state);
 	[[maybe_unused]] static void finalize_switch(Thread* prev, Thread* next);
 public:
 	static SharedPtr<Thread> create_in_process(SharedPtr<Process>, void (*kernel_exec)());

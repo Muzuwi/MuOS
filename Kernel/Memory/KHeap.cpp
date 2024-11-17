@@ -1,10 +1,11 @@
 #include <Core/IRQ/InterruptDisabler.hpp>
 #include <Core/Log/Logger.hpp>
+#include <Core/Mem/VM.hpp>
 #include <Core/MP/MP.hpp>
 #include <LibAllocator/Arena.hpp>
 #include <LibAllocator/SlabAllocator.hpp>
 #include <Memory/KHeap.hpp>
-#include <Memory/VMM.hpp>
+#include <Process/Thread.hpp>
 
 KHeap KHeap::s_instance {};
 CREATE_LOGGER("kheap", core::log::LogLevel::Debug);
@@ -13,11 +14,11 @@ void KHeap::init() {
 	log.info("Initializing kernel allocators..");
 
 	const auto size = 1_MiB;
-	auto chunk_space = VMM::allocate_kernel_heap(size);
+	auto chunk_space = core::mem::vmalloc(size);
 	ENSURE(chunk_space != nullptr);
 	log.debug("ChunkAllocator({}), size {}", chunk_space, size);
 	m_chunk_allocator = liballoc::ChunkAllocator {
-		liballoc::Arena {chunk_space, size}
+		liballoc::Arena { chunk_space, size }
 	};
 
 	for(unsigned i = 0; i < 2; ++i) {
@@ -93,7 +94,7 @@ void* KHeap::slab_alloc(size_t size) {
 		for(auto& allocator : slabs) {
 			const auto ptr = allocator.allocate();
 			if(ptr) {
-				// log.debug("alloc slab={x} ptr={x}", allocator.pool_start(), ptr);
+				//  log.debug("alloc slab={x} ptr={x}", allocator.pool_start(), ptr);
 				return ptr;
 			}
 		}
@@ -128,7 +129,7 @@ void KHeap::slab_free(void* ptr, size_t size) {
 		for(auto& allocator : slabs) {
 			if(ptr >= allocator.pool_start() &&
 			   ptr < (reinterpret_cast<uint8_t*>(allocator.pool_start()) + allocator.pool_size())) {
-				// log.debug("free slab={x} ptr={x}", allocator.pool_start(), ptr);
+				//  log.debug("free slab={x} ptr={x}", allocator.pool_start(), ptr);
 				allocator.free(ptr);
 				return;
 			}
@@ -148,7 +149,7 @@ liballoc::SlabAllocator* KHeap::slab_grow(size_t requested_size) {
 	const size_t default_arena_size = 32768;
 	const unsigned actual_object_size = 8 << index_for_size(requested_size);
 
-	auto* allocator_arena = VMM::allocate_kernel_heap(default_arena_size);
+	auto* allocator_arena = core::mem::vmalloc(default_arena_size);
 	if(!allocator_arena) {
 		return nullptr;
 	}

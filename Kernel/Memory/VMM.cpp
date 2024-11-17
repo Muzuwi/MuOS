@@ -5,6 +5,7 @@
 #include <Core/Log/Logger.hpp>
 #include <Core/Mem/GFP.hpp>
 #include <Core/Mem/Layout.hpp>
+#include <Core/Mem/VM.hpp>
 #include <LibAllocator/BumpAllocator.hpp>
 #include <Memory/VMM.hpp>
 #include <Process/Process.hpp>
@@ -19,96 +20,12 @@ CREATE_LOGGER("vmm", core::log::LogLevel::Debug);
 void VMM::initialize_kernel_vm() {
 	Process& kerneld = Process::_kerneld_ref();
 
-	log.info("Initializing kerneld address space");
-	auto maybe_handle = arch::addralloc();
-	if(maybe_handle.has_error()) {
-		core::panic("Failed allocating paging handle for kerneld process! Out of memory?");
-	}
-	kerneld.vmm().m_paging_handle = maybe_handle.data();
-
-	log.debug("Mapping kernel executable");
-	kerneld.vmm()._map_kernel_executable();
-
-	log.debug("Creating physical identity map");
-	kerneld.vmm()._map_physical_identity();
-
+	kerneld.vmm().m_paging_handle = core::mem::get_vmroot();
 	asm volatile("mov %%rax, %0\n"
 	             "mov cr3, %%rax\n"
 	             :
 	             : "r"(kerneld.vmm().m_paging_handle)
 	             : "rax");
-}
-
-/*
- *  Maps the given PAllocation starting at virtual address vaddr
- *  Should only be used by lower level kernel allocators, userland should use VMappings
- */
-void VMM::_map_pallocation(core::mem::PageAllocation allocation, void* vaddr) {
-	auto physical = PhysAddr { allocation.base };
-	while(physical.get() < allocation.end()) {
-		auto err =
-		        arch::addrmap(m_paging_handle, physical.get(), vaddr, arch::PageFlags::Read | arch::PageFlags::Write);
-		if(err != core::Error::Ok) {
-			core::panic("Failed to map PageAllocation for kernel allocator!");
-		}
-		physical += 0x1000;
-		vaddr = reinterpret_cast<uint8*>(vaddr) + 0x1000;
-	}
-}
-
-/*
- *  Maps the kernel executable in the target process memory.
- *  Only called on kerneld during kernel initialization
- */
-void VMM::_map_kernel_executable() {
-	auto* const kernel_elf_start = reinterpret_cast<uint8_t*>(&_ukernel_elf_start);
-	auto* const kernel_elf_end = reinterpret_cast<uint8_t*>(&_ukernel_elf_end);
-	auto* const kernel_text_start = reinterpret_cast<uint8_t*>(&_ukernel_text_start);
-	auto* const kernel_text_end = reinterpret_cast<uint8_t*>(&_ukernel_text_end);
-
-	auto kernel_physical = PhysAddr { &_ukernel_physical_start };
-	for(auto addr = kernel_elf_start; addr < kernel_elf_end; addr += 0x1000) {
-		auto flags = arch::PageFlags::Read | arch::PageFlags::Write;
-		bool in_text_section = (addr >= kernel_text_start && addr < kernel_text_end);
-		if(in_text_section) {
-			flags = flags | arch::PageFlags::Execute;
-		}
-		auto err = arch::addrmap(m_paging_handle, kernel_physical.get(), addr, flags);
-		if(err != core::Error::Ok) {
-			core::panic("Failed to addrmap kernel executable!");
-		}
-		kernel_physical += 0x1000;
-	}
-}
-
-static void* get_physical_end() {
-	void* max = nullptr;
-	core::mem::for_each_region([&max](core::mem::Region region) {
-		if(region.start > max) {
-			max = region.start;
-		}
-	});
-	return max;
-}
-
-/*
- *  Creates the identity map in the current address space. Only called on kernel
- *  initialization
- */
-void VMM::_map_physical_identity() {
-	auto identity_start = reinterpret_cast<uint8_t*>(&_ukernel_identity_start);
-	auto physical = PhysAddr { nullptr };
-
-	const auto physical_end = get_physical_end();
-
-	for(auto addr = identity_start; addr < identity_start + (uintptr_t)physical_end; addr += 2_MiB) {
-		const auto err = arch::addrmap(m_paging_handle, physical.get(), addr,
-		                               arch::PageFlags::Read | arch::PageFlags::Write | arch::PageFlags::Large);
-		if(err != core::Error::Ok) {
-			core::panic("Failed to create physical identity map!");
-		}
-		physical += 2_MiB;
-	}
 }
 
 /*
@@ -141,21 +58,6 @@ bool VMM::unmap(VMapping const& mapping) {
 		}
 	}
 	return true;
-}
-
-/*
- *  Allocates a physical page for use in the kernel, on behalf of the current process.
- *  After the process is removed, these pages WILL BE FREED.
- *  Can't use VMappings for these, as most often they won't have an underlying VM mapping
- */
-KOptional<PhysAddr> VMM::_allocate_kernel_page(size_t order) {
-	auto alloc = core::mem::allocate_pages(order, core::mem::PageAllocFlags {});
-	if(!alloc.has_value()) {
-		return {};
-	}
-
-	m_kernel_pages.push_back(alloc.data());
-	return { alloc.data().base };
 }
 
 /*
@@ -227,27 +129,6 @@ void* VMM::allocate_user_stack(uint64 stack_size) {
 	return (void*)(stack_top + stack_size);
 }
 
-VMapping* VMM::allocate_kernel_stack(uint64 stack_size) {
-	auto lock = acquire_vm_lock();
-
-	void* kstack_top = m_next_kernel_stack_at;
-	void* kstack_bottom = (void*)((uintptr_t)m_next_kernel_stack_at + stack_size);
-
-	//  FIXME/LIMITS
-	if(kstack_bottom > &_ukernel_virt_kstack_end) {
-		return {};
-	}
-	//  FIXME: Handle randomize_vm flag
-
-	m_next_kernel_stack_at = (void*)((uintptr_t)m_next_kernel_stack_at + stack_size + 0x1000);
-
-	auto mapping = VMapping::create((void*)kstack_top, stack_size, VM_READ | VM_WRITE | VM_KERNEL, MAP_PRIVATE);
-	auto mapping_ptr = mapping.get();
-	ENSURE(insert_vmapping(gen::move(mapping)));
-
-	return mapping_ptr;
-}
-
 void* VMM::allocate_user_heap(size_t region_size) {
 	auto lock = acquire_vm_lock();
 
@@ -276,37 +157,6 @@ bool VMM::clone_address_space_from(arch::PagingHandle handle) {
 
 	m_paging_handle = maybe_handle.destructively_move_data();
 	return true;
-}
-
-static liballoc::BumpAllocator s_heap_break { liballoc::Arena(
-	    &_ukernel_heap_start, (size_t)((uint8*)&_ukernel_heap_end - (uint8*)&_ukernel_heap_start)) };
-
-/*
- *  Allocates a region of the specified size (rounded to integer amount of pages) in the kernel heap address space.
- *  This will automatically allocate pages and map the region in the default kernel address space (kerneld).
- *  This should only be used by low-level kernel allocators!
- */
-void* VMM::allocate_kernel_heap(size_t size) {
-	ENSURE(size > 0);
-	auto size_rounded_to_page_size = ((size + 0x1000 - 1) & ~(0x1000 - 1));
-
-	auto* ptr = s_heap_break.allocate(size_rounded_to_page_size);
-
-	if(ptr == nullptr) {
-		return nullptr;
-	}
-
-	//  Map new pages for the allocated heap region
-	for(auto* current = (uint8*)ptr; current < (uint8*)ptr + size_rounded_to_page_size; current += 0x1000) {
-		auto page = core::mem::allocate_pages(0, core::mem::PageAllocFlags {});
-		if(!page.has_value()) {
-			return nullptr;
-		}
-
-		Process::_kerneld_ref().vmm()._map_pallocation(page.data(), current);
-	}
-
-	return ptr;
 }
 
 gen::LockGuard<gen::Spinlock> VMM::acquire_vm_lock() {

@@ -18,6 +18,7 @@ exec qemu-system-riscv64 \
   -smp 5 \
   -m "${MEMSIZE}" \
   -s \
+  -S \
   -serial stdio \
   -kernel "${KERNELELF}" \
   -no-reboot -no-shutdown

@@ -25,9 +25,11 @@ cd build-gcc
 				 --with-sysroot="$PREFIX" \
 				 --disable-nls\
 				 --enable-languages=c,c++ \
-				 --enable-shared
+				 --enable-shared \
+                 --with-arch=rv64imac \
+                 --with-abi=lp64
 
-make all-gcc -j"$JOBCOUNT"
-make all-target-libgcc -j"$JOBCOUNT" CFLAGS_FOR_TARGET='-mcmodel=medany -march=rv64imac -mabi=lp64'
+make all-gcc -j"$JOBCOUNT" CFLAGS_FOR_TARGET='-mcmodel=medany'
+make all-target-libgcc -j"$JOBCOUNT" CFLAGS_FOR_TARGET='-mcmodel=medany'
 make install-gcc
 make install-target-libgcc

@@ -31,14 +31,34 @@ execute_process(COMMAND "${MUOS_CC}" -march=rv64imac -mabi=lp64 -print-file-name
     OUTPUT_VARIABLE _MU_CRTEND_PATH
     ERROR_QUIET
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${MUOS_CC}" -march=rv64imac -mabi=lp64 -print-file-name=crti.o
-    OUTPUT_VARIABLE _MU_KERNEL_CRTI_OBJ
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${MUOS_CC}" -march=rv64imac -mabi=lp64 -print-file-name=crtn.o
-    OUTPUT_VARIABLE _MU_KERNEL_CRTN_OBJ
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(_MU_KERNEL_CRTI_SRC "${CMAKE_CURRENT_LIST_DIR}/crti.c")
+set(_MU_KERNEL_CRTI_OBJ "${CMAKE_BINARY_DIR}/crti.o")
+if (NOT EXISTS "${_MU_KERNEL_CRTI_OBJ}")
+    message(STATUS "Building kernel crti.o..")
+    execute_process(COMMAND ${MUOS_CC} -std=c99 -march=rv64imaczicsr -mabi=lp64 -mcmodel=medany -c ${_MU_KERNEL_CRTI_SRC} -o ${_MU_KERNEL_CRTI_OBJ}
+        RESULT_VARIABLE _CRTI_RET
+        COMMAND_ECHO STDERR)
+    if (_CRTI_RET AND NOT _CRTI_RET EQUAL 0)
+        message(FATAL_ERROR "Failed building the kernel crti.o object!")
+    endif ()
+else ()
+    message(STATUS "Kernel crti.o object already exists: ${_MU_KERNEL_CRTI_OBJ}, skipping generation..")
+endif ()
+
+set(_MU_KERNEL_CRTN_SRC "${CMAKE_CURRENT_LIST_DIR}/crtn.c")
+set(_MU_KERNEL_CRTN_OBJ "${CMAKE_BINARY_DIR}/crtn.o")
+if (NOT EXISTS "${_MU_KERNEL_CRTN_OBJ}")
+    message(STATUS "Building kernel crtn.o..")
+    execute_process(COMMAND ${MUOS_CC} -std=c99 -march=rv64imaczicsr -mabi=lp64 -mcmodel=medany -c ${_MU_KERNEL_CRTN_SRC} -o ${_MU_KERNEL_CRTN_OBJ}
+        RESULT_VARIABLE _CRTN_RET
+        COMMAND_ECHO STDERR)
+    if (_CRTN_RET AND NOT _CRTN_RET EQUAL 0)
+        message(FATAL_ERROR "Failed building the kernel crtn.o object!")
+    endif ()
+else ()
+    message(STATUS "Kernel crtn.o object already exists: ${_MU_KERNEL_CRTN_OBJ}, skipping generation..")
+endif ()
 
 # Print some helpful debug info
 message(STATUS "Found kernel C compiler: ${MUOS_CC}")

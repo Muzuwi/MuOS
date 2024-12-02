@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.17)
 project(Arch_riscv64 LANGUAGES CXX ASM)
 
+add_subdirectory(Boot0/)
+
 set(ARCH_SOURCES
     Boot.s
     Platform.cpp

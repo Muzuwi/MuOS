@@ -9,6 +9,9 @@
 #ifdef ARCH_IS_x86_64
 #	include <Arch/x86_64/VM.hpp>
 #endif
+#ifdef ARCH_IS_RISCV64
+#	include <Arch/riscv64/VM.hpp>
+#endif
 
 #ifndef KERNEL_VM_IDENTITY_BASE
 #	error "Missing architecture definition: KERNEL_VM_IDENTITY_BASE (Base address of the identity region in virtual memory)"

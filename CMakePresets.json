@@ -97,7 +97,25 @@
             "name": "native-libtest",
             "displayName": "Native - Library Tests",
             "inherits": ["default", "arch_x86_64", "debug", "native_tests"]
-        }
+        },
 
+        {
+            "name": "starfive-visionfive2",
+            "displayName": "RISC-V target: StarFive VisionFive 2 (Debug)",
+            "inherits": ["riscv64-Debug"],
+            "cacheVariables": {
+                "CONFIG_BOOT0_BOOTCON_SIFIVE": "0",
+                "CONFIG_BOOT0_BOOTCON_16550": "1"
+            }
+        },
+        {
+            "name": "sifive-unmatched-unleashed",
+            "displayName": "RISC-V target: SiFive Unmatched/Unleashed (QEMU/Renode, Debug)",
+            "inherits": ["riscv64-Debug"],
+            "cacheVariables": {
+                "CONFIG_BOOT0_BOOTCON_SIFIVE": "1",
+                "CONFIG_BOOT0_BOOTCON_16550": "0"
+            }
+        }
     ]
 }

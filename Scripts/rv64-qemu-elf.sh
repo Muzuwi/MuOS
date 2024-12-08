@@ -4,7 +4,7 @@
 # Requires qemu-system-riscv64 to be installed.
 # Assumed work directory: <repo>/Root/
 
-KERNELELF="uKernel.bin"
+KERNELELF="uKernel.uImage"
 MEMSIZE="2G"
 
 if [ ! -f "${KERNELELF}" ]; then

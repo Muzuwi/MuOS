@@ -6,12 +6,12 @@ machine LoadPlatformDescription @platforms/cpus/sifive-fu540.repl
 
 showAnalyzer uart0
 
-$mu?=@./uKernel.bin
+$mu?=@./uKernel.uImage
 $fdt?=@../Scripts/renode-riscv64/hifive-unleashed.dtb
 
 macro reset
 """
-    sysbus LoadELF $mu
+    sysbus LoadUImage $mu
     sysbus LoadFdt $fdt 0x81000000
 
     # Pass FDT address directly to the kernel, this would otherwise

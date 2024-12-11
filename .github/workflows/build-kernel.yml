@@ -2,25 +2,40 @@ name: Build Kernel
 
 on:
   push:
-    branches: [ "master", "gh-presets-ci" ]
+    branches: [ "master", "gh-presets-ci", "gh-enable-riscv" ]
   pull_request:
     branches: [ "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/muzuwi/muos-toolchain:v3
     strategy:
       matrix:
-        build_preset: [x86_64-Debug,x86_64-RelWithDebInfo,x86_64-ExperimentalHacks]
-    continue-on-error: ${{ startsWith(matrix.build_preset, 'riscv64') }}
+        include:
+          - build_preset: x86_64-Debug
+            container_image: ghcr.io/muzuwi/muos-toolchain:v3
+            x86_iso: True
+          - build_preset: x86_64-RelWithDebInfo
+            container_image: ghcr.io/muzuwi/muos-toolchain:v3
+            x86_iso: True
+          - build_preset: x86_64-ExperimentalHacks
+            container_image: ghcr.io/muzuwi/muos-toolchain:v3
+            x86_iso: True
+          - build_preset: starfive-visionfive2
+            container_image: ghcr.io/muzuwi/muos-toolchain:v3-rv64
+            rv64_uimage: True
+          - build_preset: sifive-unmatched-unleashed
+            container_image: ghcr.io/muzuwi/muos-toolchain:v3-rv64
+            rv64_uimage: True
+
+    container:
+      image: ${{ matrix.container_image }}
 
     steps:
     - uses: actions/checkout@v4
 
     - name: Install build dependencies
-      run: apt update && apt install -qq -y grub-pc xorriso ninja-build
+      run: apt update && apt install -qq -y grub-pc xorriso ninja-build u-boot-tools
 
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build --preset ${{ matrix.build_preset }}
@@ -28,9 +43,13 @@ jobs:
     - name: Build kernel executable
       run: cmake --build ${{github.workspace}}/build --target KernelELF
 
-    - name: Build ISO
-      if: ${{ startsWith(matrix.build_preset, 'x86_64') }}
+    - name: x86_64 - Build ISO
+      if: ${{ matrix.x86_iso }}
       run: cmake --build ${{github.workspace}}/build --target BootableISO
+
+    - name: rv64 - Build uImage
+      if: ${{ matrix.rv64_uimage }}
+      run: cmake --build ${{github.workspace}}/build --target BootableUImage
 
     - name: Copy emulator run scripts to the output directory
       # NOTE: See https://github.com/actions/runner/issues/2058

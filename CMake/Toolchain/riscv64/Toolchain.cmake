@@ -11,13 +11,13 @@ find_program(
     NAMES riscv64-elf-as
 )
 
-if (DEFINED MUOS_CC-NOTFOUND)
+if (MUOS_CC STREQUAL MUOS_CC-NOTFOUND)
     message(FATAL_ERROR "Could not find the binary for kernel cross-compilation GCC (missing gcc binary).")
 endif ()
-if (DEFINED MUOS_CXX-NOTFOUND)
+if (MUOS_CXX STREQUAL MUOS_CXX-NOTFOUND)
     message(FATAL_ERROR "Could not find the binary for kernel cross-compilation GCC (missing g++ binary).")
 endif ()
-if (DEFINED MUOS_AS-NOTFOUND)
+if (MUOS_AS STREQUAL MUOS_AS-NOTFOUND)
     message(FATAL_ERROR "Could not find the binary for kernel cross-compilation GCC (missing as binary).")
 endif ()
 

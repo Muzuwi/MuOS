@@ -43,3 +43,13 @@ add_custom_target(BootableUImage
     DEPENDS KernelWithBoot0.bin
     COMMAND ${MKIMAGE} -A riscv -O linux -T kernel -C none -a 0x80400000 -e 0x80400000 -n uKernel -d KernelWithBoot0.bin uKernel.uImage
     )
+
+# Update ${MUREPO}/Root/ with most recently built files to simplify development
+add_custom_command(TARGET BootableUImage POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "[build] Copying output bootable binaries to MUREPO/Root/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Boot0> ${CMAKE_SOURCE_DIR}/Root/Boot0.elf
+    COMMAND ${CMAKE_COMMAND} -E copy Boot0.bin ${CMAKE_SOURCE_DIR}/Root/
+    COMMAND ${CMAKE_COMMAND} -E copy uKernel.flat.bin ${CMAKE_SOURCE_DIR}/Root/
+    COMMAND ${CMAKE_COMMAND} -E copy uKernel.uImage ${CMAKE_SOURCE_DIR}/Root/
+    )

@@ -18,13 +18,13 @@ find_program(
     NAMES nasm
 )
 
-if (DEFINED MUOS_CC-NOTFOUND)
+if (MUOS_CC STREQUAL MUOS_CC-NOTFOUND)
     message(FATAL_ERROR "Could not find the binary for kernel cross-compilation GCC (missing gcc binary).")
 endif ()
-if (DEFINED MUOS_CXX-NOTFOUND)
+if (MUOS_CXX STREQUAL MUOS_CXX-NOTFOUND)
     message(FATAL_ERROR "Could not find the binary for kernel cross-compilation GCC (missing g++ binary).")
 endif ()
-if (DEFINED MUOS_NASM-NOTFOUND)
+if (MUOS_NASM STREQUAL MUOS_NASM-NOTFOUND)
     message(FATAL_ERROR "Could not find the binary for NASM.")
 endif ()
 

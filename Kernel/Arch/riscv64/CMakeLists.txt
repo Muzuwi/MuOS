@@ -25,3 +25,5 @@ target_compile_definitions(Architecture
 target_link_options(Architecture
     PUBLIC -T ${PROJECT_SOURCE_DIR}/Linkscript.ld
     )
+
+include(MakeUbootBootable.cmake)

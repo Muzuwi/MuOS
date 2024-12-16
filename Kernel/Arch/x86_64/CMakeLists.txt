@@ -29,4 +29,4 @@ target_link_options(Architecture
     PUBLIC -T ${PROJECT_SOURCE_DIR}/Linkscript_x64.ld
     )
 
-include(Boot/MakeGrubBootable.cmake)
+include(MakeGrubBootable.cmake)

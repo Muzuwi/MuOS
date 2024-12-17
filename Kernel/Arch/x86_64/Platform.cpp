@@ -11,6 +11,7 @@
 #include <Arch/x86_64/SerialConsole.hpp>
 #include <Arch/x86_64/VGAConsole.hpp>
 #include <Core/Error/Error.hpp>
+#include <Core/Mem/VM.hpp>
 #include <Core/MP/MP.hpp>
 #include <Memory/VMM.hpp>
 #include <Syscalls/Syscall.hpp>
@@ -23,6 +24,14 @@ core::Error arch::platform_early_init() {
 	Serial::init();
 	(void)serialcon::init();
 	CPU::initialize_features();
+
+	//  Load CR3 with the proper kernel mappings
+	//  Prior to doing this, the kernel is running with the bootstrap mappings
+	//  provided by the preloader.
+	asm volatile("mov %%rax, %0\n"
+	             "mov %%cr3, %%rax\n"
+	             :
+	             : "r"(core::mem::get_vmroot()));
 
 	return core::Error::Ok;
 }

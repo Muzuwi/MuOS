@@ -1,4 +1,5 @@
-#include <Arch/Interface.hpp>
+#include <Arch/MP.hpp>
+#include <Arch/Platform.hpp>
 #include <Arch/x86_64/ACPI.hpp>
 #include <Arch/x86_64/APIC.hpp>
 #include <Arch/x86_64/CPU.hpp>

@@ -1,3 +1,4 @@
+#include <Arch/Platform.hpp>
 #include <Arch/x86_64/CPU.hpp>
 #include <Core/Assert/Assert.hpp>
 #include <Core/IRQ/InterruptDisabler.hpp>

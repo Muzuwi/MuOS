@@ -9,7 +9,6 @@
 #include <Process/Thread.hpp>
 #include <string.h>
 #include <SystemTypes.hpp>
-#include "Arch/Interface.hpp"
 
 static void* _bootstrap_task_stack(uint8* kernel_stack_bottom, PtraceRegs state) {
 	auto struct_begin = kernel_stack_bottom - sizeof(PtraceRegs);

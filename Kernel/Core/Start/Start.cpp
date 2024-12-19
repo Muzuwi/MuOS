@@ -1,5 +1,6 @@
 #include "Start.hpp"
-#include <Arch/Interface.hpp>
+#include <Arch/MP.hpp>
+#include <Arch/Platform.hpp>
 #include <Arch/x86_64/PIT.hpp>
 #include <Core/Assert/Assert.hpp>
 #include <Core/Mem/Layout.hpp>

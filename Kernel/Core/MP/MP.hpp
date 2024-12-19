@@ -1,5 +1,5 @@
 #pragma once
-#include <Arch/Interface.hpp>
+#include <Arch/MP.hpp>
 #include <SystemTypes.hpp>
 
 class Thread;

@@ -1,4 +1,3 @@
-#include <Arch/Interface.hpp>
 #include <Arch/VM.hpp>
 #include <Arch/x86_64/Boot/MultibootInfo.hpp>
 #include <Arch/x86_64/CPU.hpp>

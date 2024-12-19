@@ -1,4 +1,4 @@
-#include <Arch/Interface.hpp>
+#include <Arch/MP.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
 #include <Memory/KHeap.hpp>

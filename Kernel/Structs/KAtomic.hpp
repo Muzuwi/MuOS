@@ -70,7 +70,7 @@ public:
 	/*
 	 *  Atomically loads and returns the stored value
 	 */
-	[[nodiscard]] T load(MemoryOrdering ordering)
+	[[nodiscard]] T load(MemoryOrdering ordering) const
 	requires SupportsAtomicLoad<T>
 	{
 		T value;

@@ -34,8 +34,6 @@ void CPU::initialize_features() {
 	wrmsr(0xC0000084, 1u << 9u);
 }
 
-extern "C" void _switch_to_asm(Thread*, Thread*);
-
 void CPU::set_kernel_gs_base(void* p) {
 	wrmsr(0xC0000102, (uint64_t)p);
 }

@@ -5,6 +5,7 @@
 #include <Core/Error/Error.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
+#include <Core/Task/Task.hpp>
 #include <LibFormat/Format.hpp>
 #include <LibGeneric/LockGuard.hpp>
 
@@ -45,7 +46,13 @@ static void write_extras() {
 	//  During early boot, we might not have GS base configured yet, and this_execution_environment
 	//  would deref a nullptr.
 	if(CPU::get_gs_base()) {
-		Format::format("[~{}]\x1b[0m", buf, sizeof(buf), this_execution_environment()->apic_id);
+		Format::format("[node={}", buf, sizeof(buf), this_execution_environment()->apic_id);
+		Serial::write_debugger_str(buf);
+		if(auto* task = this_execution_environment()->task) {
+			Format::format(",tid={}", buf, sizeof(buf), task->id);
+			Serial::write_debugger_str(buf);
+		}
+		Format::format("]\x1b[0m", buf, sizeof(buf));
 		Serial::write_debugger_str(buf);
 	}
 }

@@ -1,6 +1,7 @@
 #include <Arch/x86_64/CPU.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
+#include <Core/Task/Task.hpp>
 #include "Exception.hpp"
 
 CREATE_LOGGER("x86_64::exception", core::log::LogLevel::Debug);
@@ -48,40 +49,24 @@ static void dump_registers(PtraceRegs* pt) {
 }
 
 Exception::Response Exception::handle_uncaught(PtraceRegs* pt, uint8 vector) {
-	const auto thread = this_cpu()->current_thread();
+	auto* task = this_cpu()->current_task();
 
 	log.error("Unhandled exception vector={x} ({})", vector, EXCEPTION_VECTOR_TO_STRING[vector & 0x1F]);
 	dump_registers(pt);
 
-	if(!thread) {
+	if(!task) {
 		log.fatal("Kernel Panic - unhandled exception in kernel mode");
 		return Response::KernelPanic;
 	}
 
-	//  if(thread->parent()->flags().privilege == Kernel) {
-	//  	log.fatal("Kernel Panic - unhandled exception in kernel-mode process");
-	//  	return Response::KernelPanic;
-	//  }
-
-	//  log.error("in thread(tid={}), process(pid={})", thread->tid(), thread->parent()->pid());
-	//  log.error("task_frame={x}, stack_frame={x}", Format::ptr(thread->irq_task_frame()), Format::ptr(pt));
-	//  log.error("Thread(tid={}): Uncaught exception - killing", thread->tid());
-	//  thread->set_state(TaskState::Leaving);
-	//  thread->reschedule();
-	//  this_cpu()->scheduler->schedule();
+	log.error("in task({}) tid={}", Format::ptr(task), task->id);
+	log.error("task_frame={x}, stack_frame={x}", Format::ptr(task->interrupted_task_frame), Format::ptr(pt));
 
 	return Exception::Response::TerminateThread;
 }
 
 Exception::Response Exception::handle_page_fault(PtraceRegs* pt, uint8) {
-	const auto thread = this_cpu()->current_thread();
-
 	dump_registers(pt);
-
-	if(!thread) {
-		log.fatal("Kernel Panic - page fault in kernel mode");
-		return Response::KernelPanic;
-	}
 
 	//  if(thread->parent()->flags().privilege == User) {
 	//  	log.error("Thread(tid={}): Page fault - killing", thread->tid());

@@ -17,7 +17,7 @@
 CREATE_LOGGER("boot::x86_64", core::log::LogLevel::Debug);
 
 core::Error arch::platform_early_init() {
-	(void)vgacon::init();
+	//  (void)vgacon::init();
 	Serial::init();
 	(void)serialcon::init();
 	CPU::initialize_features();

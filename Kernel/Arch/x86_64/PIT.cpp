@@ -5,6 +5,8 @@
 #include <Core/IRQ/IRQ.hpp>
 #include <Core/Log/Logger.hpp>
 #include <Core/MP/MP.hpp>
+#include <Core/Task/Scheduler.hpp>
+#include <Core/Task/SchedulerPlatform.hpp>
 #include <LibGeneric/List.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Spinlock.hpp>
@@ -12,7 +14,7 @@
 CREATE_LOGGER("x86_64::pit", core::log::LogLevel::Debug);
 
 struct Alarm {
-	Thread* m_thread;
+	core::sched::BlockHandle m_handle;
 	uint64_t m_start;
 	uint64_t m_len;
 };
@@ -31,20 +33,17 @@ void update_timer_reload(uint16_t freq) {
 
 void _pit_irq0_handler(PtraceRegs*) {
 	pit.tick();
-	//  this_cpu()->scheduler->tick();
+	core::sched::tick();
 
-	//  for(auto it = s_alarms.begin(); it != s_alarms.end(); ++it) {
-	//  	auto& alarm = *it;
-	//  	if(alarm.m_start + alarm.m_len > PIT::milliseconds())
-	//  		continue;
-
-	//  	ENSURE(alarm.m_thread->state() == TaskState::Sleeping);
-	//  	if(alarm.m_thread->state() == TaskState::Sleeping) {
-	//  		//  Wake up
-	//  		this_cpu()->scheduler->wake_up(alarm.m_thread);
-	//  	}
-	//  	s_alarms.erase(it);
-	//  }
+	for(auto it = s_alarms.begin(); it != s_alarms.end(); ++it) {
+		auto& alarm = *it;
+		if(alarm.m_start + alarm.m_len > PIT::milliseconds()) {
+			continue;
+		}
+		//  Wake up the sleeping task
+		core::sched::unblock(alarm.m_handle);
+		s_alarms.erase(it);
+	}
 }
 
 PIT::PIT() noexcept
@@ -72,12 +71,15 @@ uint64_t PIT::milliseconds() {
 }
 
 void PIT::sleep(uint64_t len) {
-	gen::LockGuard<gen::Spinlock> guard { s_alarms_lock };
-	auto* thread = this_cpu()->current_thread();
-	auto time = milliseconds();
-	//	kdebugf("set sleep for pid=%i\n", proc->pid());
+	Alarm* ref;
+	{
+		gen::LockGuard<gen::Spinlock> guard { s_alarms_lock };
+		auto time = milliseconds();
 
-	s_alarms.push_back({ .m_thread = thread, .m_start = time, .m_len = len });
+		s_alarms.push_back({ nullptr, time, len });
+		ref = &s_alarms.back();
+	}
+	core::sched::block(ref->m_handle);
 }
 
 void x86_64::pit_init() {

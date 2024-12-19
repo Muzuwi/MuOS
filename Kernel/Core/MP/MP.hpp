@@ -3,17 +3,18 @@
 #include <SystemTypes.hpp>
 
 class Thread;
-class Scheduler;
+
+namespace core::task {
+	struct Task;
+}
 
 namespace core::mp {
 	struct Environment {
-		Thread* thread;
-		Scheduler* scheduler;
 		uint64 node_id;
+		core::task::Task* task;
 
-		constexpr Thread* current_thread() { return thread; }
-
-		constexpr void set_thread(Thread* thread) { this->thread = thread; }
+		constexpr core::task::Task* current_task() { return task; }
+		constexpr void set_task(core::task::Task* task) { this->task = task; }
 	};
 
 	Environment* create_environment();

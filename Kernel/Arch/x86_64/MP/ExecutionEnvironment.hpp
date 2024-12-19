@@ -7,7 +7,7 @@
 namespace arch::mp {
 	struct ExecutionEnvironment {
 		ExecutionEnvironment* self_reference; //  0, store self reference for quick fetching
-		Thread* thread {};                    //  8
+		core::task::Task* task {};            //  8
 		uint64 apic_id {};                    //  16
 		uint64 _scratch {};                   //  24, only used in SysEntry to temporarily preserve user rsp
 		core::mp::Environment* environment {};//  Higher-level kernel environment
@@ -20,8 +20,8 @@ namespace arch::mp {
 	static_assert(offsetof(ExecutionEnvironment, self_reference) == 0x0,
 	              "self-reference of ExecutionEnvironment must be at offset 0");
 
-	static_assert(offsetof(ExecutionEnvironment, thread) == 0x8,
-	              "pointer to current Thread in ExecutionEnvironment must be at offset 0x8");
+	static_assert(offsetof(ExecutionEnvironment, task) == 0x8,
+	              "pointer to current task in ExecutionEnvironment must be at offset 0x8");
 
 	static_assert(offsetof(ExecutionEnvironment, _scratch) == 0x18,
 	              "scratch space in ExecutionEnvironment must be at offset 0x18");

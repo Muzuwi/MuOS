@@ -1,6 +1,7 @@
 #include <Core/Assert/Assert.hpp>
 #include <Core/MP/MP.hpp>
-#include "Core/Assert/Panic.hpp"
+#include <Core/Task/Scheduler.hpp>
+#include <Core/Task/Task.hpp>
 #include "Exception.hpp"
 
 static Exception::HandlerFunction s_exception_handlers[32] {
@@ -23,6 +24,6 @@ extern "C" void _kernel_exception_entrypoint(size_t vector, PtraceRegs* interrup
 	if(response == Exception::Response::KernelPanic) {
 		ENSURE_NOT_REACHED();
 	} else if(response == Exception::Response::TerminateThread) {
-		core::panic("UNIMPLEMENTED: Exit current task from exception!");
+		core::sched::exit();
 	}
 }

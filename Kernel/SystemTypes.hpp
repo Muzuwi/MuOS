@@ -25,3 +25,5 @@ constexpr uint64 operator"" _MiB(unsigned long long value) {
 constexpr uint64 operator"" _GiB(unsigned long long value) {
 	return value * 0x40000000;
 }
+
+#define ASM_LINKAGE extern "C" __attribute__((used))

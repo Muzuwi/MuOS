@@ -82,7 +82,7 @@ namespace core::log {
 
 		template<typename... Args>
 		void format_and_push(LogLevel level, char const* format, Args... args) {
-			gen::LockGuard lg { lock };
+			char storage[internal_buffer_size];
 
 			if(static_cast<size_t>(level) < static_cast<size_t>(m_minimum_level)) {
 				return;
@@ -92,8 +92,6 @@ namespace core::log {
 			core::log::_push(level, m_tag, storage);
 		}
 
-		gen::Spinlock lock {};
-		char storage[internal_buffer_size] {};
 		char const* m_tag {};
 		LogLevel m_minimum_level {};
 	};

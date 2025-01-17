@@ -94,7 +94,6 @@ bool liballoc::ChunkAllocator::mark_chunk_allocated(Chunk& chunk, size_t size) {
 	auto* new_chunk_ptr = reinterpret_cast<uint8_t*>(chunk.alloc_ptr()) + size;
 	const auto new_chunk_size = size_after_alloc - sizeof(Chunk);
 	auto* new_chunk = new(new_chunk_ptr) Chunk(new_chunk_size);
-	memset(new_chunk->alloc_ptr(), sanitize_byte, new_chunk_size);
 
 	auto* previous_next = chunk.next;
 	chunk.next = new_chunk;

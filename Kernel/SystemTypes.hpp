@@ -27,3 +27,9 @@ constexpr uint64 operator"" _GiB(unsigned long long value) {
 }
 
 #define ASM_LINKAGE extern "C" __attribute__((used))
+
+#define container_of(ptr, type, member)                     \
+	({                                                      \
+		const decltype(((type*)0)->member)* __mptr = (ptr); \
+		(type*)((char*)__mptr - offsetof(type, member));    \
+	})

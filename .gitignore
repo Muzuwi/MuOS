@@ -28,3 +28,6 @@ Userland/Test
 
 # Docs build output directory
 Documentation/build/*
+
+# Python
+**/__pycache__/*

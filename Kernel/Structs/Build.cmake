@@ -1,1 +1,3 @@
-# Left empty for future use
+add_kernel_sources(
+    KFunctionTest.cpp
+)

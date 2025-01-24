@@ -157,7 +157,7 @@ public:
 
 	//  Invoke the stored functor and return the result from the call. Attempting
 	//  to invoke the functor when the object is in null state triggers a panic.
-	constexpr Ret operator()(Args&&... args) {
+	constexpr Ret operator()(Args... args) {
 		if(is_null()) {
 			core::panic("Call to KFunction object in null state!");
 		}
@@ -165,5 +165,5 @@ public:
 	}
 
 	//  Functional wrapper around operator()
-	constexpr Ret invoke(Args&&... args) { return this->operator()(gen::forward<Args>(args)...); }
+	constexpr Ret invoke(Args... args) { return this->operator()(gen::forward<Args>(args)...); }
 };

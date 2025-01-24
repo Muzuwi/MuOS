@@ -115,9 +115,7 @@ static core::Error remove_handler_for_irq(core::irq::IrqId id, core::irq::Handle
 	}
 	//  Move remaining entries downwards
 	for(size_t i = idx.unwrap(); i < s_interrupt_handlers.size() - 1; ++i) {
-		//  MicrotaskHandler uses KFunction, which is a move-only type
-		//  Construct in place instead of going through operator=
-		gen::construct_at(&s_interrupt_handlers[i], gen::move(s_interrupt_handlers[i + 1]));
+		s_interrupt_handlers[i] = s_interrupt_handlers[i + 1];
 	}
 	(void)s_interrupt_handlers.pop_back();
 	return core::Error::Ok;

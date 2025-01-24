@@ -282,8 +282,7 @@ core::Error core::mem::free(RegionHandle handle) {
 void core::mem::for_each_region(ForEachRegionCb cb) {
 	gen::LockGuard lg { s_lock };
 	for(size_t i = 0; i < s_region_count; ++i) {
-		//  Force a copy because KFunction is semi-broken
-		cb(Region(s_regions[i].region));
+		cb(s_regions[i].region);
 	}
 }
 

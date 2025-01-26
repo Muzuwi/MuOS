@@ -23,4 +23,5 @@ exec qemu-system-x86_64 \
     -s \
     -serial stdio \
     -vga std \
+    -qmp unix:./qmp-sock,server,nowait \
     -no-reboot -no-shutdown

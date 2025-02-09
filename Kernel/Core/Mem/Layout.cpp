@@ -12,12 +12,12 @@ struct MmRegionData {
 };
 
 //  Protects all below data
-static gen::Spinlock s_lock {};
+static constinit gen::Spinlock s_lock {};
 //  Underlying storage for all regions
 //  For simplicity, use a statically allocated array for now.
-static MmRegionData s_regions[CONFIG_CORE_MEM_LAYOUT_MAX_REGIONS] = {};
+static constinit MmRegionData s_regions[CONFIG_CORE_MEM_LAYOUT_MAX_REGIONS] = {};
 //  How many regions were created so far?
-static size_t s_region_count = {};
+static constinit size_t s_region_count = {};
 
 static MmRegionData* find_region_by_handle(core::mem::RegionHandle handle) {
 	for(size_t i = 0; i < s_region_count && i < CONFIG_CORE_MEM_LAYOUT_MAX_REGIONS; ++i) {

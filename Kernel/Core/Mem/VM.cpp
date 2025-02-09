@@ -11,13 +11,14 @@
 #include <SystemTypes.hpp>
 
 //  Protects all data below
-static gen::Spinlock s_lock;
+static constinit gen::Spinlock s_lock;
 //  Root paging handle
 //  Modifications to the *kernel* part of the paging tables of the below
 //  handle are assumed to be propagated to all children (all running tasks).
-static arch::PagingHandle s_root;
+static constinit arch::PagingHandle s_root;
 //  Bump allocator for vmalloc
 //  Currently, no deallocation is possible
+//  WARNING: Due to KERNEL_VM_VMALLOC_* being linker symbols, below cannot be constinit!
 static liballoc::BumpAllocator s_vmalloc {
 	liballoc::Arena { KERNEL_VM_VMALLOC_BASE, KERNEL_VM_VMALLOC_LEN }
 };

@@ -14,15 +14,15 @@
 #include <SystemTypes.hpp>
 
 struct IrqHandler {
-	core::irq::IrqId id;
-	core::irq::MicrotaskHandler functor;
-	core::irq::IrqLineFlags flags;
-	core::irq::HandlerToken token;
+	core::irq::IrqId id {};
+	core::irq::MicrotaskHandler functor {};
+	core::irq::IrqLineFlags flags {};
+	core::irq::HandlerToken token {};
 };
 
-static gen::StaticVector<core::irq::IrqController*, 32> s_controllers;
-static gen::StaticVector<IrqHandler, 64> s_interrupt_handlers;
-static gen::Spinlock s_lock;
+static constinit gen::StaticVector<core::irq::IrqController*, 32> s_controllers {};
+static constinit gen::StaticVector<IrqHandler, 64> s_interrupt_handlers {};
+static constinit gen::Spinlock s_lock;
 
 /*	Hash a given object
  *

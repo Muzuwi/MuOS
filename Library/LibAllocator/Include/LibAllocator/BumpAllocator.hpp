@@ -6,7 +6,7 @@
 namespace liballoc {
 	class BumpAllocator {
 	public:
-		BumpAllocator(Arena arena) noexcept
+		constexpr BumpAllocator(Arena arena) noexcept
 		    : m_arena(arena)
 		    , m_current(arena.base) {}
 

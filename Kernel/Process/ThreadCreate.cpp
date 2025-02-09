@@ -2,6 +2,7 @@
 #include <Arch/x86_64/GDT.hpp>
 #include <Arch/x86_64/InactiveTaskFrame.hpp>
 #include <Arch/x86_64/MP/ExecutionEnvironment.hpp>
+#include <Core/Mem/Heap.hpp>
 #include <Core/Mem/VM.hpp>
 #include <Core/MP/MP.hpp>
 #include <Process/PidAllocator.hpp>
@@ -41,7 +42,7 @@ static void* _bootstrap_task_stack(uint8* kernel_stack_bottom, PtraceRegs state)
 
 SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*kernel_exec)()) {
 	auto thread = SharedPtr {
-		new(KHeap::instance().slab_alloc(sizeof(Thread))) Thread { parent, PidAllocator::next() }
+		new(core::mem::hmalloc(sizeof(Thread))) Thread { parent, PidAllocator::next() }
 	};
 
 	if(!thread) {

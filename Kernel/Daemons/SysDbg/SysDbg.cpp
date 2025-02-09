@@ -1,6 +1,7 @@
 #include <Arch/x86_64/PIT.hpp>
 #include <Arch/x86_64/Serial.hpp>
 #include <Core/Log/Logger.hpp>
+#include <Core/Mem/Heap.hpp>
 #include <Core/MP/MP.hpp>
 #include <Daemons/SysDbg/SysDbg.hpp>
 #include <LibGeneric/String.hpp>
@@ -13,7 +14,6 @@
 #include "Core/IO/BlockDevice.hpp"
 #include "Core/Object/Object.hpp"
 #include "Core/Object/Tree.hpp"
-#include "Memory/KHeap.hpp"
 #include "SystemTypes.hpp"
 
 CREATE_LOGGER("sysdbg", core::log::LogLevel::Debug);
@@ -85,9 +85,6 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		SysDbg::dump_process(Process::kerneld());
 		log.info("kdebugger({}): User-mode process tree dump", thread->tid());
 		SysDbg::dump_process(Process::init());
-	} else if(command == "da") {
-		log.info("kdebugger({}): Kernel heap allocator statistics", thread->tid());
-		KHeap::instance().dump_stats();
 	} else if(command == "ds") {
 		log.info("kdebugger({}): Scheduler statistics", thread->tid());
 		this_cpu()->scheduler->dump_statistics();
@@ -201,7 +198,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 		log.info("kdebugger({}): sectors={}, sector_size={}", thread->tid(), sector_count, sector_size);
 
 		auto buf_size = sector_size * count;
-		auto* buffer = (uint8*)KHeap::instance().chunk_alloc(buf_size);
+		auto* buffer = (uint8*)core::mem::hmalloc(buf_size);
 		if(!buffer) {
 			log.info("kdebugger({}): failed to allocate buffer of size", thread->tid(), buf_size);
 			return;
@@ -226,7 +223,7 @@ void SysDbg::handle_command(gen::List<gen::String> const& args) {
 			log.info("[kdebugger({})]: #{x} | {}", thread->tid(), (blk_start * sector_size + i), current_line);
 		}
 
-		KHeap::instance().chunk_free(buffer);
+		core::mem::hfree(buffer);
 		//  readblock ide@01f0:03f6 2 2
 		//  readblock ide@01f0:03f6 80000 1
 		//  readblock ide@01f0:03f6 7ffff 1

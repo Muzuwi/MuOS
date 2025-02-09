@@ -18,7 +18,6 @@
 #include "Daemons/Testd/Testd.hpp"
 #include "LibFormat/Formatters/Pointer.hpp"
 #include "LibGeneric/String.hpp"
-#include "Memory/KHeap.hpp"
 #include "Process/Process.hpp"
 
 CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
@@ -54,7 +53,6 @@ static void dump_core_mem_layout() {
 	dump_core_mem_layout();
 	//  Initialize required kernel subsystems
 	VMM::initialize_kernel_vm();
-	KHeap::instance().init();
 
 	//  Handles further platform initialization tasks
 	if(const auto err = arch::platform_init(); err != core::Error::Ok) {

@@ -1,3 +1,4 @@
+#include <Core/Mem/Heap.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
@@ -32,7 +33,7 @@ KBox<const char> UserString::copy_to_kernel() {
 		}
 	}
 
-	auto* buf = (uint8*)KHeap::instance().chunk_alloc(size + 1);
+	auto* buf = (uint8*)core::mem::hmalloc(size + 1);
 	if(!buf) {
 		return KBox<const char> {};
 	}

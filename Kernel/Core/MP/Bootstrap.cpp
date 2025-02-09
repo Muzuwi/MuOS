@@ -1,7 +1,7 @@
 #include <Arch/MP.hpp>
 #include <Core/Log/Logger.hpp>
+#include <Core/Mem/Heap.hpp>
 #include <Core/MP/MP.hpp>
-#include <Memory/KHeap.hpp>
 #include <Process/Thread.hpp>
 #include <Scheduler/Scheduler.hpp>
 
@@ -25,7 +25,7 @@ CREATE_LOGGER("core::mp", ::core::log::LogLevel::Debug);
 	::log.info("Bootstrapping node {}", this_cpu()->node_id);
 
 	//  Allocate a scheduler for the node
-	this_cpu()->scheduler = KHeap::make<Scheduler>();
+	this_cpu()->scheduler = core::mem::make<Scheduler>();
 	if(init) {
 		this_cpu()->scheduler->run_here(init);
 	}

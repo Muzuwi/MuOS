@@ -1,3 +1,4 @@
+#include <Core/Mem/Heap.hpp>
 #include <Memory/Wrappers/UserPtr.hpp>
 #include <Process/Process.hpp>
 #include <Process/Thread.hpp>
@@ -18,7 +19,7 @@ gen::SharedPtr<typename UserPtr<T>::type> UserPtr<T>::copy_to_kernel() {
 		}
 	}
 
-	auto* buf = (uint8*)KHeap::instance().slab_alloc(size);
+	auto* buf = (uint8*)core::mem::hmalloc(size);
 	if(!buf) {
 		return gen::SharedPtr<type> { nullptr };
 	}

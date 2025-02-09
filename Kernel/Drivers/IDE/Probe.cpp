@@ -3,12 +3,12 @@
 #include <Core/Error/Error.hpp>
 #include <Core/IO/BlockDevice.hpp>
 #include <Core/Log/Logger.hpp>
+#include <Core/Mem/Heap.hpp>
 #include <Core/Object/Tree.hpp>
 #include <Drivers/IDE/IDE.hpp>
 #include <LibFormat/Format.hpp>
 #include <LibGeneric/LockGuard.hpp>
 #include <LibGeneric/Memory.hpp>
-#include <Memory/KHeap.hpp>
 #include <stddef.h>
 #include <Structs/KFunction.hpp>
 #include <SystemTypes.hpp>
@@ -30,7 +30,7 @@ static gen::String format_name(uint16 ctl_port, uint16 dev_port, DriveSelect whi
 static void ide_probe(uint16 disk_control, uint16 device_control, driver::ide::DriveSelect which) {
 	//  FIXME/LEAK: Currently we're leaking both of the objects as there's no
 	//  way to clean them up.
-	auto* drive = KHeap::make<IdeDevice>(disk_control, device_control, which);
+	auto* drive = core::mem::make<IdeDevice>(disk_control, device_control, which);
 	if(!drive) {
 		log.error("probe: IdeDevice allocation failed\n");
 		return;
@@ -42,7 +42,7 @@ static void ide_probe(uint16 disk_control, uint16 device_control, driver::ide::D
 		return;
 	}
 
-	auto* blk = KHeap::make<core::io::BlockDevice>(format_name(disk_control, device_control, which));
+	auto* blk = core::mem::make<core::io::BlockDevice>(format_name(disk_control, device_control, which));
 	if(!blk) {
 		log.error("probe: Allocating BlockDevice failed");
 		return;

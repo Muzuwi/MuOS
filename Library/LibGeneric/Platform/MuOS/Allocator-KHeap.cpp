@@ -1,7 +1,6 @@
 #include <Core/Assert/Panic.hpp>
 #include <Core/Mem/Heap.hpp>
 #include <LibGeneric/Allocator.hpp>
-#include <Memory/KHeap.hpp>
 
 void* gen::__platform_alloc(size_t n) {
 	return core::mem::hmalloc(n);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Memory/KHeap.hpp>
+#include <Core/Mem/Heap.hpp>
 #include <SystemTypes.hpp>
 
 /*
@@ -29,7 +29,7 @@ public:
 	    : m_ptr(rawptr)
 	    , m_size(size) {}
 
-	~KBox() { KHeap::instance().chunk_free(m_ptr); }
+	~KBox() { core::mem::hfree(m_ptr); }
 
 	T* operator->() { return reinterpret_cast<T*>(m_ptr); }
 

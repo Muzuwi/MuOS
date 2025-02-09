@@ -29,7 +29,8 @@ namespace gen {
 		}
 	public:
 		constexpr StaticVector() noexcept
-		    : m_pointer(0) {}
+		    : m_data()
+		    , m_pointer(0) {}
 
 		/*
 		 *  Destroys all stored elements in the vector

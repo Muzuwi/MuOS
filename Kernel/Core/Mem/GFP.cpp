@@ -56,9 +56,9 @@ struct SlabBasedPageAllocator : public AllocatorBase {
 };
 
 //  Protects all GFP data
-static gen::Spinlock s_lock {};
+static constinit gen::Spinlock s_lock {};
 //  Root physical memory allocator, initialized at boot time
-static AllocatorBase* s_root {};
+static constinit AllocatorBase* s_root {};
 
 /*	Find the next allocator of a given size that can potentially satisfy a
  * 	given allocation request for `order`. This does not mean that the

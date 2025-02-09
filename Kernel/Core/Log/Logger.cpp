@@ -6,8 +6,8 @@
 #include <LibGeneric/StaticVector.hpp>
 
 static const size_t max_logger_sinks = 4;
-static gen::Spinlock s_lock {};
-static gen::StaticVector<core::log::Sink*, max_logger_sinks> s_sinks {};
+static constinit gen::Spinlock s_lock {};
+static constinit gen::StaticVector<core::log::Sink*, max_logger_sinks> s_sinks {};
 
 core::Error core::log::register_sink(Sink* sink) {
 	if(!sink) {

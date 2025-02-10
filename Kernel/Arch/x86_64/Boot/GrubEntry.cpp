@@ -25,18 +25,23 @@ static void platform_boot_grub_init_memory(MultibootInfo* bootinfo);
 extern "C" [[noreturn, maybe_unused]] void platform_boot_entry(void* context) {
 	s_multiboot_context = PhysPtr<MultibootInfo> { (MultibootInfo*)context };
 
-	//  Initialize the execution environment
-	//  This must be done as soon as possible
-	void* env = arch::mp::create_environment();
+	//  Initialize the environment pointer. While the later kernel init would do it
+	//  anyway, initialize it as early as possible to avoid crashes by code using
+	//  `this_cpu`.
+	core::mp::Environment* env = core::mp::create_environment();
 	CPU::set_gs_base(env);
-	CPU::set_kernel_gs_base(env);
-	this_execution_environment()->gdt.load();
+	CPU::set_kernel_gs_base(nullptr);
+	//  Load kernel GDT
+	env->platform.gdt.load();
+	//  Force reload GSBASE after changing GDT. This only needs to
+	//  reload the kernel's GSBASE register, as the other is only used
+	//  when userland is running.
+	CPU::set_gs_base(env);
+	CPU::set_kernel_gs_base(nullptr);
+
 	x86_64::pic8259_init();
 	IDT::init();
 	x86_64::pit_init();
-	//  Force reload GSBASE after changing GDT
-	CPU::set_gs_base(env);
-	CPU::set_kernel_gs_base(env);
 
 	//  Initialize the memory ranges provided to us by GRUB
 	platform_boot_grub_init_memory(s_multiboot_context.get_mapped());

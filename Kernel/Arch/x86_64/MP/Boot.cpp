@@ -60,8 +60,8 @@ void arch::mp::boot_aps() {
 		bootstrap_struct.compat_gdtr_offset = (uintptr_t)data_page.get() + offsetof(CpuBootstrapPage, compat_mode_gdt);
 		bootstrap_struct.long_gdtr_offset = (uintptr_t)data_page.get() + offsetof(CpuBootstrapPage, long_mode_gdt);
 		bootstrap_struct.cr3 = (uintptr_t)idle_task->parent()->vmm().paging_handle();
-		bootstrap_struct.ap_environment = arch::mp::create_environment();
-		bootstrap_struct.ap_environment->apic_id = ap_id;
+		bootstrap_struct.ap_environment = core::mp::create_environment();
+		bootstrap_struct.ap_environment->platform.apic_id = ap_id;
 		bootstrap_struct.idle_task = idle_task;
 		bootstrap_struct.rsp = idle_task->irq_task_frame();
 		bootstrap_struct.code_page = code_page.get();
@@ -118,22 +118,27 @@ void arch::mp::boot_aps() {
  *  The entrypoint used by all starting APs.
  *  Prepares the current AP for running the scheduler loop and enters into the idle task for the first time.
  */
-extern "C" void _ap_entrypoint(arch::mp::ExecutionEnvironment* env, Thread* idle_task, PhysAddr code_page,
-                               PhysAddr data_page) {
+extern "C" void _ap_entrypoint(core::mp::Environment* env, Thread* idle_task, PhysAddr code_page, PhysAddr data_page) {
+	//  Initialize the environment pointer. While the later kernel init would do it
+	//  anyway, initialize it as early as possible to avoid crashes by code using
+	//  `this_cpu`.
 	CPU::set_gs_base(env);
-	CPU::set_kernel_gs_base(env);
+	CPU::set_kernel_gs_base(nullptr);
+	//  Load kernel GDT
+	env->platform.gdt.load();
+	//  Force reload GSBASE after changing GDT. This only needs to
+	//  reload the kernel's GSBASE register, as the other is only used
+	//  when userland is running.
+	CPU::set_gs_base(env);
+	CPU::set_kernel_gs_base(nullptr);
 
-	this_execution_environment()->gdt.load();
 	IDT::init_ap();
 	CPU::initialize_features();
-
-	CPU::set_gs_base(env);
-	CPU::set_kernel_gs_base(env);
 
 	//  Clean up bootstrap pages
 	idle_task->parent()->vmm().addrunmap(code_page.get());
 	idle_task->parent()->vmm().addrunmap(data_page.get());
 
-	log.debug("APIC node {x} up", env->apic_id);
+	log.debug("APIC node {x} up", env->platform.apic_id);
 	core::mp::bootstrap_this_node(idle_task);
 }

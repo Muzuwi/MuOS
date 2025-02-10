@@ -49,9 +49,18 @@ core::Error arch::platform_init() {
 }
 
 void arch::mp::environment_set(void* env) {
-	this_execution_environment()->environment = static_cast<core::mp::Environment*>(env);
+	//  Only need to set the *current* GS base
+	//  In kernel mode, the "kernel GS base" contains the userspace GS base.
+	CPU::set_gs_base(env);
 }
 
 void* arch::mp::environment_get() {
-	return this_execution_environment()->environment;
+	//  Read the GS base via a dedicated self-reference pointer found in the environment.
+	//  This requires integration with the core::mp::Environment struct.
+	auto read_env = []() -> void* {
+		uint64 data;
+		asm volatile("mov %0, %%gs:0\n" : "=r"(data) :);
+		return (void*)data;
+	};
+	return static_cast<void*>(read_env());
 }

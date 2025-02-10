@@ -2,12 +2,12 @@
 #include <Arch/VM.hpp>
 
 class Thread;
-namespace arch::mp {
-	class ExecutionEnvironment;
+namespace core::mp {
+	class Environment;
 }
 
 extern "C" {
-	void _ap_entrypoint(arch::mp::ExecutionEnvironment* env, Thread* idle_task, PhysAddr code_page, PhysAddr data_page);
+	void _ap_entrypoint(core::mp::Environment* env, Thread* idle_task, PhysAddr code_page, PhysAddr data_page);
 }
 
 namespace arch::mp {

@@ -1,6 +1,6 @@
 #pragma once
+#include <Core/MP/MP.hpp>
 #include <SystemTypes.hpp>
-#include "ExecutionEnvironment.hpp"
 
 class Thread;
 
@@ -29,6 +29,6 @@ struct CpuBootstrapPage {
 		uint64 offset;
 	} __attribute__((packed)) idtr;
 
-	arch::mp::ExecutionEnvironment* ap_environment;
+	core::mp::Environment* ap_environment;
 	Thread* idle_task;
 } __attribute__((packed));

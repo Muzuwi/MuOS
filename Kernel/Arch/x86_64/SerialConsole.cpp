@@ -45,7 +45,7 @@ static void write_extras() {
 	//  During early boot, we might not have GS base configured yet, and this_execution_environment
 	//  would deref a nullptr.
 	if(CPU::get_gs_base()) {
-		Format::format("[~{}]\x1b[0m", buf, sizeof(buf), this_execution_environment()->apic_id);
+		Format::format("[~{}]\x1b[0m", buf, sizeof(buf), this_cpu()->platform.apic_id);
 		Serial::write_debugger_str(buf);
 	}
 }

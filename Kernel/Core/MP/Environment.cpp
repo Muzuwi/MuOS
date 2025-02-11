@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 static constexpr const size_t max_supported_nodes = 32;
-static core::mp::Environment s_environments[max_supported_nodes] {};
+static constinit core::mp::Environment s_environments[max_supported_nodes] {};
 static constinit size_t s_next_env {};
 static constinit gen::Spinlock s_lock {};
 

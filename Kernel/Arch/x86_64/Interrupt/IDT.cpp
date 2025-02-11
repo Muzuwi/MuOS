@@ -46,7 +46,7 @@ static void register_interrupt_gate(uint8_t irq_num, T gate, uint8_t type, uint1
 void IDT::init() {
 	const uint8_t type_irq { 0x8e };
 	const uint8_t type_trap { 0x8f };
-	const auto cs = GDT::get_kernel_CS();
+	const auto cs = (uint16)Selector::KernelCode;
 
 	//  Exceptions
 	for(unsigned i = 0; i < 32; ++i)

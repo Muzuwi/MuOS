@@ -82,7 +82,7 @@ SharedPtr<Thread> Thread::create_in_process(SharedPtr<Process> parent, void (*ke
 	this_cpu()->set_thread(next);
 
 	//  x86_64: Reset IRQ stack in the TSS
-	this_cpu()->platform.gdt.set_irq_stack(next->m_kernel_stack_bottom);
+	this_cpu()->platform.tss.rsp0 = next->m_kernel_stack_bottom;
 	//  x86_64: Set the thread pointer in ExecutionEnvironment
 	this_cpu()->platform.thread = next;
 

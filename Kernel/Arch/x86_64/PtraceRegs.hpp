@@ -31,16 +31,16 @@ struct PtraceRegs {
 	static PtraceRegs user_default() {
 		PtraceRegs regs {};
 		regs.rflags = 0x200;
-		regs.cs = GDT::get_user_CS() | 3;
-		regs.ss = GDT::get_user_DS() | 3;
+		regs.cs = (uint16)Selector::UserCode | 3;
+		regs.ss = (uint16)Selector::UserData | 3;
 		return regs;
 	}
 
 	static PtraceRegs kernel_default() {
 		PtraceRegs regs {};
 		regs.rflags = 0x200;
-		regs.cs = GDT::get_kernel_CS();
-		regs.ss = GDT::get_kernel_DS();
+		regs.cs = (uint16)Selector::KernelCode;
+		regs.ss = (uint16)Selector::KernelData;
 		return regs;
 	}
 };

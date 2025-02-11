@@ -9,7 +9,8 @@ namespace arch::mp {
 		Thread* thread {};                            //  8
 		uint64 apic_id {};                            //  16
 		uint64 _scratch {};                           //  24, only used in SysEntry to temporarily preserve user rsp
-		GDT gdt {};
+		TSS tss {};
+		GDT gdt { tss };
 	};
 
 	static_assert(offsetof(ExecutionEnvironment, self_reference) == 0x0,

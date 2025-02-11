@@ -31,7 +31,7 @@ void CPU::initialize_features() {
 
 	//  Initialize SYSCALL MSRs
 	//  STAR - kernel and user segment base
-	wrmsr(0xC0000081, (uint64_t)GDT::get_kernel_CS() << 32ul | ((uint64_t)GDT::get_user_base_seg() | 3) << 48ul);
+	wrmsr(0xC0000081, (uint64)Selector::KernelCode << 32ul | ((uint64)Selector::UserNull | 3) << 48ul);
 	//  Syscall entry
 	wrmsr(0xC0000082, (uint64_t)_ukernel_syscall_entry);
 	//  Flag mask - clear IF on syscall entry
@@ -76,13 +76,4 @@ extern "C" [[noreturn]] void _bootstrap_user(PtraceRegs* regs);
 
 [[noreturn]] void CPU::jump_to_user(PtraceRegs* regs) {
 	_bootstrap_user(regs);
-}
-
-extern "C" void loadGDT(void*);
-void CPU::lgdt(void* ptr) {
-	loadGDT(ptr);
-}
-
-void CPU::ltr(uint16 selector) {
-	asm volatile("ltr %0\n" ::"r"(selector));
 }

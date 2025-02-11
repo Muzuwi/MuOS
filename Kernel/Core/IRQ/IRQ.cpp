@@ -46,6 +46,22 @@ static uint64 hashof(T const& value) {
 	return hash;
 }
 
+/*  Specialization for MicrotaskHandlers
+ *
+ *  HACK: Bitcast source types must be trivially copyable, which core::irq::MicrotaskHandler
+ *  (a KFunction underneath) is not. For now, fall back to an explicit memcpy to an array and
+ *  hash that instead of using the more efficient bitcast.
+ */
+template<>
+uint64 hashof(core::irq::MicrotaskHandler const& value) {
+	struct TypeBytes {
+		alignas(core::irq::MicrotaskHandler) uint8 bytes[sizeof(core::irq::MicrotaskHandler)];
+	} __attribute__((packed));
+	TypeBytes v;
+	memcpy(v.bytes, &value, sizeof(core::irq::MicrotaskHandler));
+	return hashof(v);
+}
+
 /*	Find a handler for the given IRQ line, and optionally, with a given token.
  */
 static IrqHandler* find_handler_for_irq(core::irq::IrqId id, core::irq::HandlerToken token = nullptr) {

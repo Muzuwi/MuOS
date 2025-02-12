@@ -13,6 +13,8 @@ message(STATUS "Compiling for machine type ${MU_MACHINE}")
 include(KernelSources)
 # Configure the architecture-specific toolchain
 find_package(MuToolchain REQUIRED)
+# For binary size analytics between builds
+find_package(Bloaty REQUIRED)
 # Enable C++/NASM support
 # This MUST be done after toolchain configuration above
 project(uKernel LANGUAGES CXX ASM ASM_NASM)
@@ -64,6 +66,8 @@ target_link_libraries(KernelELF PRIVATE
 include(Build.cmake)
 target_sources(KernelELF PRIVATE ${KERNEL_SOURCES})
 message(STATUS "Kernel sources: ${KERNEL_SOURCES}")
+
+bloaty_diff(KernelELF)
 
 add_custom_command(TARGET KernelELF
     POST_BUILD

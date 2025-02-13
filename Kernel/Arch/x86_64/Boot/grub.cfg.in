@@ -1,0 +1,3 @@
+menuentry "@BOOTABLE_ENTRY_NAME@" {
+    multiboot "@BOOTABLE_EXECUTABLE@"
+}

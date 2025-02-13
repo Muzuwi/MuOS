@@ -6,15 +6,19 @@
 # used to attach and debug the kernel.
 # Assumed work directory: <repo>/Root/
 
-KERNELELF="uKernel.bin"
-
-if ! which renode >/dev/null 2>&1 ; then
-    echo "Renode is not installed!"
+SCRIPTDIR=$(dirname "$(realpath -s "$0")")
+KERNELNAME="uKernel.riscv64.uImage"
+if [ -f "${KERNELNAME}" ]; then
+    KERNELPATH="${PWD}/${KERNELNAME}"
+elif [ -f "${SCRIPTDIR}/../Bin/${KERNELNAME}" ]; then
+    KERNELPATH="${SCRIPTDIR}/../Bin/${KERNELNAME}"
+else
+    echo "Bootable uImage (${KERNELNAME}) not found in the current directory, nor the ../Bin/ directory (script-relative)."
     exit 1
 fi
 
-if [ ! -f "${KERNELELF}" ]; then
-    echo "Kernel executable (${KERNELELF}) not found in the current directory."
+if ! which renode >/dev/null 2>&1 ; then
+    echo "Renode is not installed!"
     exit 1
 fi
 

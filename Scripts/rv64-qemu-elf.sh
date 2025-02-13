@@ -4,12 +4,16 @@
 # Requires qemu-system-riscv64 to be installed.
 # Assumed work directory: <repo>/Root/
 
-KERNELELF="uKernel.uImage"
+SCRIPTDIR=$(dirname "$(realpath -s "$0")")
 MEMSIZE="2G"
-
-if [ ! -f "${KERNELELF}" ]; then
-  echo "Kernel executable (${KERNELELF}) not found in the current directory."
-  exit 1
+KERNELNAME="uKernel.riscv64.uImage"
+if [ -f "${KERNELNAME}" ]; then
+    KERNELPATH="${PWD}/${KERNELNAME}"
+elif [ -f "${SCRIPTDIR}/../Bin/${KERNELNAME}" ]; then
+    KERNELPATH="${SCRIPTDIR}/../Bin/${KERNELNAME}"
+else
+    echo "Bootable uImage (${KERNELNAME}) not found in the current directory, nor the ../Bin/ directory (script-relative)."
+    exit 1
 fi
 
 exec qemu-system-riscv64 \
@@ -20,5 +24,5 @@ exec qemu-system-riscv64 \
   -s \
   -S \
   -serial stdio \
-  -kernel "${KERNELELF}" \
+  -kernel "${KERNELPATH}" \
   -no-reboot -no-shutdown

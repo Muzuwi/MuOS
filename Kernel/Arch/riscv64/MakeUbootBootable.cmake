@@ -20,21 +20,19 @@ add_custom_command(
     COMMAND ${OBJCOPY} --gap-fill 0x00 --pad-to 0x80410000 -O binary $<TARGET_FILE:Boot0> Boot0.bin
 )
 
-# This should be just uKernel.bin, but x86 names the kernel ELF a .bin
-# TODO: Rename this once x86 names the output properly
 add_custom_command(
-    COMMENT "Generating uKernel.flat.bin.."
-    OUTPUT uKernel.flat.bin
+    COMMENT "Generating uKernel.bin.."
+    OUTPUT uKernel.bin
     DEPENDS KernelELF
-    COMMAND ${OBJCOPY} --gap-fill 0x00 -O binary $<TARGET_FILE:KernelELF> uKernel.flat.bin
+    COMMAND ${OBJCOPY} --gap-fill 0x00 -O binary $<TARGET_FILE:KernelELF> uKernel.bin
 )
 
 add_custom_command(
     COMMENT "Generating KernelWithBoot0.bin.."
     OUTPUT KernelWithBoot0.bin
     DEPENDS Boot0.bin
-    DEPENDS uKernel.flat.bin
-    COMMAND cat Boot0.bin uKernel.flat.bin >KernelWithBoot0.bin
+    DEPENDS uKernel.bin
+    COMMAND cat Boot0.bin uKernel.bin >KernelWithBoot0.bin
 )
 
 add_custom_target(BootableUImage
@@ -44,12 +42,7 @@ add_custom_target(BootableUImage
     COMMAND ${MKIMAGE} -A riscv -O linux -T kernel -C none -a 0x80400000 -e 0x80400000 -n uKernel -d KernelWithBoot0.bin uKernel.uImage
     )
 
-# Update ${MUREPO}/Root/ with most recently built files to simplify development
-add_custom_command(TARGET BootableUImage POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "[build] Copying output bootable binaries to MUREPO/Root/"
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Boot0> ${CMAKE_SOURCE_DIR}/Root/Boot0.elf
-    COMMAND ${CMAKE_COMMAND} -E copy Boot0.bin ${CMAKE_SOURCE_DIR}/Root/
-    COMMAND ${CMAKE_COMMAND} -E copy uKernel.flat.bin ${CMAKE_SOURCE_DIR}/Root/
-    COMMAND ${CMAKE_COMMAND} -E copy uKernel.uImage ${CMAKE_SOURCE_DIR}/Root/
+deploy_binary(BootableUImage
+    GENERATED uKernel.uImage
+    NAME "uKernel.${MU_MACHINE}.uImage"
     )

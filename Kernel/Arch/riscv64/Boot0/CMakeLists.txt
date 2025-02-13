@@ -28,9 +28,7 @@ target_link_libraries(Boot0
 target_link_options(Boot0
     PRIVATE -T ${PROJECT_SOURCE_DIR}/Linkscript.ld
     )
-add_custom_command(TARGET Boot0
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Boot0> ${CMAKE_SOURCE_DIR}/Root/Boot0.elf
-    COMMENT "Copying kernel executable to Root directory ${CMAKE_SOURCE_DIR}/Root "
+
+deploy_binary(Boot0
+    SUFFIX ".${MU_MACHINE}.elf"
     )

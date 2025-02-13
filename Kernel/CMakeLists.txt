@@ -4,6 +4,8 @@ cross_build_only()
 
 message(STATUS "Compiling for machine type ${MU_MACHINE}")
 
+include(DeployBinary)
+
 include(KernelSources)
 # Configure the architecture-specific toolchain
 find_package(MuToolchain REQUIRED)
@@ -61,10 +63,6 @@ target_sources(KernelELF PRIVATE ${KERNEL_SOURCES})
 message(STATUS "Kernel sources: ${KERNEL_SOURCES}")
 
 bloaty_diff(KernelELF)
-
-add_custom_command(TARGET KernelELF
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/Root/
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:KernelELF> ${CMAKE_SOURCE_DIR}/Root/uKernel.bin
-    COMMENT "Copying kernel executable to Root directory ${CMAKE_SOURCE_DIR}/Root "
+deploy_binary(KernelELF
+    SUFFIX ".${MU_MACHINE}.elf"
     )

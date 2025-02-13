@@ -25,6 +25,7 @@ Toolchain/src/build-gcc/
 # Working directory
 Root/
 Userland/Test
+Bin/*
 
 # Docs build output directory
 Documentation/build/*

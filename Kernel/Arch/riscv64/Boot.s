@@ -32,15 +32,15 @@ _riscv64_virtual_trampoline:
     addi sp, t0, 0
     /* Preserve boot args from the previous bootstage */
     addi sp, sp, -2*8
-    sd a0, 8(sp)
-    sd a1, 16(sp)
+    sd a0, 0(sp)
+    sd a1, 8(sp)
 
     /* Call static initializers before running C++ code */
     call _init
 
     /* Restore boot args */
-    ld a1, 16(sp)
-    ld a0, 8(sp)
+    ld a1, 8(sp)
+    ld a0, 0(sp)
     addi sp, sp, 2*8
     /* Jump to the C++ entrypoint */
     jal platform_boot_entry

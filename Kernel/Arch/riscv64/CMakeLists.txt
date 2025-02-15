@@ -7,6 +7,7 @@ add_subdirectory(Boot0/)
 set(ARCH_SOURCES
     Boot.s
     Platform.cpp
+    SbiConsole.cpp
     VM.cpp
     )
 add_library(Architecture STATIC ${ARCH_SOURCES})

@@ -1,4 +1,5 @@
 #include <Arch/Platform.hpp>
+#include <Arch/riscv64/SbiConsole.hpp>
 #include <Core/Assert/Assert.hpp>
 #include <Core/Log/Logger.hpp>
 #include <SystemTypes.hpp>
@@ -13,6 +14,12 @@ extern "C" {
 	}
 
 	[[maybe_unused]] [[noreturn]] void platform_boot_entry(void* /*fdt*/) {
+		if(const auto err = arch::rv64::init_sbi_earlycon(); err != core::Error::Ok) {
+			//  This won't get printed, however a panic is the only thing we can do.
+			core::panic("Failed to initialize OpenSBI early console");
+		}
+		::log.info("SBI console initialized");
+
 		//  For testing, simply do nothing in the actual kernel for now
 		HANG();
 	}

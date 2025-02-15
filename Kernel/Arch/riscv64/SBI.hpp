@@ -6,6 +6,15 @@ namespace arch::rv64 {
 	using SbiEid = int64;
 	using SbiFid = int64;
 
+	static constexpr SbiEid SBI_EID_BASE = 0x10;
+	static constexpr SbiEid SBI_FID_GET_SPEC_VERSION = 0x0;
+	static constexpr SbiEid SBI_FID_GET_IMPL_ID = 0x1;
+	static constexpr SbiEid SBI_FID_GET_IMPL_VER = 0x2;
+	static constexpr SbiEid SBI_FID_PROBE_EXT = 0x3;
+	static constexpr SbiEid SBI_FID_GET_MACH_VENDOR_ID = 0x4;
+	static constexpr SbiEid SBI_FID_GET_MACH_ARCH_ID = 0x5;
+	static constexpr SbiEid SBI_FID_GET_MACH_IMPL_ID = 0x6;
+
 	///  Error status returned by SBI calls.
 	enum class SbiError : int64 {
 		Success = 0,

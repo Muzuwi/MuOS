@@ -40,7 +40,7 @@ namespace core::log {
 
 	class Logger {
 	public:
-		Logger(char const* tag, LogLevel level)
+		constexpr Logger(char const* tag, LogLevel level)
 		    : m_tag(tag)
 		    , m_minimum_level(level) {}
 
@@ -96,11 +96,9 @@ namespace core::log {
 		LogLevel m_minimum_level {};
 	};
 
-	Logger create_logger(char const* tag, LogLevel default_log_level);
+	inline constexpr Logger create_logger(char const* tag, LogLevel default_log_level) {
+		return { tag, default_log_level };
+	}
 }
 
-inline core::log::Logger core::log::create_logger(char const* tag, LogLevel default_log_level) {
-	return { tag, default_log_level };
-}
-
-#define CREATE_LOGGER(tag, minimum_level) static auto log = ::core::log::create_logger(tag, minimum_level)
+#define CREATE_LOGGER(tag, minimum_level) static constinit auto log = ::core::log::create_logger(tag, minimum_level)

@@ -32,12 +32,16 @@ SECTIONS
         *(.tm_clone_table)
    	} >KERNELVM
     .init_array : ALIGN(8) {
-        KEEP (*(SORT(EXCLUDE_FILE(crti.o crtn.o) .init_array.*)))
-        KEEP (*(EXCLUDE_FILE(crti.o crtn.o) .init_array))
+        */crti.o(.init_array)
+        KEEP (*(SORT(EXCLUDE_FILE(*/crti.o */crtn.o) .init_array.*)))
+        KEEP (*(EXCLUDE_FILE(*/crti.o */crtn.o) .init_array))
+        */crtn.o(.init_array)
     } >KERNELVM
     .fini_array : ALIGN(8) {
-        KEEP (*(SORT(EXCLUDE_FILE(crti.o crtn.o) .fini_array.*)))
-        KEEP (*(EXCLUDE_FILE(crti.o crtn.o) .fini_array))
+        */crti.o(.fini_array)
+        KEEP (*(SORT(EXCLUDE_FILE(*/crti.o */crtn.o) .fini_array.*)))
+        KEEP (*(EXCLUDE_FILE(*/crti.o */crtn.o) .fini_array))
+        */crtn.o(.fini_array)
     } >KERNELVM
     __SECTION_RODATA_END = .;
 

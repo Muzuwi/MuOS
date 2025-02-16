@@ -89,7 +89,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 # These flags will be propagated to every single target built after calling find_package(MuToolchain).
 # This guarantees that we use the same flags everywhere, for example: a library used by the kernel
 # won't get built with red zone enabled (unless someone explicitly does stupid stuff).
-set(_MU_CFLAGS_DEFAULT "-D__is_kernel_build__=1 -fstack-protector-all -ffreestanding -mcmodel=large -mno-red-zone -mno-sse -mno-avx -fno-tree-vectorize")
+set(_MU_CFLAGS_DEFAULT "-D__is_kernel_build__=1 -ffreestanding -mcmodel=large -mno-red-zone -mno-sse -mno-avx -fno-tree-vectorize")
 set(_MU_CXXFLAGS_DEFAULT "${_MU_CFLAGS_DEFAULT} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
 set(_MU_LINKFLAGS_DEFAULT "-nostdlib -z max-page-size=0x1000")
 

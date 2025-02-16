@@ -40,15 +40,10 @@ endif ()
 add_executable(KernelELF)
 
 # Kernel build flags
-set(KERNEL_CXX_FLAGS
-    ${MUOS_CXX_FLAGS}
-    )
-set(KERNEL_ASM_FLAGS
-    ${MUOS_ASM_FLAGS}
-    )
 target_compile_options(KernelELF
-    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${KERNEL_CXX_FLAGS}>
-    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${KERNEL_ASM_FLAGS}>
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${MUOS_CXX_FLAGS}>
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
+    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${MUOS_ASM_FLAGS}>
     )
 target_compile_definitions(KernelELF
     PRIVATE MACHINE=${MU_MACHINE}

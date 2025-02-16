@@ -15,6 +15,9 @@ add_library(riscv64::LibArch ALIAS Architecture)
 
 target_compile_options(Architecture
     PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${MUOS_CXX_FLAGS}>
+    # Enable stack protector for archlib. For linking to succeed, the required
+    # __stack_chk_* symbols must be provided (done in Core/Assert/StackProtector.cpp).
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
     PRIVATE $<$<COMPILE_LANGUAGE:ASM>:${MUOS_ASM_FLAGS}>
     )
 target_compile_definitions(Architecture

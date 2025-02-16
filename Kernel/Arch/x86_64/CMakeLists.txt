@@ -6,19 +6,16 @@ file(GLOB_RECURSE ARCH_SOURCES *.hpp *.cpp *.asm)
 add_library(Architecture OBJECT ${ARCH_SOURCES})
 add_library(x86_64::LibArch ALIAS Architecture)
 
-set(ARCH_CXX_FLAGS
-    ${MUOS_CXX_FLAGS}
-    )
-set(ARCH_ASM_FLAGS
-    ${MUOS_ASM_FLAGS}
-    -I ${PROJECT_SOURCE_DIR}/Boot/
-    )
 target_compile_options(Architecture
-    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${ARCH_CXX_FLAGS}>
-    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${ARCH_ASM_FLAGS}>
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${MUOS_CXX_FLAGS}>
+    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:${MUOS_ASM_FLAGS}>
+    PRIVATE $<$<COMPILE_LANGUAGE:ASM_NASM>:-I ${PROJECT_SOURCE_DIR}/Boot/>
     # FIXME: Once all architecture-specific code is moved out from the
     # main kernel, below flag won't be required to be public
     PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-masm=intel>
+    # Enable stack protector for archlib. For linking to succeed, the required
+    # __stack_chk_* symbols must be provided (done in Core/Assert/StackProtector.cpp).
+    PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-fstack-protector-all>
     )
 target_compile_definitions(Architecture
     PRIVATE ARCH_IS_x86_64=1

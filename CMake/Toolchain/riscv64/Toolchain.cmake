@@ -77,7 +77,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
 # Default C/C++ flags
 set(_MU_RISCV_ABI_FLAGS "-march=rv64imaczicsr -mabi=lp64")
-set(_MU_CFLAGS_DEFAULT "${_MU_RISCV_ABI_FLAGS} -fstack-protector-all -ffreestanding -mcmodel=medany -D__is_kernel_build__=1")
+set(_MU_CFLAGS_DEFAULT "${_MU_RISCV_ABI_FLAGS} -ffreestanding -mcmodel=medany -D__is_kernel_build__=1")
 set(_MU_CXXFLAGS_DEFAULT "${_MU_CFLAGS_DEFAULT} -fno-rtti -fno-exceptions -fno-threadsafe-statics")
 set(_MU_ASMFLAGS_DEFAULT "${_MU_RISCV_ABI_FLAGS}")
 set(_MU_LINKFLAGS_DEFAULT "-nostdlib")

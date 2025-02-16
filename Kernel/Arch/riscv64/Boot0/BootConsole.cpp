@@ -1,6 +1,6 @@
 #include <Arch/riscv64/Boot0/BootConsole.hpp>
 
-__attribute__((weak)) void bootcon::init(FdtHeader const*) {
+__attribute__((weak)) void bootcon::init(libfdt::FdtHeader const*) {
 	//  Intentionally left empty
 }
 

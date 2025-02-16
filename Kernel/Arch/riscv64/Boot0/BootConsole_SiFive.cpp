@@ -1,6 +1,5 @@
 #include <Arch/riscv64/Boot0/Boot0.hpp>
 #include <Arch/riscv64/Boot0/BootConsole.hpp>
-#include <Arch/riscv64/Boot0/DeviceTree.hpp>
 #include <Arch/riscv64/Boot0/Memory.hpp>
 
 enum class Register {
@@ -29,19 +28,19 @@ static inline void write_reg(Register reg, uint32 value) {
 	*((volatile uint32*)((uint8*)s_sifive_uart_base + static_cast<uintptr_t>(reg))) = value;
 }
 
-void bootcon::init(FdtHeader const* fdt) {
+void bootcon::init(libfdt::FdtHeader const* fdt) {
 	//  Find the first UART with SiFive compatible
-	FdtNodeHandle uart { nullptr };
-	fdt_visit_each_node(
+	libfdt::FdtNodeHandle uart { nullptr };
+	libfdt::visit_each_node(
 	        fdt,
-	        [](FdtHeader const* fdt, FdtNodeHandle nhandle, void* priv) -> bool {
-		        const auto compatible = fdt_node_get_named_prop(fdt, nhandle, "compatible");
+	        [](libfdt::FdtHeader const* fdt, libfdt::FdtNodeHandle nhandle, void* priv) -> bool {
+		        const auto compatible = libfdt::node_get_named_prop(fdt, nhandle, "compatible");
 		        if(!compatible) {
 			        return true;
 		        }
-		        auto const* compatstr = fdt_prop_read_string(fdt, compatible);
+		        auto const* compatstr = libfdt::prop_read_string(fdt, compatible);
 		        if(mem::strcmp(compatstr, "sifive,uart0") == 0) {
-			        *static_cast<FdtNodeHandle*>(priv) = nhandle;
+			        *static_cast<libfdt::FdtNodeHandle*>(priv) = nhandle;
 			        return false;
 		        }
 		        return true;
@@ -51,12 +50,12 @@ void bootcon::init(FdtHeader const* fdt) {
 		return;
 	}
 
-	const auto reg = fdt_node_get_named_prop(fdt, uart, "reg");
+	const auto reg = libfdt::node_get_named_prop(fdt, uart, "reg");
 	if(!reg) {
 		return;
 	}
 	uint64 addr;
-	if(!fdt_prop_read_u64(fdt, reg, &addr)) {
+	if(!libfdt::prop_read_u64(fdt, reg, &addr)) {
 		return;
 	}
 	s_sifive_uart_base = reinterpret_cast<void*>(addr);

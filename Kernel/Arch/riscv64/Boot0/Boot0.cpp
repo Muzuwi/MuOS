@@ -1,10 +1,10 @@
 #include <Arch/riscv64/Boot0/Boot0.hpp>
 #include <Arch/riscv64/Boot0/BootConsole.hpp>
-#include <Arch/riscv64/Boot0/DeviceTree.hpp>
 #include <Arch/riscv64/Boot0/Memory.hpp>
 #include <Arch/riscv64/Boot0/TinyMM.hpp>
 #include <LibAllocator/Arena.hpp>
 #include <LibAllocator/BumpAllocator.hpp>
+#include <LibFDT/DeviceTree.hpp>
 #include <LibGeneric/Allocator.hpp>
 #include <string.h>
 #include <SystemTypes.hpp>
@@ -24,24 +24,25 @@ static liballoc::BumpAllocator s_phys_allocator {
 	}
 }
 
-static bool cb_check_props(FdtHeader const* header, FdtNodeHandle, FdtPropHandle phandle, void*) {
-	bootcon::printf("\t{} ", fdt_prop_name(header, phandle));
+static bool cb_check_props(libfdt::FdtHeader const* header, libfdt::FdtNodeHandle, libfdt::FdtPropHandle phandle,
+                           void*) {
+	bootcon::printf("\t{} ", libfdt::prop_name(header, phandle));
 
-	if(fdt_prop_len(header, phandle) > 0) {
-		bootcon::printf("{} ", fdt_prop_read_string(header, phandle));
+	if(libfdt::prop_len(header, phandle) > 0) {
+		bootcon::printf("{} ", libfdt::prop_read_string(header, phandle));
 	}
 
 	uint32 val;
-	if(fdt_prop_read_u32(header, phandle, &val)) {
+	if(libfdt::prop_read_u32(header, phandle, &val)) {
 		bootcon::printf("{x} ", val);
 	}
 
 	uint64 val64;
-	if(fdt_prop_read_u64(header, phandle, &val64)) {
+	if(libfdt::prop_read_u64(header, phandle, &val64)) {
 		bootcon::printf("{x} ", val64);
 	}
 	bootcon::putch(' ');
-	if(fdt_prop_read_u64(header, phandle, &val64, 1)) {
+	if(libfdt::prop_read_u64(header, phandle, &val64, 1)) {
 		bootcon::printf("{x} ", val64);
 	}
 
@@ -49,37 +50,37 @@ static bool cb_check_props(FdtHeader const* header, FdtNodeHandle, FdtPropHandle
 	return true;
 }
 
-static bool cb_check_memory_node(FdtHeader const* header, FdtNodeHandle handle, void* args) {
-	bootcon::printf("{}\n", fdt_node_name(header, handle));
-	fdt_visit_each_prop(header, handle, cb_check_props, args);
+static bool cb_check_memory_node(libfdt::FdtHeader const* header, libfdt::FdtNodeHandle handle, void* args) {
+	bootcon::printf("{}\n", libfdt::node_name(header, handle));
+	libfdt::visit_each_prop(header, handle, cb_check_props, args);
 	return true;
 }
 
 ///  Extract usable memory from the device tree and update tinymm mappings.
-static void mm_parse_usable(FdtHeader const* handle) {
-	FdtNodeHandle memory = fdt_find_first_node_by_unit_name(handle, "memory");
+static void mm_parse_usable(libfdt::FdtHeader const* handle) {
+	libfdt::FdtNodeHandle memory = libfdt::find_first_node_by_unit_name(handle, "memory");
 	if(!memory) {
 		boot0_panic("Could not find 'memory' node in FDT");
 	}
 
-	FdtPropHandle reg = fdt_node_get_named_prop(handle, memory, "reg");
+	auto reg = libfdt::node_get_named_prop(handle, memory, "reg");
 	if(!reg) {
 		boot0_panic("Could not get 'reg' property of 'memory' node");
 	}
 
-	fdt_visit_each_node(handle, cb_check_memory_node, nullptr);
+	libfdt::visit_each_node(handle, cb_check_memory_node, nullptr);
 
 	//  TODO: Assumes address_cells=2, size_cells=2
-	const auto len = fdt_prop_len(handle, reg);
+	const auto len = libfdt::prop_len(handle, reg);
 	const auto ranges = len / (4 * 4);
 	for(size_t i = 0; i < ranges; ++i) {
 		uint64 address;
 		uint64 size;
 
-		if(!fdt_prop_read_u64(handle, reg, &address, i * 2 + 0)) {
+		if(!libfdt::prop_read_u64(handle, reg, &address, i * 2 + 0)) {
 			boot0_panic("Could not get cell from prop");
 		}
-		if(!fdt_prop_read_u64(handle, reg, &size, i * 2 + 1)) {
+		if(!libfdt::prop_read_u64(handle, reg, &size, i * 2 + 1)) {
 			boot0_panic("Could not get cell from prop");
 		}
 
@@ -88,17 +89,17 @@ static void mm_parse_usable(FdtHeader const* handle) {
 }
 
 ///  Extract reserved memory from the device tree and update tinymm mappings.
-static void mm_parse_reserved(FdtHeader const* handle) {
-	FdtNodeHandle reserved = fdt_find_first_node_by_unit_name(handle, "reserved-memory");
+static void mm_parse_reserved(libfdt::FdtHeader const* handle) {
+	libfdt::FdtNodeHandle reserved = libfdt::find_first_node_by_unit_name(handle, "reserved-memory");
 	if(!reserved) {
 		bootcon::printf(LOGPFX, "No reserved-memory nodes found");
 		return;
 	}
 
 	//  TODO: Assumes address_cells=2, size_cells=2
-	FdtNodeHandle child = nullptr;
-	while(fdt_find_next_child(handle, reserved, &child)) {
-		FdtPropHandle reg = fdt_node_get_named_prop(handle, child, "reg");
+	libfdt::FdtNodeHandle child = nullptr;
+	while(libfdt::find_next_child(handle, reserved, &child)) {
+		auto reg = libfdt::node_get_named_prop(handle, child, "reg");
 		if(!reg) {
 			bootcon::printf(LOGPFX "warn: Could not get 'reg' property of 'memory-reserved' child node\n");
 			continue;
@@ -106,11 +107,11 @@ static void mm_parse_reserved(FdtHeader const* handle) {
 
 		uint64 address;
 		uint64 size;
-		if(!fdt_prop_read_u64(handle, reg, &address, 0)) {
+		if(!libfdt::prop_read_u64(handle, reg, &address, 0)) {
 			bootcon::printf(LOGPFX "warn: Could not get address cell from reserved memory\n");
 			continue;
 		}
-		if(!fdt_prop_read_u64(handle, reg, &size, 1)) {
+		if(!libfdt::prop_read_u64(handle, reg, &size, 1)) {
 			bootcon::printf(LOGPFX "warn: Could not get size cell from reserved memory\n");
 			continue;
 		}
@@ -331,7 +332,7 @@ extern "C" void boot0_handle_exception(uint64 scause, uint64 sepc, uint64 stval)
 }
 
 extern "C" void boot0_main(void* arg0, void* sbi_fdt) {
-	auto* handle = fdt_init_parser((uint8 const*)sbi_fdt);
+	auto* handle = libfdt::init_parser((uint8 const*)sbi_fdt);
 	if(!handle) {
 		//  This panic won't print anything as bootcon is not initialized yet, but
 		//  if the FDT was invalid then there's nothing much we can do anyway.

@@ -2,12 +2,11 @@ cmake_minimum_required(VERSION 3.17)
 project(RiscvBoot0 LANGUAGES CXX ASM)
 
 set(BOOT0_SOURCES
+    $<$<BOOL:${CONFIG_BOOT0_BOOTCON_16550}>:BootConsole_16550.cpp>
+    $<$<BOOL:${CONFIG_BOOT0_BOOTCON_SIFIVE}>:BootConsole_SiFive.cpp>
     Boot0.cpp
     Boot0.s
-    $<$<BOOL:${CONFIG_BOOT0_BOOTCON_SIFIVE}>:BootConsole_SiFive.cpp>
-    $<$<BOOL:${CONFIG_BOOT0_BOOTCON_16550}>:BootConsole_16550.cpp>
     BootConsole.cpp
-    DeviceTree.cpp
     TinyMM.cpp
     )
 add_executable(Boot0 ${BOOT0_SOURCES})
@@ -22,6 +21,7 @@ target_include_directories(Boot0
     )
 target_link_libraries(Boot0
     PRIVATE LibAllocator
+    PRIVATE LibFDT
     PRIVATE LibFormat
     PRIVATE LibGeneric
     )

@@ -1,5 +1,5 @@
 #pragma once
-#include <Arch/riscv64/Boot0/DeviceTree.hpp>
+#include <LibFDT/DeviceTree.hpp>
 #include <LibFormat/Format.hpp>
 #include <LibGeneric/Move.hpp>
 #include <SystemTypes.hpp>
@@ -12,7 +12,7 @@ namespace bootcon {
 	 *  init() and putch() must be implemented by the platform to
 	 *  debug boot0.
 	 */
-	void init(FdtHeader const*);
+	void init(libfdt::FdtHeader const*);
 	void putch(char);
 	void remap();
 

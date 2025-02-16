@@ -14,7 +14,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DMU_BUILD_TYPE=test -DCMAKE_MODULE_PATH=${{github.workspace}}/CMake/ ${{github.workspace}}/Library/LibGeneric/
+      run: cmake -B ${{github.workspace}}/build -DMU_MACHINE=host -DCMAKE_MODULE_PATH=${{github.workspace}}/CMake/ ${{github.workspace}}/Library/LibGeneric/
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --target TestLibGeneric

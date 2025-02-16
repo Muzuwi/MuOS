@@ -6,10 +6,12 @@
 # Enable CTest
 enable_testing()
 
-# If not explicitly specified, we probably want to build the
-# kernel and not native tests.
-if(NOT DEFINED MU_BUILD_TYPE)
-    set(MU_BUILD_TYPE cross)
+# If MU_MACHINE is unset, default to using the host toolchain.
+# This won't allow you to build the kernel itself, but it can
+# be used to run native library tests on the current host.
+if(NOT DEFINED MU_MACHINE)
+    message(STATUS "MU_MACHINE was not provided, defaulting to host. Only library tests will be available!")
+    set(MU_MACHINE host)
 endif()
 
 # Add custom CMake modules to the search path

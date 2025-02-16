@@ -24,8 +24,24 @@ else ()
         "machine might not be compatible yet.")
 endif ()
 
-# Add common directories to the include search path
-include_directories(${CMAKE_SOURCE_DIR}/Kernel/)
-include_directories(${CMAKE_SOURCE_DIR}/Library/)
-include_directories(${CMAKE_SOURCE_DIR}/Library/LibC/include/)
-include_directories(${CMAKE_SOURCE_DIR}/Library/LibAllocator/Include)
+# Stop processing the current CMakeLists if the build is not using the native
+# host toolchain (i.e, MU_MACHINE is different than `host`).
+#
+# This can be used to prevent building targets that cannot be built using the
+# cross-compiler toolchain.
+macro(native_build_only)
+    if (NOT MU_MACHINE STREQUAL "host")
+        return()
+    endif ()
+endmacro()
+
+# Stop processing the current CMakeLists if the build is not using the cross
+# toolchain (i.e, MU_MACHINE is equal to `host`).
+#
+# This can be used to prevent building targets that cannot be built using the
+# native toolchain.
+macro(cross_build_only)
+    if (MU_MACHINE STREQUAL "host")
+        return()
+    endif ()
+endmacro()

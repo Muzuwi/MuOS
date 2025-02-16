@@ -1,5 +1,5 @@
-#include <LibGeneric/List.hpp>
 #include <catch2/catch.hpp>
+#include <LibGeneric/List.hpp>
 
 TEST_CASE("gen::List", "[structs]") {
 	SECTION("default constructed list is empty") {
@@ -157,7 +157,6 @@ TEST_CASE("gen::List", "[structs]") {
 		it++;
 		list.insert(it, 555);
 
-		const auto size = list.size();
 		const uint32_t elements[] = { 111, 222, 555, 333, 444 };
 		unsigned which = 0;
 		for(auto const& value : list) {

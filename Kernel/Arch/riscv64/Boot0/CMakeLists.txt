@@ -17,8 +17,13 @@ target_compile_options(Boot0
 target_compile_definitions(Boot0
     PRIVATE ARCH_IS_RISCV64=1
     )
+target_include_directories(Boot0
+    PRIVATE ${CMAKE_SOURCE_DIR}/Kernel/
+    )
 target_link_libraries(Boot0
     PRIVATE LibAllocator
+    PRIVATE LibFormat
+    PRIVATE LibGeneric
     )
 target_link_options(Boot0
     PRIVATE -T ${PROJECT_SOURCE_DIR}/Linkscript.ld

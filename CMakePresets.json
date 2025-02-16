@@ -16,17 +16,13 @@
 
 
         {
-            "name": "native_tests",
+            "name": "arch_host",
             "hidden": true,
-            "binaryDir": "${sourceDir}/cmake-build-native_tests-${presetName}",
+            "binaryDir": "${sourceDir}/cmake-build-host-${presetName}",
             "cacheVariables": {
-                "MU_MACHINE": "x86_64",
-                "MU_BUILD_TYPE": "native",
-                "LIBALLOCATOR_BUILD_TESTS": "true"
+                "MU_MACHINE": "host"
             }
         },
-
-
         {
             "name": "arch_x86_64",
             "hidden": true,
@@ -94,9 +90,9 @@
             "inherits": ["default", "arch_riscv64", "relwithdebinfo"]
         },
         {
-            "name": "native-libtest",
-            "displayName": "Native - Library Tests",
-            "inherits": ["default", "arch_x86_64", "debug", "native_tests"]
+            "name": "host-libtest",
+            "displayName": "Host - Library Tests",
+            "inherits": ["default", "arch_host", "debug"]
         },
 
         {

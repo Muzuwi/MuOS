@@ -1,13 +1,7 @@
 cmake_minimum_required(VERSION 3.17)
 
-if(NOT MU_BUILD_TYPE STREQUAL "cross")
-    message(STATUS "Native tests requested - kernel build skipped")
-    return()
-endif()
+cross_build_only()
 
-if (NOT MU_MACHINE)
-    message(FATAL_ERROR "No target architecture was specified! Please provide via MU_MACHINE")
-endif ()
 message(STATUS "Compiling for machine type ${MU_MACHINE}")
 
 include(KernelSources)
@@ -54,6 +48,10 @@ target_link_libraries(KernelELF PRIVATE
     LibAllocator
     LibGeneric
     LibC
+    LibFormat
+    )
+target_include_directories(KernelELF
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
 # Include the top-level Build.cmake, which will descend down

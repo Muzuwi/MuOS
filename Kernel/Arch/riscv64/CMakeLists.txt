@@ -23,7 +23,13 @@ target_compile_options(Architecture
 target_compile_definitions(Architecture
     PUBLIC ARCH_IS_RISCV64=1
     )
-
+target_include_directories(Architecture
+    PRIVATE ${CMAKE_SOURCE_DIR}/Kernel/
+    )
+target_link_libraries(Architecture
+    PRIVATE LibFormat
+    PRIVATE LibGeneric
+    )
 # The link script flag is public, this way the kernel executable is also
 # built with the proper linking layout.
 target_link_options(Architecture

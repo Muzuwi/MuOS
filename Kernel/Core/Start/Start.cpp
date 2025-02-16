@@ -26,10 +26,15 @@ CREATE_LOGGER("core::start", core::log::LogLevel::Debug);
  */
 static void dump_core_mem_layout() {
 	::log.info("Physical memory layout:");
-	core::mem::for_each_region([](core::mem::Region region) {
+	size_t count = 0;
+	core::mem::for_each_region([&count](core::mem::Region region) {
 		::log.info("|- {x} - {x} ({})", Format::ptr(region.start), Format::ptr((uint8*)region.start + region.len),
 		           core::mem::type_to_str(region.type));
+		++count;
 	});
+	if(count == 0) {
+		::log.warning("No memory regions were registered; physical memory allocation will fail!");
+	}
 }
 
 /** Start the kernel and boot into userland

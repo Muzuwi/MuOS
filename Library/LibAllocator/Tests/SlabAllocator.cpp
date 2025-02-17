@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 #include <cstdint>
 #include <cstring>
+#include <format>
 #include <LibAllocator/SlabAllocator.hpp>
 
 static constexpr const size_t ARENA_LEN = 32 * 1024 * 1024;

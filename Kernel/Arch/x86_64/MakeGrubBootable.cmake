@@ -26,6 +26,7 @@ add_custom_command(
     COMMAND ${GRUB_MKRESCUE} -o MuOS.iso isodir/
     )
 add_custom_target(BootableISO
+    ALL
     DEPENDS MuOS.iso
     )
 deploy_binary(BootableISO

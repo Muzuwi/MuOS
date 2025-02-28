@@ -36,6 +36,7 @@ add_custom_command(
 )
 
 add_custom_target(BootableUImage
+    ALL
     COMMENT "Generating uKernel.uImage.."
     OUTPUT uKernel.uImage
     DEPENDS KernelWithBoot0.bin

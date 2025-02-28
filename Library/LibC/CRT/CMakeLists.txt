@@ -15,15 +15,19 @@ add_custom_command(
 )
 
 add_custom_target(LibC-CRT0
+    ALL
     DEPENDS crt0.o
     )
 add_custom_target(LibC-CRTi
+    ALL
     DEPENDS crti.o
     )
 add_custom_target(LibC-CRTn
+    ALL
     DEPENDS crtn.o
     )
 add_custom_target(LibC-CRT
+    ALL
     DEPENDS LibC-CRT0 LibC-CRTi LibC-CRTn
     )
 

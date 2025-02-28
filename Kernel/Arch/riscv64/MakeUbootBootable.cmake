@@ -35,14 +35,16 @@ add_custom_command(
     COMMAND cat Boot0.bin uKernel.bin >KernelWithBoot0.bin
 )
 
-add_custom_target(BootableUImage
-    ALL
+add_custom_command(
     COMMENT "Generating uKernel.uImage.."
     OUTPUT uKernel.uImage
     DEPENDS KernelWithBoot0.bin
     COMMAND ${MKIMAGE} -A riscv -O linux -T kernel -C none -a 0x80400000 -e 0x80400000 -n uKernel -d KernelWithBoot0.bin uKernel.uImage
+)
+add_custom_target(BootableUImage
+    ALL
+    DEPENDS uKernel.uImage
     )
-
 deploy_binary(BootableUImage
     GENERATED uKernel.uImage
     NAME "uKernel.${MU_MACHINE}.uImage"

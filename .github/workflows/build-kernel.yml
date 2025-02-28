@@ -40,22 +40,14 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build --preset ${{ matrix.build_preset }}
 
-    - name: Build kernel executable
-      run: cmake --build ${{github.workspace}}/build --target KernelELF
-
-    - name: x86_64 - Build ISO
-      if: ${{ matrix.x86_iso }}
-      run: cmake --build ${{github.workspace}}/build --target BootableISO
-
-    - name: rv64 - Build uImage
-      if: ${{ matrix.rv64_uimage }}
-      run: cmake --build ${{github.workspace}}/build --target BootableUImage
+    - name: Build the project
+      run: cmake --build ${{github.workspace}}/build --target all
 
     - name: Copy emulator run scripts to the output directory
       # NOTE: See https://github.com/actions/runner/issues/2058
       # GITHUB_WORKSPACE points to the repository/sources
       run: |
-        cp -r $GITHUB_WORKSPACE/Scripts/* $GITHUB_WORKSPACE/Root/
+        cp -r $GITHUB_WORKSPACE/Scripts/* $GITHUB_WORKSPACE/Bin/
 
     - name: Collect build metadata for artifact stamping
       id: buildmeta
@@ -68,5 +60,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: MuOS.${{ matrix.build_preset }}.${{ github.ref_name }}.${{ steps.buildmeta.outputs.gitrev }}
-        path: ${{github.workspace}}/Root/*
+        path: |
+          ${{github.workspace}}/Bin/*
 
